@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder>
+  <Workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.mp4</q1:FileName>
+          <q1:PlaybackRate>60</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT2S</q1:EventOffset>
+          <q1:DefaultDuration>PT1M</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="SelectMany">
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Grayscale" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>100</q2:X>
+                  <q2:Y>0</q2:Y>
+                  <q2:Width>1080</q2:Width>
+                  <q2:Height>900</q2:Height>
+                </q2:RegionOfInterest>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:RoiActivity">
+                <q1:Regions>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>140</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>184</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>124</q1:X>
+                      <q1:Y>792</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>71</q1:X>
+                      <q1:Y>792</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>292</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>339</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>304</q1:X>
+                      <q1:Y>795</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>245</q1:X>
+                      <q1:Y>795</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>437</q1:X>
+                      <q1:Y>749</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>483</q1:X>
+                      <q1:Y>749</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>479</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>421</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>593</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>638</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>660</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>603</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>738</q1:X>
+                      <q1:Y>745</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>783</q1:X>
+                      <q1:Y>745</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>830</q1:X>
+                      <q1:Y>791</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>773</q1:X>
+                      <q1:Y>791</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>892</q1:X>
+                      <q1:Y>741</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>936</q1:X>
+                      <q1:Y>741</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>1006</q1:X>
+                      <q1:Y>785</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>951</q1:X>
+                      <q1:Y>787</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                </q1:Regions>
+              </Projection>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>1</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>4</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Grayscale, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RoiActivity, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

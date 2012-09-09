@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder>
+  <Workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns:q2="clr-namespace:Bonsai.Vision.AForge;assembly=Bonsai.Vision.AForge" xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:FileName>front_video.mp4</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT2S</q1:EventOffset>
+          <q1:DefaultDuration>PT10S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="SelectMany">
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q3:Grayscale" />
+            </Expression>
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="q1:BackgroundExtraction">
+              <q1:BackgroundFrames>0</q1:BackgroundFrames>
+              <q1:Tolerance>0</q1:Tolerance>
+            </Expression>
+            <Expression xsi:type="Take">
+              <Count>1</Count>
+            </Expression>
+            <Expression xsi:type="CombineLatest" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q3:Subtract" />
+            </Expression>
+            <Expression xsi:type="Where">
+              <Filter xsi:type="q3:ConnectedComponentCheck" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:ContrastTracking">
+                <q1:ThresholdValue>128</q1:ThresholdValue>
+                <q1:ThresholdType>Binary</q1:ThresholdType>
+                <q1:MinArea>0</q1:MinArea>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="SkipUntil" />
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q2:VideoFileWriterSink">
+                <q2:FileName>crossing.mp4</q2:FileName>
+                <q2:Size>
+                  <q2:Width>1280</q2:Width>
+                  <q2:Height>960</q2:Height>
+                </q2:Size>
+                <q2:FrameRate>120</q2:FrameRate>
+                <q2:Codec>MPEG4</q2:Codec>
+                <q2:Interpolation>NearestNeighbor</q2:Interpolation>
+                <q2:BitRate>40000000</q2:BitRate>
+                <q2:Suffix>Count</q2:Suffix>
+              </Sink>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>1</From>
+              <To>5</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>1</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>1</From>
+              <To>9</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>4</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>4</From>
+              <To>5</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>5</From>
+              <To>6</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>6</From>
+              <To>8</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>7</From>
+              <To>9</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>8</From>
+              <To>7</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>9</From>
+              <To>10</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Grayscale, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.BackgroundExtraction, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.ConnectedComponentCheck, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.ContrastTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.AForge.VideoFileWriterSink, Bonsai.Vision.AForge, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

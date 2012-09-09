@@ -1,0 +1,6 @@
+Tools: Spyder (2.1.9) + Bonsai.Packages (rev. 94)
+
+For each crossing session folder:
+1. Create directory 'Analysis'
+2. Segment crossing clips (make_crossings.py)
+3. Manually remove duplicate crossings (video_analysis.bonsai)

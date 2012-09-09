@@ -1,0 +1,476 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder>
+  <Workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.Scripting;assembly=Bonsai.Scripting" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Events</q1:PlaybackMode>
+          <q1:FileName>..\front_video.mp4</q1:FileName>
+          <q1:PlaybackRate>200</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT2S</q1:EventOffset>
+          <q1:DefaultDuration>PT5S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="SelectMany">
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Grayscale" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>100</q2:X>
+                  <q2:Y>0</q2:Y>
+                  <q2:Width>1080</q2:Width>
+                  <q2:Height>900</q2:Height>
+                </q2:RegionOfInterest>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="CombineLatest" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:TimestampImageFileMatch">
+                <q1:BackgroundFolder>Background</q1:BackgroundFolder>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Take">
+              <Count>1</Count>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Subtract" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Threshold">
+                <q2:ThresholdValue>5</q2:ThresholdValue>
+                <q2:MaxValue>255</q2:MaxValue>
+                <q2:ThresholdType>Binary</q2:ThresholdType>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:FindContours">
+                <q2:Mode>External</q2:Mode>
+                <q2:Method>CHAIN_APPROX_NONE</q2:Method>
+                <q2:Offset>
+                  <q2:X>0</q2:X>
+                  <q2:Y>0</q2:Y>
+                </q2:Offset>
+                <q2:MinArea>100</q2:MinArea>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:BinaryRegionAnalysis" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:LargestBinaryRegion" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:TipTracking">
+                <q1:Direction>Horizontal</q1:Direction>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:TipTracking">
+                <q1:Direction>Vertical</q1:Direction>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:DrawConnectedComponents" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q1:RoiActivity">
+                <q1:Regions>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>140</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>184</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>124</q1:X>
+                      <q1:Y>792</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>71</q1:X>
+                      <q1:Y>792</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>292</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>339</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>304</q1:X>
+                      <q1:Y>795</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>245</q1:X>
+                      <q1:Y>795</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>437</q1:X>
+                      <q1:Y>749</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>483</q1:X>
+                      <q1:Y>749</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>479</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>421</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>593</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>638</q1:X>
+                      <q1:Y>747</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>660</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>603</q1:X>
+                      <q1:Y>796</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>738</q1:X>
+                      <q1:Y>745</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>783</q1:X>
+                      <q1:Y>745</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>830</q1:X>
+                      <q1:Y>791</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>773</q1:X>
+                      <q1:Y>791</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                  <q1:ArrayOfCvPoint>
+                    <q1:CvPoint>
+                      <q1:X>892</q1:X>
+                      <q1:Y>741</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>936</q1:X>
+                      <q1:Y>741</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>1006</q1:X>
+                      <q1:Y>785</q1:Y>
+                    </q1:CvPoint>
+                    <q1:CvPoint>
+                      <q1:X>951</q1:X>
+                      <q1:Y>787</q1:Y>
+                    </q1:CvPoint>
+                  </q1:ArrayOfCvPoint>
+                </q1:Regions>
+              </Projection>
+            </Expression>
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonSink">
+                <q3:LoadScript>steps = None</q3:LoadScript>
+                <q3:Script>if steps is None:
+    steps = [open("step%s.csv" % (f),'a') for f in range(input.Count)]
+
+for i in range(input.Count):
+    steps[i].write("%s " % (input[i].Activity.Val0))</q3:Script>
+                <q3:UnloadScript>for file in steps:
+    file.write("\n")
+    file.close()</q3:UnloadScript>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Projection xsi:type="q2:Average" />
+            </Expression>
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>print input.Val0,</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>mean.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>print input,</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>tip_horizontal.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>print input,</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>tip_vertical.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>
+                <string>Timestamp</string>
+              </Selector>
+            </Expression>
+            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>print input.ToString("o"),</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>trial_time.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>if input.Count &gt; 0 and input[0].Area &gt; 3000:
+    print input[0].Centroid.X,
+else:
+    print -1,</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>centroid_x.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+            <Expression xsi:type="Do">
+              <Sink xsi:type="q3:PythonTextWriter">
+                <q3:Script>if input.Count &gt; 0 and input[0].Area &gt; 3000:
+    print input[0].Centroid.Y,
+else:
+    print -1,</q3:Script>
+                <q3:UnloadScript>print</q3:UnloadScript>
+                <q3:FileName>centroid_y.csv</q3:FileName>
+                <q3:Append>true</q3:Append>
+              </Sink>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>0</From>
+              <To>5</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>0</From>
+              <To>24</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>1</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>4</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>19</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>4</From>
+              <To>7</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>5</From>
+              <To>6</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>6</From>
+              <To>4</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>7</From>
+              <To>8</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>8</From>
+              <To>9</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>9</From>
+              <To>10</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>10</From>
+              <To>11</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>11</From>
+              <To>12</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>11</From>
+              <To>13</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>11</From>
+              <To>27</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>12</From>
+              <To>22</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>13</From>
+              <To>23</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>14</From>
+              <To>15</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>15</From>
+              <To>21</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>16</From>
+              <To>17</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>17</From>
+              <To>18</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>18</From>
+              <To>15</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>19</From>
+              <To>20</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>20</From>
+              <To>21</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>21</From>
+              <To>25</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>22</From>
+              <To>14</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>23</From>
+              <To>14</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>24</From>
+              <To>26</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>26</From>
+              <To>25</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>27</From>
+              <To>28</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>28</From>
+              <To>16</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Grayscale, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.TimestampImageFileMatch, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Threshold, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.FindContours, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.BinaryRegionAnalysis, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.LargestBinaryRegion, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.TipTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.DrawConnectedComponents, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RoiActivity, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Scripting.PythonSink, Bonsai.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Average, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Scripting.PythonTextWriter, Bonsai.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>
