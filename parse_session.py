@@ -44,8 +44,6 @@ def parse_session(path,name,analysis=True):
                 crossing_trial_mapping.append(candidate_trials[-1])
             else:
                 crossing_trial_mapping.append(0)
-            
-        #crossing_trial_mapping = [[i+1 for i in range(len(reward_times)) if reward_times[i] < crossing[0]][-1] for crossing in trial_time]
         
         stepfiles = ['step%s.csv' % (s) for s in range(6)]
         step_activity = [utils.loadfromcsv(step) for step in stepfiles]
@@ -56,8 +54,9 @@ def parse_session(path,name,analysis=True):
         tip_horizontal_path = [[x for x in trial if x >= 0] for trial in tip_horizontal]
         tip_vertical_path = [[x for x in trial if x >= 0] for trial in tip_vertical]
         tip_horizontal_path_indices = [[i for i,x in enumerate(trial) if x >= 0] for trial in tip_horizontal];
-        left_crossings = [i for i,x in enumerate(tip_horizontal_path) if x[0] > 600]
-        right_crossings = [i for i,x in enumerate(tip_horizontal_path) if x[0] < 600]
+        crossing_direction = [x[0] > 600 for x in tip_horizontal_path]
+        left_crossings = [i for i,x in enumerate(crossing_direction) if x]
+        right_crossings = [i for i,x in enumerate(crossing_direction) if not x]
         for i in left_crossings:
             for s in range(len(steps) / 2):
                 tmp = steps[s][i]
@@ -88,6 +87,7 @@ def parse_session(path,name,analysis=True):
         steps = None
         left_crossings = None
         right_crossings = None
+        crossing_direction = None
         trial_time = None
         crossing_trial_mapping = None
 
@@ -95,8 +95,10 @@ def parse_session(path,name,analysis=True):
         left_trials = np.genfromtxt(r'..\left_trials.csv',dtype=bool)
         right_trials = np.genfromtxt(r'..\right_trials.csv',dtype=bool)
         manipulation_trials = utils.flatten(zip(left_trials,right_trials))
+        session_type = 'manipulation'
     else:
         manipulation_trials = None
+        session_type = 'stable'
     
     reward_times = [dateutil.parser.parse(time) for time in reward_times]
     inter_reward_intervals = np.diff(reward_times)
@@ -116,6 +118,7 @@ def parse_session(path,name,analysis=True):
     step_activity=step_activity,
     steps=steps,
     step_times=step_times,
+    crossing_direction=crossing_direction,
     left_crossings=left_crossings,
     right_crossings=right_crossings,
     trial_time=trial_time,
@@ -124,4 +127,5 @@ def parse_session(path,name,analysis=True):
     reward_times=reward_times,
     inter_reward_intervals=inter_reward_intervals,
     crossing_trial_mapping=crossing_trial_mapping,
-    manipulation_trials=manipulation_trials)
+    manipulation_trials=manipulation_trials,
+    session_type=session_type)

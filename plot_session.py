@@ -88,6 +88,21 @@ def plot_progression_delta_path(session):
         plt.plot(np.diff(normalized))
     plt.xlabel('time (frames)')
     plt.ylabel('progression delta (pixels)')
+    
+def plot_tip_trajectories(session):
+    plt.figure(session.name + ' ' + session.session_type)
+    for i in range(len(session.tip_horizontal)):
+        xtip = session.tip_horizontal[i]
+        ytip = session.tip_vertical[i]
+        cdirection = session.crossing_direction[i]
+        valid_indices = [i for i,x in enumerate(xtip) if x > 0 and x < 1020]
+        x = [cdirection and xtip[ind] or (1078 + xtip[ind] * -1) for ind in valid_indices]
+        y = [ytip[ind] for ind in valid_indices]
+        decision = sum((np.array(y) < 600) | (np.array(y) > 800))
+        if decision == 0:
+            plt.plot(x,y)
+    ax = plt.gca()
+    ax.set_ylim(ax.get_ylim()[::-1])
         
 def plot_latency_curves(name,sessions):
     plt.figure(name + ' cumulative latency')
@@ -100,6 +115,53 @@ def plot_latency_curves(name,sessions):
     plt.xlabel('trials')
     plt.ylabel('latency (s)')
     plt.title('cumulative latency')
+    
+def plot_step_dynamics(name,sessions,step,selector):
+    title = name + ' step %s aligned dynamics' % step
+    plt.figure(title)
+    step_tip_trials = [process_session.get_step_aligned_data(selector(session),session,step,120,120,False)[0] for session in sessions]
+    im = plt.imshow(utils.flatten(step_tip_trials))
+    plt.colorbar(im)
+    plt.xlabel('time (frames)')
+    plt.ylabel('trials')
+    plt.title(title)
+    
+    trial = 0
+    for i,session in enumerate(step_tip_trials):
+        im.axes.annotate(sessions[i].name + ' ' + sessions[i].session_type, xy=(0,trial), xycoords='data',
+                         xytext=(-350,0),textcoords='offset points',
+                         arrowprops=dict(arrowstyle="->"))
+        trial += len(session)
+    
+def plot_step_tip_dynamics(name,sessions,step):
+    plot_step_dynamics(name + ' horizontal tip',sessions,step,lambda s:s.tip_horizontal)
+    
+def plot_step_tip_height_dynamics(name,sessions,step):
+    plot_step_dynamics(name + ' vertical tip',sessions,step,lambda s:s.tip_vertical)
+    
+def plot_step_activity_dynamics(name,sessions,step):
+    plot_step_dynamics(name + ' step activity',sessions,step,lambda s:s.step_activity[step])
+    
+def plot_step_tip_progression(name,sessions):
+    plt.figure(name + ' average step aligned tip position')
+    step_tip_trials = [[utils.meanstd(process_session.get_step_aligned_data(session.tip_horizontal,session,step)[0]) for session in sessions] for step in range(6)]
+    [plt.errorbar(range(len(session_data)),[mean for mean,std in session_data],[std for mean,std in session_data]) for session_data in step_tip_trials]
+    
+def plot_step_tip_trials_end_to_end(name,sessions):
+    plt.figure(name + ' step aligned tip position')
+    time_color_map(sessions,plt.cm.hsv)
+    step_tip_trials = [[process_session.get_step_aligned_data(session.tip_horizontal,session,step)[0] for session in sessions] for step in range(6)]
+    [plot_end_to_end(step_aligned_data) for step_aligned_data in step_tip_trials]
+    plt.xlabel('trials')
+    plt.ylabel('tip position (pixels)')
+    
+def plot_step_tip_height_trials_end_to_end(name,sessions):
+    plt.figure(name + ' step aligned tip height')
+    time_color_map(sessions,plt.cm.spectral)
+    step_tip_trials = [[process_session.get_step_aligned_data(session.tip_vertical,session,step)[0] for session in sessions] for step in range(6)]
+    [plot_end_to_end(step_aligned_data) for step_aligned_data in step_tip_trials]
+    plt.xlabel('trials')
+    plt.ylabel('tip height (pixels)')
         
 def plot_step_tip_distribution(session,stepindex):
     plt.figure("%s step %s tip distribution" % (session.name, stepindex))
@@ -223,5 +285,3 @@ def plot_posture_clusters(session,images,clusters,t):
     plt.figure(session.name + 'Cluster Std Comparison')
     plt.bar(range(len(average_clusters)),[cv.Sum(img[0])[0] for img in average_clusters])
     del average_clusters
-    
-def plot_

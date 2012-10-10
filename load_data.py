@@ -5,17 +5,41 @@ Created on Tue Jun 05 16:13:44 2012
 @author: IntelligentSystems
 """
 
+import os
 import parse_session as parser
-import process_session
 import analysis_utilities as utils
 
 def load_path(basefolder):
     sessions = []
     datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1)]
     for path in datafolders:
-        sessions.append(parser.parse_session(path,path))
+        path_parts = os.path.split(path)
+        subject = path_parts[1]
+        date = os.path.split(path_parts[0])[1]
+        sessions.append(parser.parse_session(path,subject + ' ' + date))
     return sessions
-
+    
+def annotate_jpak345(sessions):
+    sessions[0].session_type = 'habituation'
+    for i in range(5):
+        sessions[i].session_type += ' (lowered)'
+    sessions[9].session_type += ' (servos)'
+    for i in range(10,14):
+        sessions[i].session_type += ' (5th step acw)'
+    for i in range(16,18):
+        sessions[i].session_type += ' (4th step cw)'
+    for i in range(19,22):
+        sessions[i].session_type += ' (both)'
+        
+def annotate_jpak678(sessions):
+    sessions[0].session_type = 'habituation'
+    for i in range(5,14):
+        sessions[i].session_type += ' (4th step cw)'
+    for i in range(16,18):
+        sessions[i].session_type += ' (4th step cw)'
+    for i in range(19,22):
+        sessions[i].session_type += ' (both)'
+        
 #==============================================================================
 # jpak03 = True
 # if jpak03:
@@ -94,4 +118,4 @@ def load_path(basefolder):
 #     jpak05control = process_session.merge_sessions('jpak05control',[jpak05control1,jpak05control2,jpak05control3,jpak05control4])
 #     jpak05manipA = process_session.merge_sessions('jpak05manip1',[jpak05premanip, jpak05manip1,jpak05manip2,jpak05manip3,jpak05manip4])
 #==============================================================================
-    jpak05manipB = process_session.merge_sessions('jpak05manip2',[jpak05forwardrot1,jpak05forwardrot2])
+#    jpak05manipB = process_session.merge_sessions('jpak05manip2',[jpak05forwardrot1,jpak05forwardrot2])

@@ -114,9 +114,12 @@ def index_distribution(boolean_trials,s=slice(None)):
 #    if boolean_trials[trial][i]]
 #    for trial in range(len(boolean_trials))]
 #    return [item[s] for item in indices]
-
-def get_aligned_data(data,indices):
-    return [data[trial][index] for trial,index in enumerate(indices) if index >= 0]
+    
+def get_step_aligned_data(data,session,stepindex,before=0,after=0,padinvalid=True):
+    (step_centroids,step_left,step_right) = step_indices(session,stepindex)
+    left = utils.get_aligned_data(data,step_left,before,after,padinvalid)
+    right = utils.get_aligned_data(data,step_right,before,after,padinvalid)
+    return left,right
     
 def first_step_indices(session,stepindex):
     return [[i for i,x in enumerate(trial) if x > 100000][slice(1)] for trial in session.step_activity[stepindex]]

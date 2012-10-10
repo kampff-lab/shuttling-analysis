@@ -9,6 +9,32 @@ import os
 import csv
 import string
 import numpy as np
+import scipy.stats as stats
+
+def padded_slice(x,start,stop,fillvalue):
+    pad_left = 0
+    pad_right = 0
+    if start < 0:
+        pad_left = -start;
+    if stop > len(x):
+        pad_right = stop - len(x)
+    return [fillvalue] * pad_left + x[max(0,start):stop] + [fillvalue] * pad_right
+
+def get_aligned_data(data,indices,before=0,after=0,padinvalid=True):
+    if before == 0 and after == 0:
+        if padinvalid:
+            return [index >= 0 and data[trial][index] or np.nan for trial,index in enumerate(indices)]
+        else:
+            return [data[trial][index] for trial,index in enumerate(indices) if index >= 0]
+    else:
+        width = before + after + 1
+        if padinvalid:
+            return [index >= 0 and padded_slice(data[trial],index-before,index+after+1,np.nan) or [np.nan] * width for trial,index in enumerate(indices)]
+        else:
+            return [padded_slice(data[trial],index-before,index+after+1,np.nan) for trial,index in enumerate(indices) if index >= 0]
+
+def meanstd(x,axis=None):
+    return stats.nanmean(x,axis),stats.nanstd(x,axis)
 
 def ensure_list(x):
     if len(x.shape) < 1:
