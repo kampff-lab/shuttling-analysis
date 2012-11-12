@@ -11,7 +11,7 @@ import analysis_utilities as utils
 
 def load_path(basefolder):
     sessions = []
-    datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1)]
+    datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1) if os.path.exists(path + '\\Analysis')]
     for path in datafolders:
         path_parts = os.path.split(path)
         subject = path_parts[1]
@@ -31,14 +31,24 @@ def annotate_jpak345(sessions):
     for i in range(19,22):
         sessions[i].session_type += ' (both)'
         
+# I think these indices were incorrect (ARK)  
+      
 def annotate_jpak678(sessions):
     sessions[0].session_type = 'habituation'
-    for i in range(5,14):
+    for i in range(5,9):
         sessions[i].session_type += ' (4th step cw)'
-    for i in range(16,18):
-        sessions[i].session_type += ' (4th step cw)'
-    for i in range(19,22):
-        sessions[i].session_type += ' (both)'
+    for i in range(9,12):
+        sessions[i].session_type += ' (all free)'
+
+#def annotate_jpak678(sessions):
+#    sessions[0].session_type = 'habituation'
+#    for i in range(5,14):
+#        sessions[i].session_type += ' (4th step cw)'
+#    for i in range(16,18):
+#        sessions[i].session_type += ' (4th step cw)'
+#    for i in range(19,22):
+#        sessions[i].session_type += ' (both)'
+        
         
 #==============================================================================
 # jpak03 = True

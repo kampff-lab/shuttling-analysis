@@ -88,18 +88,38 @@ def plot_progression_delta_path(session):
         plt.plot(np.diff(normalized))
     plt.xlabel('time (frames)')
     plt.ylabel('progression delta (pixels)')
+
+def plot_tip_spatial_speed_trial(session,i):
+    plt.figure(session.name + ' ' + session.session_type + ' speed')
+    speed_spline,speed,decision = process_session.get_tip_spatial_speed_trial(session,i)
+    if decision:
+        plt.plot(speed_spline)
+    
+def plot_tip_spatial_speed(session):
+    plt.figure(session.name + ' ' + session.session_type + ' speed')
+    data = []
+    for i in range(len(session.tip_horizontal)):
+        print i,len(data)
+        speed_spline,speed,decision = process_session.get_tip_spatial_speed_trial(session,i)
+        if decision:
+            data.append(speed_spline)
+    im = plt.imshow(data,vmin=0,vmax=10)
+    plt.colorbar(im)
+    return data
+
+def plot_tip_trajectory(session,i):
+    plt.figure(session.name + ' ' + session.session_type + ' trajectory')
+    x,y,decision = process_session.get_tip_trajectory_trial(session,i)
+    if decision:
+        plt.plot(x,y)
+    ax = plt.gca()
+    ax.set_ylim(ax.get_ylim()[::-1])
     
 def plot_tip_trajectories(session):
-    plt.figure(session.name + ' ' + session.session_type)
+    plt.figure(session.name + ' ' + session.session_type + ' trajectory')
     for i in range(len(session.tip_horizontal)):
-        xtip = session.tip_horizontal[i]
-        ytip = session.tip_vertical[i]
-        cdirection = session.crossing_direction[i]
-        valid_indices = [i for i,x in enumerate(xtip) if x > 0 and x < 1020]
-        x = [cdirection and xtip[ind] or (1078 + xtip[ind] * -1) for ind in valid_indices]
-        y = [ytip[ind] for ind in valid_indices]
-        decision = sum((np.array(y) < 600) | (np.array(y) > 800))
-        if decision == 0:
+        x,y,decision = process_session.get_tip_trajectory_trial(session,i)
+        if decision:
             plt.plot(x,y)
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])

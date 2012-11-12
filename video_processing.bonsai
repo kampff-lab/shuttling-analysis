@@ -61,7 +61,7 @@
                   <q2:X>0</q2:X>
                   <q2:Y>0</q2:Y>
                 </q2:Offset>
-                <q2:MinArea>100</q2:MinArea>
+                <q2:MinArea>1000</q2:MinArea>
               </Projection>
             </Expression>
             <Expression xsi:type="Select">

@@ -7,6 +7,7 @@ Created on %(date)s
 
 import os
 import cv
+import itertools
 import matplotlib.mlab as mlab
 import numpy as np
 import dateutil
@@ -14,6 +15,8 @@ import scipy.cluster.hierarchy as hcl
 import parse_session
 import analysis_utilities as utils
 import image_processing as imgproc
+from scipy.interpolate import UnivariateSpline
+import bisect
 
 # for shuttling assay number 1 !!!
 roi_step_centers = [154,292,452,626.5,784,949]
@@ -72,6 +75,56 @@ def weighted_image_mean(weights,filenames,resultpath):
             cv.Add(image,result,result)
     cv.SaveImage(resultpath,result)
     
+def get_directionless_tip_trajectory(xtip,ytip,cdirection):
+    #valid_indices = [i for i,x in enumerate(xtip) if x > 0]
+    #valid_indices = utils.consecutive_elements(valid_indices)
+    #valid_indices = utils.flatten(valid_indices[slice(len(valid_indices),-2,-1)])
+    #valid_indices = [i for i in valid_indices if xtip[i] >= 50 and xtip[i] <= 1020]
+    
+    valid_indices = [i for i,x in enumerate(xtip) if x > 0]
+    valid_indices = utils.consecutive_elements(valid_indices)
+    valid_indices = max(valid_indices,key=len)
+    
+    cdirection = xtip[valid_indices[0]] > 600
+    if cdirection:
+        left_side = utils.find_lt(xtip[valid_indices],1020)
+        right_side = utils.find_lt(xtip[valid_indices],50)
+    else:
+        left_side = utils.find_gt(xtip[valid_indices],50)
+        right_side = utils.find_gt(xtip[valid_indices],1020)
+    
+    valid_indices = valid_indices[slice(left_side,right_side)]
+    
+    #valid_indices = [i for i,x in enumerate(xtip) if x >= 50 and x <= 1020]
+    #valid_indices = utils.consecutive_elements(valid_indices)
+    #valid_indices = max(valid_indices,key=len)
+    
+    x = np.array([cdirection and (1070 + xtip[ind] * -1) or xtip[ind] for ind in valid_indices])
+    y = np.array([ytip[ind] for ind in valid_indices])
+    vbounds_exceeded = sum((y < 600) | (y > 800))
+    return (x,y,vbounds_exceeded == 0 and len(xtip) > 0 and xtip[0] < 0)
+
+def get_tip_trajectory_trial(session,i):
+    xtip = np.array(session.tip_horizontal[i])
+    ytip = np.array(session.tip_vertical[i])
+    cdirection = session.crossing_direction[i]
+    return get_directionless_tip_trajectory(xtip,ytip,cdirection)
+    
+def get_tip_spatial_speed_trial(session,i):
+    x,y,decision = get_tip_trajectory_trial(session,i)
+    xspeed = np.diff(x)
+    yspeed = np.diff(y)
+    speed = np.sqrt(xspeed * xspeed + yspeed * yspeed)
+    sortedindices = np.argsort(x[1:])
+    values = zip(x[sortedindices+1],speed[sortedindices])
+    values = [(g[0],np.average([v[1] for v in g[1]])) for g in itertools.groupby(values,key=lambda p:p[0])]
+    [xvals,svals] = zip(*values)
+    
+    spline = UnivariateSpline(xvals,svals)
+    xs = range(100,1000)
+    speed_spline = spline(xs)
+    return speed_spline,speed,decision
+    
 def get_clipped_trajectories(session):
     return [[x for x in trajectory if x < 1077] for trajectory in session.tip_horizontal_path]    
     
@@ -85,11 +138,13 @@ def merge_sessions(name,sessions):
     mean = utils.flatten([s.mean for s in sessions if s.mean is not None]),
     tip_horizontal = utils.flatten([s.tip_horizontal for s in sessions if s.tip_horizontal is not None]),
     tip_horizontal_path = utils.flatten([s.tip_horizontal_path for s in sessions if s.tip_horizontal_path is not None]),
-    tip_vertical = [],
+    tip_vertical = utils.flatten([s.tip_vertical for s in sessions if s.tip_vertical is not None]),
+    crossing_direction = utils.flatten([s.crossing_direction for s in sessions if s.crossing_direction is not None]),
     step_activity = [], steps = [],
     left_crossings = [],
     right_crossings = [],
-    merged_sessions = sessions)
+    merged_sessions = sessions,
+    session_type = 'merge')
     
     offset = 0
     for s in sessions:

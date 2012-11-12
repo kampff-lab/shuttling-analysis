@@ -11,6 +11,28 @@ import string
 import numpy as np
 import scipy.stats as stats
 
+def find_gt(l,v):
+    try:
+        return next(i for i,x in enumerate(l) if x > v)
+    except StopIteration:
+        return len(l)
+        
+def find_lt(l,v):
+    try:
+        return next(i for i,x in enumerate(l) if x < v)
+    except StopIteration:
+        return len(l)
+
+def test_consecutive(x, y):
+    if len(x) > 0 and x[-1][-1] == (y-1):
+        x[-1].append( y )
+    else:
+        x.append( [y] )
+    return x
+
+def consecutive_elements(l):
+    return reduce(test_consecutive,l,[])
+
 def padded_slice(x,start,stop,fillvalue):
     pad_left = 0
     pad_right = 0
