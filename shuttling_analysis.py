@@ -37,20 +37,20 @@ def shuttling_analysis(path):
     os.chdir(path)
     
 #==============================================================================
-#     if os.path.exists('mean.csv') or os.path.exists('step0.csv'):
-#         print "Deleting existing data..."
-#         remove_file('mean.csv')
-#         remove_file('centroid_x.csv')
-#         remove_file('centroid_y.csv')
-#         remove_file('step0.csv')
-#         remove_file('step1.csv')
-#         remove_file('step2.csv')
-#         remove_file('step3.csv')
-#         remove_file('step4.csv')
-#         remove_file('step5.csv')
-#         remove_file('tip_horizontal.csv')
-#         remove_file('tip_vertical.csv')
-#         remove_file('trial_time.csv')
+    if os.path.exists('mean.csv') or os.path.exists('step0.csv'):
+        print "Deleting existing data..."
+        remove_file('mean.csv')
+        remove_file('centroid_x.csv')
+        remove_file('centroid_y.csv')
+        remove_file('step0.csv')
+        remove_file('step1.csv')
+        remove_file('step2.csv')
+        remove_file('step3.csv')
+        remove_file('step4.csv')
+        remove_file('step5.csv')
+        remove_file('tip_horizontal.csv')
+        remove_file('tip_vertical.csv')
+        remove_file('trial_time.csv')
 #==============================================================================
 
     playerpath = dname + r'\bonsai\Bonsai.Player.exe'        
@@ -60,19 +60,19 @@ def shuttling_analysis(path):
         subprocess.call([playerpath, backgroundbuilder])
     
     if not os.path.exists('mean.csv'):
-        videoprocessing = dname + r'\video_processing.bonsai'
+        videoprocessing = dname + r'\video_processing_tip.bonsai'
         print "Analysing crossing videos..."
         subprocess.call([playerpath, videoprocessing])
         
-    stepfile = 'step0_times.csv'
-    if not os.path.exists(stepfile) or os.stat(stepfile).st_size == 0 or True:
+#    stepfile = 'step0_times.csv'
+#    if not os.path.exists(stepfile) or os.stat(stepfile).st_size == 0 or True:
 #        print "Extracting step times..."
-        session = parser.parse_session(path,path,False,True)
+#        session = parser.parse_session(path,path,False)
 #        process_session.make_step_times(session)
 #        print "Saving step frames..."
 #        buildsteppath = dname + r'\steps\build_step_frames'
 #        os.system(buildsteppath)
-        print "Saving average step frames..."
-        process_session.make_step_means(session)
-        del session
+#        print "Saving average step frames..."
+#        process_session.make_step_means(session)
+#        del session
     os.chdir(currdir)
