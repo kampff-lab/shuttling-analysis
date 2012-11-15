@@ -9,8 +9,32 @@ import cv
 import os
 import glob
 import numpy as np
-import scipy.cluster.hierarchy as hcl
 from collections import deque
+
+def play_video(path,name,posmsec=0,fps=0):
+    capture = cv.CaptureFromFile(path)
+    if fps <= 0:
+        fps = cv.GetCaptureProperty(capture,cv.CV_CAP_PROP_FPS)
+    interval = int(1000.0 / fps)
+    cv.SetCaptureProperty(capture,cv.CV_CAP_PROP_POS_MSEC,posmsec)
+
+    playing = [True]
+    cv.NamedWindow(name)
+    def on_mouse(event, x, y, flags, param):
+        if event == cv.CV_EVENT_RBUTTONDOWN:
+            playing[0] = False
+    cv.SetMouseCallback(name, on_mouse)
+    
+    while playing[0]:
+        frame = cv.QueryFrame(capture)
+        if frame is None:
+            playing[0] = False
+        else:
+            cv.ShowImage(name,frame)
+            cv.WaitKey(interval)
+        
+    cv.DestroyWindow(name)
+    del capture
 
 def load_image_folder(path,iscolor=True):
     images = []

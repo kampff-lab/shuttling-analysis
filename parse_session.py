@@ -26,9 +26,12 @@ def trim_progression_path(progression):
 def parse_session(path,name,analysis=True):
     cwd = os.getcwd()
     os.chdir(path)
+    start_time = None
     left_rewards = utils.ensure_list(np.genfromtxt(r'..\left_rewards.csv',dtype=str))
     right_rewards = utils.ensure_list(np.genfromtxt(r'..\right_rewards.csv',dtype=str))
     reward_times = filter(None,utils.flatten(itertools.izip_longest(left_rewards,right_rewards)))
+    with open(r'..\front_video.csv') as front_video:
+        start_time = next((dateutil.parser.parse(str.split(line)[0]) for line in front_video),None)
         
     if analysis:
         mean = utils.loadfromcsv('mean.csv')
@@ -122,6 +125,7 @@ def parse_session(path,name,analysis=True):
     left_crossings=left_crossings,
     right_crossings=right_crossings,
     trial_time=trial_time,
+    start_time=start_time,
     left_rewards=left_rewards,
     right_rewards=right_rewards,
     reward_times=reward_times,

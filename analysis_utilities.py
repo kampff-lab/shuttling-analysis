@@ -11,17 +11,15 @@ import string
 import numpy as np
 import scipy.stats as stats
 
+def nanmean(x):
+    x = np.ma.masked_array(x,np.isnan(x))
+    return np.mean(x)
+
 def find_gt(l,v):
-    try:
-        return next(i for i,x in enumerate(l) if x > v)
-    except StopIteration:
-        return len(l)
+    return next((i for i,x in enumerate(l) if x > v), len(l))
         
 def find_lt(l,v):
-    try:
-        return next(i for i,x in enumerate(l) if x < v)
-    except StopIteration:
-        return len(l)
+    return next((i for i,x in enumerate(l) if x < v), len(l))
 
 def test_consecutive(x, y):
     if len(x) > 0 and x[-1][-1] == (y-1):

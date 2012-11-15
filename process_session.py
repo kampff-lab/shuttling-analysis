@@ -16,10 +16,15 @@ import parse_session
 import analysis_utilities as utils
 import image_processing as imgproc
 from scipy.interpolate import UnivariateSpline
-import bisect
 
 # for shuttling assay number 1 !!!
 roi_step_centers = [154,292,452,626.5,784,949]
+
+def get_time_video_pos_msec(session,time):
+    return (time - session.start_time).total_seconds() * 1000.0
+
+def get_trial_video_pos_msec(session,trial,frame=0):
+    return get_time_video_pos_msec(session, dateutil.parser.parse(session.trial_time[trial][frame]))
 
 def make_step_means(session):
     for i in range(len(session.steps)):
@@ -103,6 +108,24 @@ def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     y = np.array([ytip[ind] for ind in valid_indices])
     vbounds_exceeded = sum((y < 600) | (y > 800))
     return (x,y,vbounds_exceeded == 0 and len(xtip) > 0 and xtip[0] < 0)
+    
+def get_spatial_variable_interpolation(x,y,interprange):
+    sortedindices = np.argsort(x[1:])
+    values = zip(x[sortedindices+1],y[sortedindices])
+    values = [(g[0],np.average([v[1] for v in g[1]])) for g in itertools.groupby(values,key=lambda p:p[0])]
+    [xvals,yvals] = zip(*values)
+    return np.interp(interprange,xvals,yvals)
+    
+def get_spatial_tip_height_trial(session,i):
+    xtip = np.array(session.tip_horizontal[i])
+    ytip = np.array(session.tip_vertical[i])
+    return get_spatial_variable_interpolation(xtip,ytip,range(100,1000))
+    
+def get_tip_horizontal_speed_trial(session,i):
+    xtip = np.array(session.tip_horizontal[i])
+    xdisplacement = np.diff(xtip)
+    speed = np.sqrt(xdisplacement * xdisplacement)
+    return get_spatial_variable_interpolation(xtip,speed,range(100,1000))
 
 def get_tip_trajectory_trial(session,i):
     xtip = np.array(session.tip_horizontal[i])
@@ -118,12 +141,16 @@ def get_tip_spatial_speed_trial(session,i):
     sortedindices = np.argsort(x[1:])
     values = zip(x[sortedindices+1],speed[sortedindices])
     values = [(g[0],np.average([v[1] for v in g[1]])) for g in itertools.groupby(values,key=lambda p:p[0])]
-    [xvals,svals] = zip(*values)
     
-    spline = UnivariateSpline(xvals,svals)
-    xs = range(100,1000)
-    speed_spline = spline(xs)
-    return speed_spline,speed,decision
+    try:
+        [xvals,svals] = zip(*values)
+    
+        spline = UnivariateSpline(xvals,svals)
+        xs = range(100,1000)
+        speed_spline = spline(xs)
+        return speed_spline,speed,decision
+    except Exception:
+        return None,speed,False
     
 def get_clipped_trajectories(session):
     return [[x for x in trajectory if x < 1077] for trajectory in session.tip_horizontal_path]    
@@ -204,14 +231,14 @@ def step_tip_distribution(session,stepindex):
     return [session.tip_horizontal[i[1]][i[0]] for i in sti if len(i[0]) > 0]
     
 def step_probabilities(session):
-    return [len([1 for trial in step if sum(trial) > 0]) / float(len(session.tip_horizontal)) for step in session.steps]
+    return [1 - (len([1 for trial in step if sum(trial) > 0]) / float(len(session.tip_horizontal))) for step in session.steps]
     
 def manipulated_step_probabilities(session):
     trials = [i for i,trial in enumerate(session.crossing_trial_mapping) if session.manipulation_trials[trial]]
     return conditional_step_probabilities(session,trials)
     
 def conditional_step_probabilities(session,trials):
-    return [len([1 for i in trials if sum(step[i]) > 0]) / float(len(trials)) for step in session.steps]
+    return [1 - (len([1 for i in trials if sum(step[i]) > 0]) / float(len(trials))) for step in session.steps]
     
 def get_tip_horizontal_speed_trials(trials,trial_slice=slice(None)):
     return [np.diff(trial)[trial_slice] for trial in trials]
