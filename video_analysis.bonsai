@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder>
-  <Workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns="https://horizongir.org/bonsai">
+<WorkflowBuilder Version="1.0.453.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
           <q1:PlaybackMode>Video</q1:PlaybackMode>
-          <q1:FileName>..\front_video.mp4</q1:FileName>
-          <q1:PlaybackRate>60</q1:PlaybackRate>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
           <q1:Playing>false</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>
@@ -20,17 +20,10 @@
             <q1:EventDescriptorCategory>annotations.csv</q1:EventDescriptorCategory>
           </q1:EventCategories>
           <q1:EventOffset>PT0S</q1:EventOffset>
-          <q1:DefaultDuration>PT1M</q1:DefaultDuration>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
         </Source>
       </Expression>
-      <Expression xsi:type="SelectMany">
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="WorkflowInput" />
-          </Nodes>
-          <Edges />
-        </Workflow>
-      </Expression>
+      <Expression xsi:type="Merge" />
     </Nodes>
     <Edges>
       <Edge>

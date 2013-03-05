@@ -20,6 +20,19 @@ from scipy.interpolate import UnivariateSpline
 # for shuttling assay number 1 !!!
 roi_step_centers = [154,292,452,626.5,784,949]
 
+def update_mean_series(n,mean,series):
+    n = n + 1
+    if n == 1:
+        mean = np.array(series)
+    else:
+        for i in range(len(mean)):
+            if i >= len(series):
+                break
+            
+            delta = series[i] - mean[i]
+            mean[i] = mean[i] + delta/n
+    return n,mean
+
 def get_time_video_pos_msec(session,time):
     return (time - session.start_time).total_seconds() * 1000.0
 
@@ -90,8 +103,8 @@ def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     valid_indices = utils.consecutive_elements(valid_indices)
     valid_indices = max(valid_indices,key=len)
     
-    cdirection = xtip[valid_indices[0]] > 600
-    if cdirection:
+    rdir = xtip[valid_indices[0]] > 600
+    if rdir:
         left_side = utils.find_lt(xtip[valid_indices],1020)
         right_side = utils.find_lt(xtip[valid_indices],50)
     else:
@@ -104,10 +117,10 @@ def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     #valid_indices = utils.consecutive_elements(valid_indices)
     #valid_indices = max(valid_indices,key=len)
     
-    x = np.array([cdirection and (1070 + xtip[ind] * -1) or xtip[ind] for ind in valid_indices])
+    x = np.array([xtip[ind] for ind in valid_indices])
     y = np.array([ytip[ind] for ind in valid_indices])
     vbounds_exceeded = sum((y < 600) | (y > 800))
-    return (x,y,vbounds_exceeded == 0 and len(xtip) > 0 and xtip[0] < 0)
+    return (x,y,vbounds_exceeded == 0 and len(xtip) > 0 and xtip[0] < 0,rdir)
     
 def get_spatial_variable_interpolation(x,y,interprange):
     sortedindices = np.argsort(x[1:])
@@ -130,8 +143,8 @@ def get_tip_horizontal_speed_trial(session,i):
 def get_tip_trajectory_trial(session,i):
     xtip = np.array(session.tip_horizontal[i])
     ytip = np.array(session.tip_vertical[i])
-    cdirection = session.crossing_direction[i]
-    return get_directionless_tip_trajectory(xtip,ytip,cdirection)
+    rdir = session.crossing_direction[i]
+    return get_directionless_tip_trajectory(xtip,ytip,rdir)
     
 def get_tip_spatial_speed_trial(session,i):
     x,y,decision = get_tip_trajectory_trial(session,i)
@@ -183,6 +196,13 @@ def merge_sessions(name,sessions):
     
     if s.steps is not None:
         result.steps = [utils.flatten([s.steps[i] for s in sessions if s.steps]) for i in range(len(sessions[0].steps))]
+    return result
+
+# in dev: split sessions based on selection criterion (either selection_value or not selection_value)
+def split_sessions(sessions, selection_criterion='light_trial', selection_value=1):
+    result = []
+   # for session in sessions:
+        
     return result
 
 def index_distribution(boolean_trials,s=slice(None)):

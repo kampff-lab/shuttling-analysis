@@ -11,8 +11,15 @@ import string
 import numpy as np
 import scipy.stats as stats
 
+def removenan(x):
+    x = np.array(x)
+    return x[~np.isnan(x)]
+
+def masknan(x):
+    return np.ma.masked_array(x,np.isnan(x))
+
 def nanmean(x):
-    x = np.ma.masked_array(x,np.isnan(x))
+    x = masknan(x)
     return np.mean(x)
 
 def find_gt(l,v):

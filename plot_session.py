@@ -14,6 +14,7 @@ import analysis_utilities as utils
 import image_processing as imgproc
 import process_session
 from rasterplot import rasterplot
+import matplotlib.gridspec as gridspec
 
 def click_data_action(figure,ondataclick):
     def onclick(event):
@@ -66,13 +67,14 @@ def plot_average_crossing_times(merged):
     plt.bar(range(len(merged.merged_sessions)), trial_miu, yerr = [np.zeros(len(trial_err)),trial_err])
     
 def plot_trial_times_end_to_end(name,sessions):
-    fig = plt.figure(name + ' crossing times')
+    fig = plt.figure(name + ' trial times')
     #time_color_map(sessions,plt.cm.jet)
     alternating_color_map(sessions,['b','r'])
     trial_times = [process_session.get_trial_times(session) for session in sessions]
     plot_end_to_end(trial_times)
-    plt.xlabel('trials')
+    plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
+    plt.title('interval between start of first crossing and poke head entry')
     
     # Interactive video playback feature
     def click_playback(figure,sessions):
@@ -151,26 +153,69 @@ def plot_tip_spatial_speed(session):
     plt.colorbar(im)
     return trial_map
     
+def plot_spatial_variable_interpolation_split(fig,session,selector,vmin=None,vmax=None):
+    data = []
+    adjustprops = dict(left=0.1, bottom=0.1, right=0.97, top=0.93, wspace=0.2, hspace=0.2)
+    fig.subplots_adjust(**adjustprops)
+    for i in range(len(session.tip_horizontal)):
+        value = selector(session,i)
+        data.append(value)
+        
+    if session.session_type == 'merge':
+        sessions = session.merged_sessions
+    else:
+        sessions = [session]
+        
+    root = None
+    for i in range(len(sessions)):
+        if root is None:
+            ax = fig.add_subplot(len(sessions),1,i + 1)
+            for label in ax.get_xticklabels():
+                label.visible = False
+            root = ax
+        else:
+            ax = fig.add_subplot(len(sessions),1,i + 1, sharex=root, sharey=root)
+        
+        im = plt.imshow(data,vmin=vmin,vmax=vmax)
+        plt.colorbar(im)
+
+    [plt.axvline(step-100,linewidth=2,color='r') for step in process_session.roi_step_centers]        
+    plt.xlabel('horizontal position (pixels)')
+    plt.ylabel('trials')
+    #plt.xticks(np.array(process_session.roi_step_centers)-100)
+    
 def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None):
     data = []
     for i in range(len(session.tip_horizontal)):
         value = selector(session,i)
         data.append(value)
+        
     im = plt.imshow(data,vmin=vmin,vmax=vmax)
     cb = plt.colorbar(im)
-    [plt.axvline(step-100,linewidth=2,color='b') for step in process_session.roi_step_centers]
+    [plt.axvline(step-100,linewidth=2,color='k') for step in process_session.roi_step_centers]
     if session.session_type == 'merge':
         for i,boundary in enumerate(np.insert(np.cumsum([len(s.trial_time) for s in session.merged_sessions][:-1]),0,0)):
-            #plt.axhline(boundary,linewidth=2,color='k')
-            annotation = session.merged_sessions[i].session_type
-            im.axes.annotate(annotation, xy=(0,boundary), xycoords='data',
-                         xytext=(-230,-4),textcoords='offset points')
+            if i == 0:
+                continue
+            color = 'k'
+            if session.merged_sessions[i].session_type == 'manipulation':
+                color = 'r'
+            #plt.axhline(boundary,linewidth=5,color='b')
+            #annotation = session.merged_sessions[i].name + ' ' + session.merged_sessions[i].session_type
+            im.axes.annotate('', xy=(0,boundary), xycoords='data',
+                         xytext=(-50,0),textcoords='offset points',
+                         arrowprops=dict(facecolor=color,arrowstyle='wedge'))
+            
+            #im.axes.annotate(annotation, xy=(0,boundary), xycoords='data',
+            #             xytext=(-130,-4),textcoords='offset points')
         
         #[plt.axhline(boundary,linewidth=2,color='b') for boundary in np.cumsum([len(s.trial_time) for s in session.merged_sessions][:-1])]
-    
+
+    #im.axes.set_yticklabels(labels)
+    #im.axes.get_yaxis().set_ticks([])
     plt.xlabel('horizontal position (pixels)')
     plt.ylabel('trials')
-    plt.xticks(np.array(process_session.roi_step_centers)-100)
+    plt.xticks(np.array(process_session.roi_step_centers)-100,np.array(process_session.roi_step_centers))
     
     # Interactive video playback feature
     def click_playback(figure,session,selector = lambda y:y):
@@ -194,17 +239,18 @@ def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None
     click_playback(fig,session)
     return cb
     
-def plot_tip_spatial_height_interp(session,vmin=600,vmax=750):
+def plot_tip_spatial_height_interp(session,vmin=600,vmax=700):
     fig = plt.figure(session.name + ' ' + session.session_type + ' height interp')
     cb = plot_spatial_variable_interpolation(fig,session,(lambda s,i:process_session.get_spatial_tip_height_trial(s,i)),vmin,vmax)
-    plt.title('tip height across space')
-    cb.set_label('tip height (pixels)')
-    cb.ax.invert_yaxis()
+    plt.title('distribution of nose tip height with position (single animal)')
+    if cb is not None:
+        cb.set_label('tip height (pixels)')
+        cb.ax.invert_yaxis()
     
 def plot_tip_spatial_speed_interp(session,vmin=0,vmax=20):
     fig = plt.figure(session.name + ' ' + session.session_type + ' speed interp')
     cb = plot_spatial_variable_interpolation(fig,session,(lambda s,i:process_session.get_tip_horizontal_speed_trial(s,i)),vmin,vmax)
-    plt.title('tip speed')
+    plt.title('distribution of nose tip speed with position (single animal)')
     cb.set_label('tip speed (pixels / frame)')
 
 def plot_tip_trajectory(session,i):
@@ -216,11 +262,25 @@ def plot_tip_trajectory(session,i):
     ax.set_ylim(ax.get_ylim()[::-1])
     
 def plot_tip_trajectories(session):
+    lplot = None
+    rplot = None
     plt.figure(session.name + ' ' + session.session_type + ' trajectory')
     for i in range(len(session.tip_horizontal)):
-        x,y,decision = process_session.get_tip_trajectory_trial(session,i)
+        x,y,decision,rdir = process_session.get_tip_trajectory_trial(session,i)
         if decision:
-            plt.plot(x,y)
+            #plt.plot(x,y)
+            if rdir:
+                rplot, = plt.plot(x,y,'r')
+            else:
+                lplot, = plt.plot(x,y,'b')
+   
+    #[plt.axvline(center,linewidth=2,color='k') for center in np.array(process_session.roi_step_centers)]
+    #plt.xlabel('horizontal position (pixels)')
+    #plt.ylabel('vertical position (pixels)')
+    #plt.title('tracked nose tip trajectories')
+    plt.xticks(np.array(process_session.roi_step_centers))
+    plt.legend([lplot,rplot],('left','right'),loc=4)
+                
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])
         
@@ -287,7 +347,10 @@ def plot_step_tip_height_trials_end_to_end(name,sessions,step):
     
 def plot_step_tip_position(name,sessions,steps):
     plt.figure(name + ' step aligned tip position')
-    time_color_map(sessions,plt.cm.spectral)
+    gs = gridspec.GridSpec(2,2,width_ratios=[8,1],height_ratios=[1,8],wspace = 0.05,hspace = 0.05)
+    #time_color_map(sessions,plt.cm.spectral)
+    plt.subplot(gs[2])
+    alternating_color_map(sessions,['black','orange'])
     step_tip_trials_x = [[process_session.get_step_aligned_data(session.tip_horizontal,session,step)[0] for session in sessions] for step in steps]
     step_tip_trials_y = [[process_session.get_step_aligned_data(session.tip_vertical,session,step)[0] for session in sessions] for step in steps]
     
@@ -303,12 +366,39 @@ def plot_step_tip_position(name,sessions,steps):
                 step_tip_trial_sessions_y[s].append(step_tip_trials_y[i][s][k])
     
     [plt.plot(step_tip_trial_sessions_x[i],step_tip_trial_sessions_y[i],'.') for i in range(len(step_tip_trial_sessions_x))]
-    plt.xlabel('x (pixels)')
-    plt.ylabel('y (pixels)')
-    plt.title('step aligned tip positions')
+    plt.xlabel('horizontal position (pixels)')
+    plt.ylabel('vertical position (pixels)')
+    plt.title('nose tip positions aligned on step events (single animal)')
+    plt.xticks(np.array(process_session.roi_step_centers))
     plt.legend([session.session_type for session in sessions])
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])
+    
+    plt.subplot(gs[0])
+    alternating_color_map(sessions,['black','orange'])
+    
+    step_tip_trial_sessions_x = [utils.removenan(session) for session in step_tip_trial_sessions_x]
+    step_tip_trial_sessions_y = [utils.removenan(session) for session in step_tip_trial_sessions_y]
+    minx = np.min([np.min(session) for session in step_tip_trial_sessions_x])
+    maxx = 1075.0
+    miny = np.min([np.min(session) for session in step_tip_trial_sessions_y])
+    maxy = np.max([np.max(session) for session in step_tip_trial_sessions_y])
+    
+    bins = np.linspace(minx, maxx, 100)
+    [plt.hist(step_tip_trial_sessions_x[i],100,range=(minx,maxx),alpha=1-(i*0.5),histtype='stepfilled') for i in range(len(step_tip_trial_sessions_x))]
+    plt.xticks([])
+    plt.yticks([])
+    plt.subplot(gs[3])
+    alternating_color_map(sessions,['black','orange'])
+    bins = np.linspace(miny, maxy, 100)
+    [plt.hist(step_tip_trial_sessions_y[i],bins,alpha=1-(i*0.5),orientation='horizontal',histtype='stepfilled') for i in range(len(step_tip_trial_sessions_y))]
+    ax = plt.gca()
+    plt.xticks([])
+    plt.yticks([])
+    ax.set_ylim(ax.get_ylim()[::-1])
+    #plt.xlim(0,14)
+    plt.xlim(0,40)
+    #return step_tip_trial_sessions_x
     
 def plot_step_average_variable(name,sessions,selector):
     plt.figure(name + ' step aligned tip height')
@@ -395,22 +485,30 @@ def plot_step_trials(name,steps):
 #    plt.figure(session.name + 'step probability')
 #    plt.bar(range(len(session.steps)),process_session.step_probabilities(session))
     
-def plot_step_probability(name,sessions):
-    width = 0.35
+def plot_step_probability(name,sessions,colormap=None):
+    width = 0.9 / (len(sessions) + 1)
     ind = np.arange(6)
     fig = plt.figure(name + ' skip probability')
     ax = fig.add_subplot(111)
-    colormap = get_color_map(sessions,plt.cm.spectral)
+    if colormap is None:
+        colormap = get_color_map(sessions,plt.cm.spectral)
+        
     barplots = []
     for i in range(len(sessions)):
         barplots.append(plt.bar(ind + i * width, process_session.step_probabilities(sessions[i]), width, color = colormap[i]))
         
-    ax.set_xticks(ind + width)
+    ax.set_xticks(ind + 0.5 * width * len(sessions))
     ax.set_xticklabels( ('1', '2', '3', '4', '5', '6') )
-    ax.legend(barplots,[session.name for session in sessions],bbox_to_anchor=(0, 0, 1, 1), bbox_transform=fig.transFigure)
-    plt.xlabel('step skipped')
-    plt.ylabel('probability of skipping steps in a trial')
-    plt.title('skip probability')
+    
+    display = (0,4)
+    ax.legend([barplots[i] for i in display],('stable','manipulation'),bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+       ncol=2, mode="expand", borderaxespad=0.)
+    
+    #ax.legend(('black','red'))
+    #ax.legend(barplots,[session.name for session in sessions],bbox_to_anchor=(0, 0, 1, 1), bbox_transform=fig.transFigure)
+    #plt.xlabel('step skipped\n(single animal across all sessions)')
+    #plt.ylabel('probability of skipping a step')
+    #plt.title('probability of skipping each step')
 
 def plot_session(session):
     plot_average_intensity(session.name,session.mean)
