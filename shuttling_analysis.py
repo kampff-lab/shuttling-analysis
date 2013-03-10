@@ -19,6 +19,11 @@ abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 
 def make_crossings(path="."):
+    if not isinstance(path,basestring):
+        for p in path:
+            make_crossings(p)
+        return
+    
     proceed = True
     analysisFolder = os.path.join(path,'Analysis')
     filename = os.path.join(analysisFolder,'crossings.csv')

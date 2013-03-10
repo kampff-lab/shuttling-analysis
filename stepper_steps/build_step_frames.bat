@@ -1,0 +1,1 @@
+powershell . "%~dp0\build_step_frames.ps1" < NUL
