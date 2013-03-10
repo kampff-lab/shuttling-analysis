@@ -166,11 +166,40 @@ def get_tip_spatial_speed_trial(session,i):
         return None,speed,False
     
 def get_clipped_trajectories(session):
-    return [[x for x in trajectory if x < 1077] for trajectory in session.tip_horizontal_path]    
+    return [[x for x in trajectory if x < 1077] for trajectory in session.tip_horizontal_path]
+
+def get_crossing_expansion(session,trial_variable):
+    trial_expansions = np.bincount(session.crossing_trial_mapping)
+    return utils.flatten([[x]*c for x,c in itertools.izip_longest(trial_variable,trial_expansions,fillvalue=trial_expansions[len(trial_expansions)-1])])
+
+def get_first_crossings_in_trial(session):
+    return np.insert(np.diff(session.crossing_trial_mapping),0,1) > 0
     
-def get_trial_times(session):
-    valid_trials = np.insert(np.diff(session.crossing_trial_mapping),0,1)
-    return [(session.reward_times[session.crossing_trial_mapping[i]] - dateutil.parser.parse(session.trial_time[i][path[0]])).total_seconds() for i,path in enumerate(np.array(session.tip_horizontal_path_indices)[valid_trials]) if session.crossing_trial_mapping[i] < len(session.reward_times)]
+def get_trial_times(session,valid_trials=None):
+    first_crossings_in_trial = get_first_crossings_in_trial(session)
+    if valid_trials is not None:
+        valid_trials = get_crossing_expansion(session,valid_trials)
+        first_crossings_in_trial &= valid_trials
+        
+    return [(session.reward_times[session.crossing_trial_mapping[i]] - dateutil.parser.parse(session.trial_time[i][path[0]])).total_seconds()
+    for i,path in enumerate(np.array(session.tip_horizontal_path_indices)) if first_crossings_in_trial[i]
+    if session.crossing_trial_mapping[i] < len(session.reward_times)]
+    
+# Gets an array of the average height of the nose tip for each crossing
+def get_average_crossing_tip_height(session,valid_trials=None):
+    average_height = np.array([np.mean(trial) for trial in session.tip_vertical_path])
+    if(valid_trials is not None):
+        valid_trials = get_crossing_expansion(session,valid_trials)
+        average_height = [x for x,v in zip(average_height,valid_trials) if v]
+    return average_height
+    
+# Gets an array of the average height of the nose tip for each crossing
+def get_average_crossing_tip_speed(session,valid_trials=None):
+    average_speeds = np.array([np.mean(np.power(np.diff(trialx),2) + np.power(np.diff(trialy),2)) for trialx,trialy in zip(session.tip_horizontal_path,session.tip_vertical_path)])
+    if(valid_trials is not None):
+        valid_trials = get_crossing_expansion(session,valid_trials)
+        average_speeds = [x for x,v in zip(average_speeds,valid_trials) if v]
+    return average_speeds
   
 def merge_sessions(name,sessions):
     result = parse_session.session(
@@ -238,8 +267,11 @@ def step_times(session,stepindex):
     times = [len(sti[i]) > 0 and [trial[sti[i][0]]] or [] for i,trial in enumerate(session.trial_time)]
     centroids = [len(sti[i]) > 0 and [trajectory[sti[i][0]]] or [] for i,trajectory in enumerate(session.centroid_x)]
     #direction = [(len(centroid) > 0 and centroid[0] >= 0) and [centroid[0] < roi_step_centers[stepindex]] or [] for i,centroid in enumerate(centroids)]
-    left = [times[i] for i,centroid in enumerate(centroids) if len(centroid) > 0 and centroid[0] >= 0 and centroid[0] < roi_step_centers[stepindex]]
-    right = [times[i] for i,centroid in enumerate(centroids) if len(centroid) > 0 and centroid[0] >= 0 and centroid[0] > roi_step_centers[stepindex]]
+    
+    left = [times[i] for i in session.left_crossings]
+    right = [times[i] for i in session.right_crossings]
+#    left = [times[i] for i,centroid in enumerate(centroids) if len(centroid) > 0 and centroid[0] >= 0 and centroid[0] < roi_step_centers[stepindex]]
+#    right = [times[i] for i,centroid in enumerate(centroids) if len(centroid) > 0 and centroid[0] >= 0 and centroid[0] > roi_step_centers[stepindex]]
     return times,centroids,left,right
     
 def step_front(session,stepindex):

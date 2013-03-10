@@ -66,11 +66,32 @@ def plot_average_crossing_times(merged):
         trial_err.append(sigma)
     plt.bar(range(len(merged.merged_sessions)), trial_miu, yerr = [np.zeros(len(trial_err)),trial_err])
     
-def plot_trial_times_end_to_end(name,sessions):
+def plot_average_tip_height_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],invert_y=True):
+    plt.figure(name + ' average tip height')
+    alternating_color_map(sessions,colors)
+    average_height = [process_session.get_average_crossing_tip_height(session,conditionselector(session)) for session in sessions]
+    plot_end_to_end(average_height)
+    plt.xlabel('trials (single animal, session colored)')
+    plt.ylabel('average tip height (pixels)')
+    plt.title('average height of the tip of the nose during successive crossings')
+    if invert_y:
+        ax = plt.gca()
+        ax.invert_yaxis()
+        
+def plot_average_tip_speed_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
+    plt.figure(name + ' average tip speed')
+    alternating_color_map(sessions,colors)
+    average_speed = [process_session.get_average_crossing_tip_speed(session,conditionselector(session)) for session in sessions]
+    plot_end_to_end(average_speed)
+    plt.xlabel('trials (single animal, session colored)')
+    plt.ylabel('average tip speed (pixels^2)')
+    plt.title('average speed of the tip of the nose during successive crossings')
+    
+def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
     fig = plt.figure(name + ' trial times')
     #time_color_map(sessions,plt.cm.jet)
-    alternating_color_map(sessions,['b','r'])
-    trial_times = [process_session.get_trial_times(session) for session in sessions]
+    alternating_color_map(sessions,colors)
+    trial_times = [process_session.get_trial_times(session,conditionselector(session)) for session in sessions]
     plot_end_to_end(trial_times)
     plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
@@ -97,9 +118,9 @@ def plot_trial_times_end_to_end(name,sessions):
                 trial_total = trial_total + len_session
             
             pos_msec = process_session.get_time_video_pos_msec(datasession,time)
-            video = '\\..\\front_video.mp4'
+            video = '\\..\\front_video.avi'
             if event.key == 't':
-                video = '\\..\\top_video.mp4'
+                video = '\\..\\top_video.avi'
             imgproc.play_video(datasession.path[0] + video,datasession.name + ' ' + str(pos_msec) + 'msec',pos_msec)
         click_data_action(figure,ondataclick)
     click_playback(fig,sessions)
@@ -234,7 +255,7 @@ def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None
             
             y = selector(y)
             pos_msec = process_session.get_trial_video_pos_msec(datasession,y)
-            imgproc.play_video(datasession.path[0] + '\\..\\front_video.mp4',datasession.name,pos_msec,0)
+            imgproc.play_video(datasession.path[0] + '\\..\\front_video.avi',datasession.name,pos_msec,0)
         click_data_action(figure,ondataclick)
     click_playback(fig,session)
     return cb
@@ -440,6 +461,13 @@ def plot_average_intensity(name,mean):
     ylim = ax.get_ylim()
     ylim = (2,ylim[1])
     ax.set_ylim(ylim)
+    
+def plot_step_activity(session,step):
+    plt.figure(session.name + ' step %s activity' % (step))
+    [plt.plot(activity) for activity in session.step_activity[step]]
+    plt.xlabel('time (frames)')
+    plt.ylabel('roi activity (pixels)')
+    plt.title('step activity')
     
 def plot_step_trials(name,steps):
     plt.figure(name + 'steps')
