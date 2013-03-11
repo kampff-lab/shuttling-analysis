@@ -66,6 +66,33 @@ def plot_average_crossing_times(merged):
         trial_err.append(sigma)
     plt.bar(range(len(merged.merged_sessions)), trial_miu, yerr = [np.zeros(len(trial_err)),trial_err])
     
+def plot_average_tip_height_all_conditions(name,sessions):
+    plot_average_tip_height_light_trials(name,sessions)
+    plot_average_tip_height_light_change(name,sessions)
+    plot_average_tip_height_direction_trials(name,sessions)
+    
+def plot_average_tip_height_light_trials(name,sessions):
+    plot_average_tip_height_two_conditions(name,'light','dark',sessions,lambda s:s.light_trials)
+    
+def plot_average_tip_height_light_change(name,sessions):
+    plot_average_tip_height_two_conditions(name,'change','no change',sessions,lambda s:np.insert(np.diff(s.light_trials),0,1))
+    
+def plot_average_tip_height_direction_trials(name,sessions):
+    plot_average_tip_height_two_conditions(name,'left','right',sessions,lambda s:np.array(s.crossing_direction))
+    
+def plot_average_tip_height_two_conditions(name,condition1,condition2,sessions,selector):
+    figurename = "%s %s/%s" % (name,condition1,condition2)
+    plot_average_tip_height_end_to_end(figurename,sessions,selector,colors='r')
+    ax = plt.gca()
+    line = ax.lines[0]
+    line.set_label(condition1)
+    
+    plot_average_tip_height_end_to_end(figurename,sessions,lambda s:~selector(s),colors='b',invert_y=False)
+    ax = plt.gca()
+    line = ax.lines[-1]
+    line.set_label(condition2)
+    plt.legend()
+    
 def plot_average_tip_height_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],invert_y=True):
     plt.figure(name + ' average tip height')
     alternating_color_map(sessions,colors)

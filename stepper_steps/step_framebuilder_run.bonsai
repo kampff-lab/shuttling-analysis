@@ -5,8 +5,8 @@
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
           <q1:PlaybackMode>Events</q1:PlaybackMode>
-          <q1:FileName>..\whisker_video.avi</q1:FileName>
-          <q1:PlaybackRate>240</q1:PlaybackRate>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
           <q1:Playing>true</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>
@@ -34,7 +34,7 @@
             </Expression>
             <Expression xsi:type="Do">
               <Sink xsi:type="q1:SaveTimestampedImage">
-                <q1:FileName>Whiskers\Step7\Right\step.png</q1:FileName>
+                <q1:FileName>Steps\Step7\Right\step.png</q1:FileName>
               </Sink>
             </Expression>
             <Expression xsi:type="WorkflowOutput" />

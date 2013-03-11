@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.461.0">
-  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.Scripting;assembly=Bonsai.Scripting" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+<WorkflowBuilder Version="1.0.468.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
           <q1:PlaybackMode>Events</q1:PlaybackMode>
           <q1:FileName>..\front_video.avi</q1:FileName>
-          <q1:PlaybackRate>60</q1:PlaybackRate>
+          <q1:PlaybackRate>10</q1:PlaybackRate>
           <q1:Playing>true</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>
             <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
           </q1:EventCategories>
-          <q1:EventOffset>-PT2S</q1:EventOffset>
+          <q1:EventOffset>-PT0.5S</q1:EventOffset>
           <q1:DefaultDuration>PT5S</q1:DefaultDuration>
         </Source>
       </Expression>
@@ -24,7 +24,9 @@
             <Expression xsi:type="Select">
               <Transform xsi:type="q2:Grayscale" />
             </Expression>
-            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Average" />
+            </Expression>
             <Expression xsi:type="Select">
               <Transform xsi:type="q1:TimestampImageFileMatch">
                 <q1:BackgroundFolder>Background</q1:BackgroundFolder>
@@ -72,11 +74,15 @@
             <Expression xsi:type="Select">
               <Transform xsi:type="q2:LargestBinaryRegion" />
             </Expression>
+            <Expression xsi:type="WorkflowOutput" />
             <Expression xsi:type="Zip" />
             <Expression xsi:type="Select">
-              <Transform xsi:type="q2:DrawContours" />
+              <Transform xsi:type="q2:DrawContours">
+                <q2:MaxLevel>1</q2:MaxLevel>
+                <q2:Thickness>-1</q2:Thickness>
+              </Transform>
             </Expression>
-            <Expression xsi:type="WorkflowOutput" />
+            <Expression xsi:type="Zip" />
             <Expression xsi:type="Zip" />
             <Expression xsi:type="Select">
               <Transform xsi:type="q2:SortBinaryRegions" />
@@ -286,17 +292,44 @@
                 </q2:RegionOfInterest>
               </Transform>
             </Expression>
-            <Expression xsi:type="Where">
-              <Condition xsi:type="q3:PythonCondition">
-                <q3:Script>def process(input):
-    return input is not None</q3:Script>
-              </Condition>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Threshold">
+                <q2:ThresholdValue>18</q2:ThresholdValue>
+                <q2:MaxValue>255</q2:MaxValue>
+                <q2:ThresholdType>Binary</q2:ThresholdType>
+              </Transform>
             </Expression>
             <Expression xsi:type="Select">
-              <Transform xsi:type="q2:Average" />
+              <Transform xsi:type="q2:Skeletonization">
+                <q2:DistanceType>L2</q2:DistanceType>
+                <q2:LaplacianAperture>7</q2:LaplacianAperture>
+                <q2:RidgeThreshold>-256.8</q2:RidgeThreshold>
+              </Transform>
             </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Item1</Selector>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Smooth">
+                <q2:SmoothType>Gaussian</q2:SmoothType>
+                <q2:Size1>51</q2:Size1>
+                <q2:Size2>51</q2:Size2>
+                <q2:Sigma1>0</q2:Sigma1>
+                <q2:Sigma2>0</q2:Sigma2>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Zip" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:MorphologicalOperation">
+                <q2:Size>
+                  <q2:Width>3</q2:Width>
+                  <q2:Height>3</q2:Height>
+                </q2:Size>
+                <q2:Anchor>
+                  <q2:X>1</q2:X>
+                  <q2:Y>1</q2:Y>
+                </q2:Anchor>
+                <q2:Shape>Cross</q2:Shape>
+                <q2:Iterations>1</q2:Iterations>
+                <q2:Operator>Erode</q2:Operator>
+              </Transform>
             </Expression>
           </Nodes>
           <Edges>
@@ -322,7 +355,7 @@
             </Edge>
             <Edge>
               <From>3</From>
-              <To>15</To>
+              <To>16</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -332,17 +365,12 @@
             </Edge>
             <Edge>
               <From>5</From>
-              <To>21</To>
-              <Label>Source</Label>
+              <To>6</To>
+              <Label>Other</Label>
             </Edge>
             <Edge>
               <From>6</From>
               <To>8</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>6</From>
-              <To>23</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -351,8 +379,18 @@
               <Label>Source</Label>
             </Edge>
             <Edge>
+              <From>7</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
               <From>8</From>
               <To>9</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>8</From>
+              <To>24</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -367,72 +405,87 @@
             </Edge>
             <Edge>
               <From>10</From>
-              <To>14</To>
+              <To>15</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
               <From>11</From>
-              <To>17</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>12</From>
-              <To>13</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>13</From>
-              <To>16</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>14</From>
-              <To>20</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>16</From>
-              <To>3</To>
-              <Label>Other</Label>
-            </Edge>
-            <Edge>
-              <From>17</From>
-              <To>12</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>17</From>
               <To>18</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
-              <From>18</From>
-              <To>13</To>
-              <Label>Other</Label>
+              <From>12</From>
+              <To>14</To>
+              <Label>Source</Label>
             </Edge>
             <Edge>
-              <From>19</From>
+              <From>14</From>
+              <To>17</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>15</From>
+              <To>21</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>16</From>
+              <To>25</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>17</From>
               <To>16</To>
               <Label>Other</Label>
             </Edge>
             <Edge>
-              <From>20</From>
+              <From>18</From>
+              <To>12</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>18</From>
               <To>19</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
-              <From>21</From>
-              <To>6</To>
+              <From>19</From>
+              <To>14</To>
               <Label>Other</Label>
             </Edge>
             <Edge>
+              <From>20</From>
+              <To>17</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>21</From>
+              <To>20</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
               <From>22</From>
-              <To>3</To>
+              <To>26</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
               <From>23</From>
+              <To>25</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>24</From>
               <To>22</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>25</From>
+              <To>13</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>26</From>
+              <To>23</To>
               <Label>Source</Label>
             </Edge>
           </Edges>
@@ -451,6 +504,7 @@
     <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.Grayscale, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Average, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.BehaviorAnalysis.TimestampImageFileMatch, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
@@ -462,7 +516,8 @@
     <Type>Bonsai.Vision.SortBinaryRegions, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.BehaviorAnalysis.TipTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.RoiActivity, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Scripting.PythonCondition, Bonsai.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Vision.Average, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Skeletonization, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Smooth, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.MorphologicalOperation, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
   </ExtensionTypes>
 </WorkflowBuilder>

@@ -14,9 +14,53 @@ import parse_session as parser
 import process_session
 import numpy as np
 import matplotlib as mpl
+import dateutil
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+# old bonsai
+#    playerpath = dname + r'\bonsai\Bonsai.Player.exe'
+# current bonsai
+analysisfolder = 'Analysis'
+backgroundfolder = 'Background'
+playerpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
+editorpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Editor.exe'
+
+def analysis_pipeline(datafolders):
+    
+    for path in datafolders:    
+        print "Pre-processing "+ path + "..."
+        print "Generating crossings..."
+        make_crossings(path)
+        analysispath = os.path.join(path,analysisfolder)
+        currdir = os.getcwd()
+        os.chdir(analysispath)
+        videoanalysis = os.path.join(dname,'video_analysis.bonsai')
+        print "Filtering crossings..."
+        subprocess.call([editorpath,videoanalysis,'--start'])
+        os.chdir(currdir)
+
+    print "Running analysis pipeline..."
+    for path in datafolders:
+        analysispath = os.path.join(path,analysisfolder)
+        shuttling_analysis(analysispath)
+    
+def background_check(path):
+    crossings_filename = os.path.join(path,'crossings.csv')
+    crossings = utils.ensure_list(np.genfromtxt(crossings_filename,dtype=str))
+    if len(crossings) > 0:        
+        backgroundpath = os.path.join(path,backgroundfolder)
+        backgroundfiles = sorted(os.listdir(backgroundpath))
+        if len(backgroundfiles) == 0:
+            # There are no backgrounds!
+            return False
+            
+        last_crossing = crossings[-1]
+        last_background = os.path.splitext(backgroundfiles[-1])[0]
+        separator = last_background.find('_') + 1
+        last_background = last_background[separator:].replace('_',':')
+        return last_background > last_crossing
+    return True
 
 def make_crossings(path="."):
     if not isinstance(path,basestring):
@@ -25,8 +69,8 @@ def make_crossings(path="."):
         return
     
     proceed = True
-    analysisFolder = os.path.join(path,'Analysis')
-    filename = os.path.join(analysisFolder,'crossings.csv')
+    analysispath = os.path.join(path,analysisfolder)
+    filename = os.path.join(analysispath,'crossings.csv')
     timestamp_filename = os.path.join(path,'front_video.csv')
     activity_filename = os.path.join(path,'center_activity.csv')
     if os.path.exists(filename):
@@ -38,8 +82,8 @@ def make_crossings(path="."):
         proceed = False
     
     if proceed:
-        if not os.path.exists(analysisFolder):
-            os.mkdir(analysisFolder)
+        if not os.path.exists(analysispath):
+            os.mkdir(analysispath)
             
         timestamps = np.genfromtxt(timestamp_filename,usecols=0,dtype=str)
         if os.path.exists(activity_filename):
@@ -121,14 +165,15 @@ def shuttling_analysis(path):
 #        remove_file('trial_time.csv')
 #==============================================================================
 
-    # old bonsai
-#    playerpath = dname + r'\bonsai\Bonsai.Player.exe'
-    # current bonsai
-    playerpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
-    if not os.path.exists('Background'):
+    if not os.path.exists(backgroundfolder):
         backgroundbuilder = dname + r'\background_builder_v2.bonsai'
         print "Extracting raw backgrounds..."
         subprocess.call([playerpath, backgroundbuilder])
+        if not background_check(path):
+            print "Found crossings with no matching background!"
+            proceed = input('Proceed?')
+            if not isinstance(proceed,bool) or not proceed:
+                raise Exception("Aborted by user!")
     
 #==============================================================================
 #     if not os.path.exists('crossings_cleaned.csv'):

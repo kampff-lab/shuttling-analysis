@@ -385,12 +385,6 @@ def unload():
                 </q2:RegionOfInterest>
               </Transform>
             </Expression>
-            <Expression xsi:type="Where">
-              <Condition xsi:type="q3:PythonCondition">
-                <q3:Script>def process(input):
-    return input is not None</q3:Script>
-              </Condition>
-            </Expression>
           </Nodes>
           <Edges>
             <Edge>
@@ -435,8 +429,8 @@ def unload():
             </Edge>
             <Edge>
               <From>6</From>
-              <To>30</To>
-              <Label>Source</Label>
+              <To>7</To>
+              <Label>Other</Label>
             </Edge>
             <Edge>
               <From>7</From>
@@ -563,11 +557,6 @@ def unload():
               <To>28</To>
               <Label>Source</Label>
             </Edge>
-            <Edge>
-              <From>30</From>
-              <To>7</To>
-              <Label>Other</Label>
-            </Edge>
           </Edges>
         </Workflow>
       </Expression>
@@ -598,6 +587,5 @@ def unload():
     <Type>Bonsai.Vision.SortBinaryRegions, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.BehaviorAnalysis.TipTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.RoiActivity, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Scripting.PythonCondition, Bonsai.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
   </ExtensionTypes>
 </WorkflowBuilder>
