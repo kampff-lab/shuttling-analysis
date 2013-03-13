@@ -14,7 +14,6 @@ import parse_session as parser
 import process_session
 import numpy as np
 import matplotlib as mpl
-import dateutil
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -31,14 +30,22 @@ def analysis_pipeline(datafolders):
     for path in datafolders:    
         print "Pre-processing "+ path + "..."
         print "Generating crossings..."
-        make_crossings(path)
+        newcrossings = make_crossings(path)
         analysispath = os.path.join(path,analysisfolder)
         currdir = os.getcwd()
         os.chdir(analysispath)
         videoanalysis = os.path.join(dname,'video_analysis.bonsai')
-        print "Filtering crossings..."
-        subprocess.call([editorpath,videoanalysis,'--start'])
-        os.chdir(currdir)
+        if newcrossings:
+            print "Filtering crossings..."
+            subprocess.call([editorpath,videoanalysis,'--start'])
+            os.chdir(currdir)
+            
+    for path in datafolders:
+        print "Checking backgrounds for " + path + "..."
+        analysispath = os.path.join(path,analysisfolder)
+        backgroundsready = make_backgrounds(analysispath)
+        if not backgroundsready:
+            raise Exception("Aborted due to missing backgrounds!")
 
     print "Running analysis pipeline..."
     for path in datafolders:
@@ -53,22 +60,21 @@ def background_check(path):
         backgroundfiles = sorted(os.listdir(backgroundpath))
         if len(backgroundfiles) == 0:
             # There are no backgrounds!
-            return False
+            return (False,None)
             
         last_crossing = crossings[-1]
         last_background = os.path.splitext(backgroundfiles[-1])[0]
         separator = last_background.find('_') + 1
         last_background = last_background[separator:].replace('_',':')
-        return last_background > last_crossing
-    return True
+        return (last_background > last_crossing,last_crossing.replace(':','_'))
+    return (True,None)
 
 def make_crossings(path="."):
     if not isinstance(path,basestring):
         for p in path:
             make_crossings(p)
-        return
+        return True
     
-    proceed = True
     analysispath = os.path.join(path,analysisfolder)
     filename = os.path.join(analysispath,'crossings.csv')
     timestamp_filename = os.path.join(path,'front_video.csv')
@@ -76,28 +82,53 @@ def make_crossings(path="."):
     if os.path.exists(filename):
         ans = raw_input('File exists - overwrite? (y/n)')
         if ans != 'y':
-            proceed = False
+            return False
     
     if not os.path.exists(timestamp_filename):
-        proceed = False
+        return False
     
-    if proceed:
-        if not os.path.exists(analysispath):
-            os.mkdir(analysispath)
-            
-        timestamps = np.genfromtxt(timestamp_filename,usecols=0,dtype=str)
-        if os.path.exists(activity_filename):
-            area = np.genfromtxt(activity_filename)
-        else:
-            area = np.genfromtxt(timestamp_filename,usecols=4)
+    if not os.path.exists(analysispath):
+        os.mkdir(analysispath)
         
-        crosses = np.insert(np.diff(np.array(area > 500000,dtype=int)),0,0)
-        cross_in = mpl.mlab.find(crosses > 0)
-        cross_out = mpl.mlab.find(crosses < 0)
-        ici = cross_in[1:] - cross_out[0:len(cross_out)-1]
-        valid_crosses = np.insert(ici > 120,0,True)
-        cross_times = timestamps[cross_in[valid_crosses]]
-        np.savetxt(filename,cross_times,'%s')
+    timestamps = np.genfromtxt(timestamp_filename,usecols=0,dtype=str)
+    if os.path.exists(activity_filename):
+        area = np.genfromtxt(activity_filename)
+    else:
+        area = np.genfromtxt(timestamp_filename,usecols=4)
+    
+    crosses = np.insert(np.diff(np.array(area > 500000,dtype=int)),0,0)
+    cross_in = mpl.mlab.find(crosses > 0)
+    cross_out = mpl.mlab.find(crosses < 0)
+    ici = cross_in[1:] - cross_out[0:len(cross_out)-1]
+    valid_crosses = np.insert(ici > 120,0,True)
+    cross_times = timestamps[cross_in[valid_crosses]]
+    np.savetxt(filename,cross_times,'%s')
+    return True
+    
+def make_backgrounds(path=None):
+    currdir = os.getcwd()
+    if path is not None:
+        os.chdir(path)
+    
+    if os.path.exists(backgroundfolder):
+        ans = raw_input('Backgrounds exist - overwrite? (y/n)')
+        if ans != 'y':
+            return True
+        else:
+            shutil.rmtree('Background')
+        
+    backgroundbuilder = dname + r'\background_builder_v2.bonsai'
+    print "Extracting raw backgrounds..."
+    subprocess.call([playerpath, backgroundbuilder])
+    validbackgrounds,lastcrossing = background_check(path)
+    if not validbackgrounds:
+        print "Found crossings with no matching background!"
+        ans = raw_input('Last crossing is %s - proceed? (y/n)' % (lastcrossing))
+        if ans != 'y':
+            return False
+                
+    os.chdir(currdir)
+    return True
 
 def remove_file(path):
     for filename in glob.glob(path):
@@ -165,15 +196,15 @@ def shuttling_analysis(path):
 #        remove_file('trial_time.csv')
 #==============================================================================
 
-    if not os.path.exists(backgroundfolder):
-        backgroundbuilder = dname + r'\background_builder_v2.bonsai'
-        print "Extracting raw backgrounds..."
-        subprocess.call([playerpath, backgroundbuilder])
-        if not background_check(path):
-            print "Found crossings with no matching background!"
-            proceed = input('Proceed?')
-            if not isinstance(proceed,bool) or not proceed:
-                raise Exception("Aborted by user!")
+#    if not os.path.exists(backgroundfolder):
+#        backgroundbuilder = dname + r'\background_builder_v2.bonsai'
+#        print "Extracting raw backgrounds..."
+#        subprocess.call([playerpath, backgroundbuilder])
+#        if not background_check(path):
+#            print "Found crossings with no matching background!"
+#            proceed = input('Proceed?')
+#            if not isinstance(proceed,bool) or not proceed:
+#                raise Exception("Aborted by user!")
     
 #==============================================================================
 #     if not os.path.exists('crossings_cleaned.csv'):

@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.468.0">
+<WorkflowBuilder Version="1.0.470.0">
   <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
           <q1:PlaybackMode>Events</q1:PlaybackMode>
           <q1:FileName>..\front_video.avi</q1:FileName>
-          <q1:PlaybackRate>10</q1:PlaybackRate>
+          <q1:PlaybackRate>60</q1:PlaybackRate>
           <q1:Playing>true</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>
             <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
           </q1:EventCategories>
-          <q1:EventOffset>-PT0.5S</q1:EventOffset>
+          <q1:EventOffset>-PT2S</q1:EventOffset>
           <q1:DefaultDuration>PT5S</q1:DefaultDuration>
         </Source>
       </Expression>
@@ -292,45 +292,6 @@
                 </q2:RegionOfInterest>
               </Transform>
             </Expression>
-            <Expression xsi:type="Select">
-              <Transform xsi:type="q2:Threshold">
-                <q2:ThresholdValue>18</q2:ThresholdValue>
-                <q2:MaxValue>255</q2:MaxValue>
-                <q2:ThresholdType>Binary</q2:ThresholdType>
-              </Transform>
-            </Expression>
-            <Expression xsi:type="Select">
-              <Transform xsi:type="q2:Skeletonization">
-                <q2:DistanceType>L2</q2:DistanceType>
-                <q2:LaplacianAperture>7</q2:LaplacianAperture>
-                <q2:RidgeThreshold>-256.8</q2:RidgeThreshold>
-              </Transform>
-            </Expression>
-            <Expression xsi:type="Select">
-              <Transform xsi:type="q2:Smooth">
-                <q2:SmoothType>Gaussian</q2:SmoothType>
-                <q2:Size1>51</q2:Size1>
-                <q2:Size2>51</q2:Size2>
-                <q2:Sigma1>0</q2:Sigma1>
-                <q2:Sigma2>0</q2:Sigma2>
-              </Transform>
-            </Expression>
-            <Expression xsi:type="Zip" />
-            <Expression xsi:type="Select">
-              <Transform xsi:type="q2:MorphologicalOperation">
-                <q2:Size>
-                  <q2:Width>3</q2:Width>
-                  <q2:Height>3</q2:Height>
-                </q2:Size>
-                <q2:Anchor>
-                  <q2:X>1</q2:X>
-                  <q2:Y>1</q2:Y>
-                </q2:Anchor>
-                <q2:Shape>Cross</q2:Shape>
-                <q2:Iterations>1</q2:Iterations>
-                <q2:Operator>Erode</q2:Operator>
-              </Transform>
-            </Expression>
           </Nodes>
           <Edges>
             <Edge>
@@ -389,11 +350,6 @@
               <Label>Source</Label>
             </Edge>
             <Edge>
-              <From>8</From>
-              <To>24</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
               <From>9</From>
               <To>10</To>
               <Label>Source</Label>
@@ -430,7 +386,7 @@
             </Edge>
             <Edge>
               <From>16</From>
-              <To>25</To>
+              <To>13</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -463,31 +419,6 @@
               <To>20</To>
               <Label>Source</Label>
             </Edge>
-            <Edge>
-              <From>22</From>
-              <To>26</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>23</From>
-              <To>25</To>
-              <Label>Other</Label>
-            </Edge>
-            <Edge>
-              <From>24</From>
-              <To>22</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>25</From>
-              <To>13</To>
-              <Label>Source</Label>
-            </Edge>
-            <Edge>
-              <From>26</From>
-              <To>23</To>
-              <Label>Source</Label>
-            </Edge>
           </Edges>
         </Workflow>
       </Expression>
@@ -516,8 +447,5 @@
     <Type>Bonsai.Vision.SortBinaryRegions, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.BehaviorAnalysis.TipTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.RoiActivity, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Vision.Skeletonization, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Vision.Smooth, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
-    <Type>Bonsai.Vision.MorphologicalOperation, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
   </ExtensionTypes>
 </WorkflowBuilder>

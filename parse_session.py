@@ -73,7 +73,7 @@ def parse_session(path,name,analysis=True):
         tip_horizontal_path = [[x for x in trial if x >= 0] for trial in tip_horizontal]
         tip_vertical_path = [[x for x in trial if x >= 0] for trial in tip_vertical]
         tip_horizontal_path_indices = [[i for i,x in enumerate(trial) if x >= 0] for trial in tip_horizontal];
-        crossing_direction = [x[0] > 600 for x in tip_horizontal_path]
+        crossing_direction = [x[0] > 640 for x in tip_horizontal_path]
         left_crossings = [i for i,x in enumerate(crossing_direction) if x]
         right_crossings = [i for i,x in enumerate(crossing_direction) if not x]
         for i in left_crossings:

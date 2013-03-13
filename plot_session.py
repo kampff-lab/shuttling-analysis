@@ -50,6 +50,13 @@ def plot_end_to_end(data):
         offset += epochlen
         plt.plot(indices,epoch,'.')
         
+def plot_end_to_end_xy(data):
+    offset = 0
+    for x,y,epochlen in data:
+        x += offset
+        offset += epochlen
+        plt.plot(x,y,'.')
+        
 def plot_crossing_times(session,fmt='.'):
     plt.figure(session.name + ' crossing times')
     plt.plot(process_session.get_trial_times(session),fmt)
@@ -71,48 +78,76 @@ def plot_average_tip_height_all_conditions(name,sessions):
     plot_average_tip_height_light_change(name,sessions)
     plot_average_tip_height_direction_trials(name,sessions)
     
-def plot_average_tip_height_light_trials(name,sessions):
-    plot_average_tip_height_two_conditions(name,'light','dark',sessions,lambda s:s.light_trials)
+def plot_average_tip_height_light_trials(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_height_two_conditions(name,'light','dark',sessions,lambda s:s.light_trials,crop=crop)
     
-def plot_average_tip_height_light_change(name,sessions):
-    plot_average_tip_height_two_conditions(name,'change','no change',sessions,lambda s:np.insert(np.diff(s.light_trials),0,1))
+def plot_average_tip_height_light_change(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_height_two_conditions(name,'change','no change',sessions,lambda s:np.insert(np.diff(s.light_trials),0,1),crop=crop)
     
-def plot_average_tip_height_direction_trials(name,sessions):
-    plot_average_tip_height_two_conditions(name,'left','right',sessions,lambda s:np.array(s.crossing_direction))
+def plot_average_tip_height_direction_trials(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_height_two_conditions(name,'left','right',sessions,lambda s:np.array(s.crossing_direction),crop=crop)
     
-def plot_average_tip_height_two_conditions(name,condition1,condition2,sessions,selector):
+def plot_average_tip_height_two_conditions(name,condition1,condition2,sessions,selector,crop=process_session.default_crop):
     figurename = "%s %s/%s" % (name,condition1,condition2)
-    plot_average_tip_height_end_to_end(figurename,sessions,selector,colors='r')
+    plot_average_tip_height_end_to_end(figurename,sessions,selector,colors='r',crop=crop)
     ax = plt.gca()
     line = ax.lines[0]
     line.set_label(condition1)
     
-    plot_average_tip_height_end_to_end(figurename,sessions,lambda s:~selector(s),colors='b',invert_y=False)
+    fig = plot_average_tip_height_end_to_end(figurename,sessions,lambda s:~selector(s),colors='b',invert_y=False,crop=crop)
     ax = plt.gca()
     line = ax.lines[-1]
     line.set_label(condition2)
     plt.legend()
+    plt.xlabel('crossings (single animal)')
+    return fig
     
-def plot_average_tip_height_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],invert_y=True):
-    plt.figure(name + ' average tip height')
+def plot_average_tip_height_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],invert_y=True,crop=[0,1280]):
+    fig = plt.figure(name + ' average tip height')
     alternating_color_map(sessions,colors)
-    average_height = [process_session.get_average_crossing_tip_height(session,conditionselector(session)) for session in sessions]
-    plot_end_to_end(average_height)
-    plt.xlabel('trials (single animal, session colored)')
+    average_height = [process_session.get_average_crossing_tip_height(session,conditionselector(session),crop) for session in sessions]
+    plot_end_to_end_xy(average_height)
+    plt.xlabel('crossings (single animal, session colored)')
     plt.ylabel('average tip height (pixels)')
     plt.title('average height of the tip of the nose during successive crossings')
     if invert_y:
         ax = plt.gca()
         ax.invert_yaxis()
+    return fig
+    
+def plot_average_tip_speed_light_trials(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_speed_two_conditions(name,'light','dark',sessions,lambda s:s.light_trials,crop=crop)
+    
+def plot_average_tip_speed_light_change(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_speed_two_conditions(name,'change','no change',sessions,lambda s:np.insert(np.diff(s.light_trials),0,1),crop=crop)
+    
+def plot_average_tip_speed_direction_trials(name,sessions,crop=process_session.default_crop):
+    return plot_average_tip_speed_two_conditions(name,'left','right',sessions,lambda s:np.array(s.crossing_direction),crop=crop)    
+    
+def plot_average_tip_speed_two_conditions(name,condition1,condition2,sessions,selector,crop=process_session.default_crop):
+    figurename = "%s %s/%s" % (name,condition1,condition2)
+    plot_average_tip_speed_end_to_end(figurename,sessions,selector,colors='r',crop=crop)
+    ax = plt.gca()
+    line = ax.lines[0]
+    line.set_label(condition1)
+    
+    fig = plot_average_tip_speed_end_to_end(figurename,sessions,lambda s:~selector(s),colors='b',crop=crop)
+    ax = plt.gca()
+    line = ax.lines[-1]
+    line.set_label(condition2)
+    plt.legend()
+    plt.xlabel('crossings (single animal)')
+    return fig
         
-def plot_average_tip_speed_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
-    plt.figure(name + ' average tip speed')
+def plot_average_tip_speed_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],crop=process_session.default_crop):
+    fig = plt.figure(name + ' average tip speed')
     alternating_color_map(sessions,colors)
-    average_speed = [process_session.get_average_crossing_tip_speed(session,conditionselector(session)) for session in sessions]
-    plot_end_to_end(average_speed)
-    plt.xlabel('trials (single animal, session colored)')
-    plt.ylabel('average tip speed (pixels^2)')
+    average_speed = [process_session.get_average_crossing_tip_speed(session,conditionselector(session),crop) for session in sessions]
+    plot_end_to_end_xy(average_speed)
+    plt.xlabel('crossings (single animal, session colored)')
+    plt.ylabel('average tip speed (pixels / frame)')
     plt.title('average speed of the tip of the nose during successive crossings')
+    return fig
     
 def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
     fig = plt.figure(name + ' trial times')
@@ -151,6 +186,7 @@ def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,co
             imgproc.play_video(datasession.path[0] + video,datasession.name + ' ' + str(pos_msec) + 'msec',pos_msec)
         click_data_action(figure,ondataclick)
     click_playback(fig,sessions)
+    return fig
         
 def plot_progression(session):
     plt.figure(session.name + ' progression')
@@ -240,7 +276,7 @@ def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None
         
     im = plt.imshow(data,vmin=vmin,vmax=vmax)
     cb = plt.colorbar(im)
-    [plt.axvline(step-100,linewidth=2,color='k') for step in process_session.roi_step_centers]
+    [plt.axvline(step-process_session.interpolation_range[0],linewidth=2,color='k') for step in process_session.roi_step_centers]
     if session.session_type == 'merge':
         for i,boundary in enumerate(np.insert(np.cumsum([len(s.trial_time) for s in session.merged_sessions][:-1]),0,0)):
             if i == 0:
@@ -262,8 +298,8 @@ def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None
     #im.axes.set_yticklabels(labels)
     #im.axes.get_yaxis().set_ticks([])
     plt.xlabel('horizontal position (pixels)')
-    plt.ylabel('trials')
-    plt.xticks(np.array(process_session.roi_step_centers)-100,np.array(process_session.roi_step_centers))
+    plt.ylabel('crossings')
+    plt.xticks(np.array(process_session.roi_step_centers)-process_session.interpolation_range[0],np.array(process_session.roi_step_centers))
     
     # Interactive video playback feature
     def click_playback(figure,session,selector = lambda y:y):
@@ -288,18 +324,20 @@ def plot_spatial_variable_interpolation(fig,session,selector,vmin=None,vmax=None
     return cb
     
 def plot_tip_spatial_height_interp(session,vmin=600,vmax=700):
-    fig = plt.figure(session.name + ' ' + session.session_type + ' height interp')
+    fig = plt.figure(session.name + ' position tip height ')
     cb = plot_spatial_variable_interpolation(fig,session,(lambda s,i:process_session.get_spatial_tip_height_trial(s,i)),vmin,vmax)
-    plt.title('distribution of nose tip height with position (single animal)')
+    plt.title('distribution of nose tip height with position')
     if cb is not None:
         cb.set_label('tip height (pixels)')
         cb.ax.invert_yaxis()
+    return fig
     
 def plot_tip_spatial_speed_interp(session,vmin=0,vmax=20):
-    fig = plt.figure(session.name + ' ' + session.session_type + ' speed interp')
+    fig = plt.figure(session.name + ' position tip speed')
     cb = plot_spatial_variable_interpolation(fig,session,(lambda s,i:process_session.get_tip_horizontal_speed_trial(s,i)),vmin,vmax)
-    plt.title('distribution of nose tip speed with position (single animal)')
+    plt.title('distribution of nose tip speed with position')
     cb.set_label('tip speed (pixels / frame)')
+    return fig
 
 def plot_tip_trajectory(session,i):
     plt.figure(session.name + ' ' + session.session_type + ' trajectory')
@@ -309,28 +347,28 @@ def plot_tip_trajectory(session,i):
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])
     
-def plot_tip_trajectories(session):
+def plot_tip_trajectories(session,crop=[0,1280]):
     lplot = None
     rplot = None
-    plt.figure(session.name + ' ' + session.session_type + ' trajectory')
-    for i in range(len(session.tip_horizontal)):
-        x,y,decision,rdir = process_session.get_tip_trajectory_trial(session,i)
-        if decision:
-            #plt.plot(x,y)
-            if rdir:
-                rplot, = plt.plot(x,y,'r')
-            else:
-                lplot, = plt.plot(x,y,'b')
+    fig = plt.figure(session.name + ' ' + session.session_type + ' trajectory')
+    for i in range(1,len(session.tip_horizontal)-1):
+        x,y,rdir = process_session.get_tip_trajectory_trial(session,i,crop)
+        #plt.plot(x,y)
+        if rdir:
+            rplot, = plt.plot(x,y,'b')
+        else:
+            lplot, = plt.plot(x,y,'r')
    
     #[plt.axvline(center,linewidth=2,color='k') for center in np.array(process_session.roi_step_centers)]
     #plt.xlabel('horizontal position (pixels)')
     #plt.ylabel('vertical position (pixels)')
     #plt.title('tracked nose tip trajectories')
-    plt.xticks(np.array(process_session.roi_step_centers))
+    #plt.xticks(np.array(process_session.roi_step_centers))
     plt.legend([lplot,rplot],('left','right'),loc=4)
                 
     ax = plt.gca()
     ax.set_ylim(ax.get_ylim()[::-1])
+    return fig
         
 def plot_latency_curves(name,sessions):
     plt.figure(name + ' cumulative latency')

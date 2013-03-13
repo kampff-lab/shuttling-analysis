@@ -18,7 +18,10 @@ import image_processing as imgproc
 from scipy.interpolate import UnivariateSpline
 
 # for shuttling assay number 1 !!!
-roi_step_centers = [154,292,452,626.5,784,949]
+#roi_step_centers = [154,292,452,626.5,784,949]
+roi_step_centers = [114,281,420,580,750,905,1056,1200]
+interpolation_range = range(50,1250)
+default_crop = [0,1280]
 
 def update_mean_series(n,mean,series):
     n = n + 1
@@ -132,19 +135,21 @@ def get_spatial_variable_interpolation(x,y,interprange):
 def get_spatial_tip_height_trial(session,i):
     xtip = np.array(session.tip_horizontal[i])
     ytip = np.array(session.tip_vertical[i])
-    return get_spatial_variable_interpolation(xtip,ytip,range(100,1000))
+    return get_spatial_variable_interpolation(xtip,ytip,interpolation_range)
     
 def get_tip_horizontal_speed_trial(session,i):
     xtip = np.array(session.tip_horizontal[i])
     xdisplacement = np.diff(xtip)
     speed = np.sqrt(xdisplacement * xdisplacement)
-    return get_spatial_variable_interpolation(xtip,speed,range(100,1000))
+    return get_spatial_variable_interpolation(xtip,speed,interpolation_range)
 
-def get_tip_trajectory_trial(session,i):
+def get_tip_trajectory_trial(session,i,crop=[0,1280]):
     xtip = np.array(session.tip_horizontal[i])
     ytip = np.array(session.tip_vertical[i])
     rdir = session.crossing_direction[i]
-    return get_directionless_tip_trajectory(xtip,ytip,rdir)
+    valid_samples = (xtip > crop[0]) & (xtip < crop[1])
+#    return get_directionless_tip_trajectory(xtip,ytip,rdir)
+    return xtip[valid_samples],ytip[valid_samples],rdir
     
 def get_tip_spatial_speed_trial(session,i):
     x,y,decision = get_tip_trajectory_trial(session,i)
@@ -159,11 +164,16 @@ def get_tip_spatial_speed_trial(session,i):
         [xvals,svals] = zip(*values)
     
         spline = UnivariateSpline(xvals,svals)
-        xs = range(100,1000)
+        xs = interpolation_range
         speed_spline = spline(xs)
         return speed_spline,speed,decision
     except Exception:
         return None,speed,False
+        
+def get_clipped_trial_variable(session,i,variable,crop=default_crop):
+    xtip = np.array(session.tip_horizontal[i])
+    valid_samples = (xtip > crop[0]) & (xtip < crop[1])
+    return np.array(variable)[valid_samples]
     
 def get_clipped_trajectories(session):
     return [[x for x in trajectory if x < 1077] for trajectory in session.tip_horizontal_path]
@@ -186,20 +196,34 @@ def get_trial_times(session,valid_trials=None):
     if session.crossing_trial_mapping[i] < len(session.reward_times)]
     
 # Gets an array of the average height of the nose tip for each crossing
-def get_average_crossing_tip_height(session,valid_trials=None):
-    average_height = np.array([np.mean(trial) for trial in session.tip_vertical_path])
+# Outputs a tuple/list of [trial_variable,trial_indices,numberoftrials]
+# This allows for plotting data end-to-end and retain valid offsets for different colorings
+def get_average_crossing_tip_height(session,valid_trials=None,crop=default_crop):
+    average_height = np.array([np.mean(get_clipped_trial_variable(session,i,trial,crop)) for i,trial in enumerate(session.tip_vertical)])
     if(valid_trials is not None):
         valid_trials = get_crossing_expansion(session,valid_trials)
-        average_height = [x for x,v in zip(average_height,valid_trials) if v]
-    return average_height
+        zipped_trials = map(np.array, zip(*[(i,x) for i,(x,v) in enumerate(zip(average_height,valid_trials)) if v]))
+        if zipped_trials != []:
+            return zipped_trials + [len(average_height)]
+        else:
+            return [np.array([]),np.array([]),len(average_height)]
+#        average_height = [x for x,v in zip(average_height,valid_trials) if v]
+    return [np.array(range(len(average_height))),average_height,len(average_height)]
     
 # Gets an array of the average height of the nose tip for each crossing
-def get_average_crossing_tip_speed(session,valid_trials=None):
-    average_speeds = np.array([np.mean(np.power(np.diff(trialx),2) + np.power(np.diff(trialy),2)) for trialx,trialy in zip(session.tip_horizontal_path,session.tip_vertical_path)])
+# Outputs a tuple/list of [trial_variable,trial_indices,numberoftrials]
+# This allows for plotting data end-to-end and retain valid offsets for different colorings
+def get_average_crossing_tip_speed(session,valid_trials=None,crop=default_crop):
+    average_speeds = np.array([np.mean(np.sqrt(np.power(np.diff(get_clipped_trial_variable(session,i,trialx,crop)),2) + np.power(np.diff(get_clipped_trial_variable(session,i,trialy,crop)),2))) for i,(trialx,trialy) in enumerate(zip(session.tip_horizontal,session.tip_vertical))])
     if(valid_trials is not None):
         valid_trials = get_crossing_expansion(session,valid_trials)
-        average_speeds = [x for x,v in zip(average_speeds,valid_trials) if v]
-    return average_speeds
+        zipped_trials = map(np.array, zip(*[(i,x) for i,(x,v) in enumerate(zip(average_speeds,valid_trials)) if v]))
+        if zipped_trials != []:
+            return zipped_trials + [len(average_speeds)]
+        else:
+            return [np.array([]),np.array([]),len(average_speeds)]        
+#        average_speeds = [x for x,v in zip(average_speeds,valid_trials) if v]
+    return [np.array(range(len(average_speeds))),average_speeds,len(average_speeds)]
   
 def merge_sessions(name,sessions):
     result = parse_session.session(
@@ -213,7 +237,7 @@ def merge_sessions(name,sessions):
     left_crossings = [],
     right_crossings = [],
     merged_sessions = sessions,
-    session_type = 'merge')
+    session_type = 'merged')
     
     offset = 0
     for s in sessions:
