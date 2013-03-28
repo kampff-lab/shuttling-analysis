@@ -51,19 +51,18 @@ def parse_session(path,name,analysis=True):
                 crossing_trial_mapping.append(0)
                 
         # extract light trial pattern and tile it to be as long as the number of trials
-        light_trials = np.genfromtxt(r'..\light_trials.csv',dtype=bool)
-        light_trials = np.tile(light_trials, (len(reward_times) / len(light_trials) + 1))
-        light_trials = light_trials[0:len(reward_times)]
+        if os.path.exists(r'..\light_trials.csv'):
+            light_trials = np.genfromtxt(r'..\light_trials.csv',dtype=bool)
+            light_trials = np.tile(light_trials, (len(reward_times) / len(light_trials) + 1))
+            light_trials = light_trials[0:len(reward_times)]
         
-        light_trial_crossing_count = np.bincount(crossing_trial_mapping)
-        crossing_light_condition = utils.flatten([[x]*c for x,c in zip(light_trials,light_trial_crossing_count)])
-        
-#        light_trials = [x[0] for x in utils.loadfromcsv(r'..\light_trials.csv', convert=lambda x:(len(x)-5)*-1)]
-#        light_trials = light_trials*int(math.ceil(len(trial_time)/len(light_trials)))
-#        light_trials = light_trials[0:len(trial_time)]
+            light_trial_crossing_count = np.bincount(crossing_trial_mapping)
+            crossing_light_condition = utils.flatten([[x]*c for x,c in zip(light_trials,light_trial_crossing_count)])
+        else:
+            light_trials = None
+            crossing_light_condition = None
         
         stepfiles = [f for f in glob.glob("step*.csv") if len(f) <= 9]
-#        stepfiles = ['step%s.csv' % (s) for s in range(6)]
         step_activity = [utils.loadfromcsv(step) for step in stepfiles]
         step_threshold = [[np.array([x > 100000 and 1 or 0 for x in trial]) for trial in step] for step in step_activity]
         steps = [[np.insert(np.diff(trial),0,0) > 0 for trial in step] for step in step_threshold]
@@ -83,16 +82,6 @@ def parse_session(path,name,analysis=True):
                 steps[len(steps)-1-s][i] = tmp
             for j in range(len(tip_horizontal_path[i])):
                 tip_horizontal_path[i][j] = 1078 + (tip_horizontal_path[i][j] * -1)
-#        tip_horizontal_path = [trim_progression_path(trial) for trial in tip_horizontal_path]
-                
-#        stepframefiles = ['Steps\Step%s' % (s) for s in range(6)]
-#        step_analysis = []
-#        for f in stepframefiles:
-#            images = load_image_folder(f)
-#            distances = pixel_distance_matrix(images)
-#            clusters = hcl.complete(distances)
-#            del images
-#            step_analysis.append((distances, clusters))
     else:
         mean = None
         centroid_x = None
@@ -111,6 +100,7 @@ def parse_session(path,name,analysis=True):
         crossing_trial_mapping = None
         step_times = None
         light_trials = None
+        crossing_light_condition = None
 
     if os.path.exists(r'..\left_trials.csv'):
         left_trials = np.genfromtxt(r'..\left_trials.csv',dtype=bool)

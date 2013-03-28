@@ -19,7 +19,7 @@ def save_figure(fig):
     fig.savefig(filename + '.png')
 
 def session_summary_stepperassay(datafolders):
-    currdir = os.getcwd()    
+    currdir = os.getcwd()
     
     valid_positions = [200,1000]
     tip_height_limits = [600,300]
@@ -46,28 +46,12 @@ def session_summary_stepperassay(datafolders):
         plt.ylim(speed_limits)
         save_figure(fig)
         
-        fig = plts.plot_average_tip_speed_light_trials(name,sessions,crop=valid_positions)
-        plt.ylim(speed_limits)
-        save_figure(fig)
-        
-        fig = plts.plot_average_tip_speed_light_change(name,sessions,crop=valid_positions)
-        plt.ylim(speed_limits)
-        save_figure(fig)
-        
         fig = plts.plot_average_tip_speed_direction_trials(name,sessions,crop=valid_positions)
         plt.ylim(speed_limits)
         save_figure(fig)
         
         # Plot average tip height under different conditions
         fig = plts.plot_average_tip_height_end_to_end(name,sessions,crop=valid_positions)
-        plt.ylim(tip_height_limits)
-        save_figure(fig)
-        
-        fig = plts.plot_average_tip_height_light_trials(name,sessions,crop=valid_positions)
-        plt.ylim(tip_height_limits)
-        save_figure(fig)
-        
-        fig = plts.plot_average_tip_height_light_change(name,sessions,crop=valid_positions)
         plt.ylim(tip_height_limits)
         save_figure(fig)
         

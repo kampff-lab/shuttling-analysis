@@ -224,7 +224,7 @@ def shuttling_analysis(path):
 #==============================================================================
 
     if not os.path.exists('mean.csv'):
-        videoprocessing = dname + r'\video_processing_tip_steppers_lightbox.bonsai'
+        videoprocessing = dname + r'\video_processing_tip_servo_lightbox.bonsai'
         print "Analysing crossing videos..."
         subprocess.call([playerpath, videoprocessing])
 
