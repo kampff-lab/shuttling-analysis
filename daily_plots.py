@@ -18,7 +18,7 @@ def save_figure(fig):
     filename = fig.get_label().replace(' ','_').replace('/','_')
     fig.savefig(filename + '.png')
 
-def session_summary_stepperassay(datafolders):
+def session_summary_servoassay(datafolders):
     currdir = os.getcwd()
     
     valid_positions = [200,1000]
@@ -62,17 +62,24 @@ def session_summary_stepperassay(datafolders):
         # Plot nose tip height across sessions
         merged_sessions = procs.merge_sessions(name,sessions)
         fig = plts.plot_tip_spatial_height_interp(merged_sessions,vmin=450,vmax=520)
+        plt.xlim(valid_positions)
         save_figure(fig)
         
         # Plot nose tip speed across sessions
         fig = plts.plot_tip_spatial_speed_interp(merged_sessions,vmin=0,vmax=20)
+        plt.xlim(valid_positions)
         save_figure(fig)
-        
-        # Plot nose tip trajectories for each session
+
+        # Individual session plots        
         for session in sessions:
+            # Plot nose tip trajectories
             fig = plts.plot_tip_trajectories(session,crop=valid_positions)
             plt.xlim([0,1280])
             plt.ylim([680,0])
+            save_figure(fig)
+            
+            # Plot poke activation        
+            fig = plts.plot_poke_activation(session)
             save_figure(fig)
         del sessions
         plt.close('all')

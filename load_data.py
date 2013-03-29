@@ -13,9 +13,10 @@ def load_path(basefolder):
     sessions = []
     datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1) if os.path.exists(path + '\\Analysis')]
     for path in datafolders:
-        path_parts = os.path.split(path)
-        subject = path_parts[1]
-        date = os.path.split(path_parts[0])[1]
+        path_parts = os.path.split(os.path.split(path)[0])
+        date = path_parts[1]
+        path_parts = os.path.split(path_parts[0])
+        subject = path_parts[1]        
         sessions.append(parser.parse_session(path,subject + ' ' + date))
     return sessions
     

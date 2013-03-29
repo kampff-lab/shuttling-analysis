@@ -71,6 +71,16 @@ def get_aligned_data(data,indices,before=0,after=0,padinvalid=True):
 
 def meanstd(x,axis=None):
     return stats.nanmean(x,axis),stats.nanstd(x,axis)
+    
+def find_peaks(data):
+    return (np.diff(np.sign(np.diff(data))) < 0).nonzero()[0] + 1 # local max
+    
+def find_troughs(data):
+    return (np.diff(np.sign(np.diff(data))) > 0).nonzero()[0] + 1 # local min
+    
+def get_peak_statistics(data):
+    peaks = find_peaks(data)
+    return meanstd(data[peaks])
 
 def ensure_list(x):
     if len(x.shape) < 1:

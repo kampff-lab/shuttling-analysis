@@ -35,6 +35,13 @@ def parse_session(path,name,analysis=True):
         start_time = next((dateutil.parser.parse(str.split(line)[0]) for line in front_video),None)
         
     if analysis:
+        if os.path.exists(r'..\left_poke.csv'):
+            left_poke = [np.genfromtxt(r'..\left_poke.csv',usecols=0),np.genfromtxt(r'..\left_poke.csv',usecols=1,dtype=str)]
+            right_poke = [np.genfromtxt(r'..\right_poke.csv',usecols=0),np.genfromtxt(r'..\right_poke.csv',usecols=1,dtype=str)]
+        else:
+            left_poke = None
+            right_poke = None
+        
         mean = utils.loadfromcsv('mean.csv')
         centroid_x = utils.loadfromcsv('centroid_x.csv')
         centroid_y = utils.loadfromcsv('centroid_y.csv')
@@ -101,6 +108,8 @@ def parse_session(path,name,analysis=True):
         step_times = None
         light_trials = None
         crossing_light_condition = None
+        left_poke = None
+        right_poke = None
 
     if os.path.exists(r'..\left_trials.csv'):
         left_trials = np.genfromtxt(r'..\left_trials.csv',dtype=bool)
@@ -142,4 +151,6 @@ def parse_session(path,name,analysis=True):
     manipulation_trials=manipulation_trials,
     session_type=session_type,
     light_trials=light_trials,
-    crossing_light_condition=crossing_light_condition)
+    crossing_light_condition=crossing_light_condition,
+    left_poke=left_poke,
+    right_poke=right_poke)

@@ -6,6 +6,7 @@ Created on %(date)s
 """
 
 import cv
+import bisect
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as hcl
@@ -628,6 +629,49 @@ def plot_distance_statistics(name,distances,clusters):
     
     plt.figure(name + ' cluster dendrogram')
     hcl.dendrogram(clusters)
+    
+def plot_poke_activation(session):
+    fig = plt.figure(session.name + ' poke activation')
+    left_plot = plt.plot(session.left_poke[0],'y')
+    right_plot = plt.plot(session.right_poke[0],'k')
+    left_rewards = [bisect.bisect_left(session.left_poke[1],reward) for reward in session.left_rewards]
+    right_rewards = [bisect.bisect_left(session.right_poke[1],reward) for reward in session.right_rewards]
+    reward_lines = plt.vlines(left_rewards,0,100,'r')
+    reward_lines = plt.vlines(right_rewards,0,100,'r')
+    plt.xlabel('Samples')
+    plt.ylabel('Activation (a.u.)')
+    plt.legend( (left_plot[0], right_plot[0], reward_lines), ('Left Poke', 'Right Poke', 'Rewards') )
+    plt.title('left/right poke activation')
+    return fig
+    
+def plot_poke_statistics(name,sessions):
+    barwidth = 0.35
+    fig = plt.figure(name + ' poke activation')
+    left_pokes = map(list, zip(*[utils.meanstd(session.left_poke[0][session.left_poke[0] > 200]) for session in sessions]))
+    right_pokes = map(list, zip(*[utils.meanstd(session.right_poke[0][session.right_poke[0] > 200]) for session in sessions]))
+    
+    ax = fig.add_subplot(111)
+    indices = np.arange(len(sessions))
+    left_rects = ax.bar(indices, left_pokes[0], barwidth, color='r', yerr=left_pokes[1])
+    right_rects = ax.bar(indices+barwidth, right_pokes[0], barwidth, color='y', yerr=right_pokes[1])
+
+    ax.set_xlabel('Sessions')
+    ax.set_ylabel('Activation (a.u.)')
+    ax.set_title('Reward-triggered poke activation values')
+    ax.set_xticks(indices+barwidth)
+    ax.set_xticklabels( [session.name for session in sessions] )
+    ax.legend( (left_rects[0], right_rects[0]), ('Left Poke', 'Right Poke') )
+    
+    def autolabel(rects):
+        # attach some text labels
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%d'%int(height),
+                    ha='center', va='bottom')
+                
+    autolabel(left_rects)
+    autolabel(right_rects)    
+    return fig
     
 def plot_average(name,images):
     mean = imgproc.average_image_list(images)
