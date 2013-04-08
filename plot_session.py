@@ -23,14 +23,17 @@ def click_data_action(figure,ondataclick):
             ondataclick(event)
     figure.canvas.mpl_connect('button_press_event',onclick)
     
-def get_color_map(data,colormap=plt.cm.jet):
+def get_color_cycle(data,colormap=plt.cm.jet):
     return [colormap(i) for i in np.linspace(0, 0.9, len(data))]
     
+def get_alternating_color_cycle(data,colors):
+    return [colors[i % len(colors)] for i in range(len(data))]
+    
 def alternating_color_map(data,colors):
-    plt.gca().set_color_cycle([colors[i % len(colors)] for i in range(len(data))])
+    plt.gca().set_color_cycle(get_alternating_color_cycle(data,colors))
 
 def time_color_map(data,colormap=plt.cm.jet):
-    plt.gca().set_color_cycle(get_color_map(data,colormap))
+    plt.gca().set_color_cycle(get_color_cycle(data,colormap))
 
 def plot_time_var(trials):
     time_color_map(trials)
@@ -58,16 +61,27 @@ def plot_end_to_end_xy(data):
         offset += epochlen
         plt.plot(x,y,'.')
         
+def bar_end_to_end(data,colorcycle):
+    offset = 0
+    rects = []
+    for i in range(len(data)):
+        epoch = data[i]
+        epochlen = len(epoch)
+        indices = range(offset,offset+epochlen)
+        offset += epochlen
+        rects.append(plt.bar(indices,epoch,facecolor=colorcycle[i]))
+    return rects
+        
 def plot_crossing_times(session,fmt='.'):
     plt.figure(session.name + ' crossing times')
-    plt.plot(process_session.get_trial_times(session),fmt)
+    plt.plot(process_session.get_first_crossing_trial_times(session),fmt)
     
 def plot_average_crossing_times(merged):
     plt.figure(merged.name + ' average crossing times')
     trial_miu = []
     trial_err = []
     for session in merged.merged_sessions:
-        trial_times = process_session.get_trial_times(session)
+        trial_times = process_session.get_first_crossing_trial_times(session)
         miu = np.mean(trial_times)
         sigma = np.std(trial_times)
         trial_miu.append(miu)
@@ -150,15 +164,24 @@ def plot_average_tip_speed_end_to_end(name,sessions,conditionselector=lambda x:N
     plt.title('average speed of the tip of the nose during successive crossings')
     return fig
     
-def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
+def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None):
     fig = plt.figure(name + ' trial times')
     #time_color_map(sessions,plt.cm.jet)
-    alternating_color_map(sessions,colors)
-    trial_times = [process_session.get_trial_times(session,conditionselector(session)) for session in sessions]
-    plot_end_to_end(trial_times)
-    plt.xlabel('trials (single animal, session colored)')
+    trial_time_color = get_alternating_color_cycle(sessions,['b'])
+    effective_time_color = get_alternating_color_cycle(sessions,['r'])
+    effective_trial_times = [process_session.get_first_crossing_trial_times(session,conditionselector(session)) for session in sessions]
+    trial_times = [[i.total_seconds() for i in session.inter_reward_intervals] for session in sessions]
+    rects_total = bar_end_to_end(trial_times,trial_time_color)
+    rects_effective = bar_end_to_end(effective_trial_times,effective_time_color)
+    boundaries = process_session.get_boundary_indices(trial_times)
+    if len(boundaries) > 0:
+        ylim = plt.gca().get_ylim()
+        plt.vlines(boundaries,ylim[0],ylim[1])
+    
+    plt.xlabel('trials (single animal)')
     plt.ylabel('time to reward (s)')
-    plt.title('interval between start of first crossing and poke head entry')
+    plt.title('session trial times')
+    plt.legend([rects_total[0][0],rects_effective[0][0]],('total time','from first crossing'))
     
     # Interactive video playback feature
     def click_playback(figure,sessions):
@@ -181,12 +204,23 @@ def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,co
                 trial_total = trial_total + len_session
             
             pos_msec = process_session.get_time_video_pos_msec(datasession,time)
-            video = '\\..\\front_video.avi'
-            if event.key == 't':
-                video = '\\..\\top_video.avi'
-            imgproc.play_video(datasession.path[0] + video,datasession.name + ' ' + str(pos_msec) + 'msec',pos_msec)
+            fps = 120
+            video = '\\..\\top_video.avi'
+            if event.key == 'f':
+                video = '\\..\\front_video.avi'
+            imgproc.play_video(datasession.path[0] + video,datasession.name + ' ' + str(pos_msec) + 'msec',pos_msec,fps)
         click_data_action(figure,ondataclick)
     click_playback(fig,sessions)
+    return fig
+    
+def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
+    fig = plt.figure(name + ' effective trial times')
+    alternating_color_map(sessions,colors)
+    effective_trial_times = [process_session.get_first_crossing_trial_times(session,conditionselector(session)) for session in sessions]
+    plot_end_to_end(effective_trial_times)    
+    plt.xlabel('trials (single animal, session colored)')
+    plt.ylabel('time to reward (s)')
+    plt.title('interval between start of first crossing and poke head entry')
     return fig
         
 def plot_progression(session):
@@ -579,17 +613,17 @@ def plot_step_trials(name,steps):
 #    plt.figure(session.name + 'step probability')
 #    plt.bar(range(len(session.steps)),process_session.step_probabilities(session))
     
-def plot_step_probability(name,sessions,colormap=None):
+def plot_step_probability(name,sessions,colorcycle=None):
     width = 0.9 / (len(sessions) + 1)
     ind = np.arange(6)
     fig = plt.figure(name + ' skip probability')
     ax = fig.add_subplot(111)
-    if colormap is None:
-        colormap = get_color_map(sessions,plt.cm.spectral)
+    if colorcycle is None:
+        colorcycle = get_color_cycle(sessions,plt.cm.spectral)
         
     barplots = []
     for i in range(len(sessions)):
-        barplots.append(plt.bar(ind + i * width, process_session.step_probabilities(sessions[i]), width, color = colormap[i]))
+        barplots.append(plt.bar(ind + i * width, process_session.step_probabilities(sessions[i]), width, color = colorcycle[i]))
         
     ax.set_xticks(ind + 0.5 * width * len(sessions))
     ax.set_xticklabels( ('1', '2', '3', '4', '5', '6') )
@@ -634,13 +668,24 @@ def plot_poke_activation(session):
     fig = plt.figure(session.name + ' poke activation')
     left_plot = plt.plot(session.left_poke[0],'y')
     right_plot = plt.plot(session.right_poke[0],'k')
-    left_rewards = [bisect.bisect_left(session.left_poke[1],reward) for reward in session.left_rewards]
-    right_rewards = [bisect.bisect_left(session.right_poke[1],reward) for reward in session.right_rewards]
-    reward_lines = plt.vlines(left_rewards,0,100,'r')
-    reward_lines = plt.vlines(right_rewards,0,100,'r')
+    
+    reward_lines = None
+    if len(session.left_rewards) > 0:
+        left_rewards = [bisect.bisect_left(session.left_poke[1],reward) for reward in session.left_rewards]
+        reward_lines = plt.vlines(left_rewards,0,100,'r')
+
+    if len(session.right_rewards) > 0:
+        right_rewards = [bisect.bisect_left(session.right_poke[1],reward) for reward in session.right_rewards]        
+        reward_lines = plt.vlines(right_rewards,0,100,'r')
+        
     plt.xlabel('Samples')
     plt.ylabel('Activation (a.u.)')
-    plt.legend( (left_plot[0], right_plot[0], reward_lines), ('Left Poke', 'Right Poke', 'Rewards') )
+    
+    if reward_lines is None:
+        plt.legend( (left_plot[0], right_plot[0]), ('Left Poke', 'Right Poke') )
+    else:
+        plt.legend( (left_plot[0], right_plot[0], reward_lines), ('Left Poke', 'Right Poke', 'Rewards') )
+        
     plt.title('left/right poke activation')
     return fig
     

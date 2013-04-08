@@ -96,6 +96,9 @@ def weighted_image_mean(weights,filenames,resultpath):
             cv.Add(image,result,result)
     cv.SaveImage(resultpath,result)
     
+def get_boundary_indices(data):
+    return np.cumsum([len(data[i]) for i in range(len(data)-1)])
+    
 def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     #valid_indices = [i for i,x in enumerate(xtip) if x > 0]
     #valid_indices = utils.consecutive_elements(valid_indices)
@@ -185,7 +188,7 @@ def get_crossing_expansion(session,trial_variable):
 def get_first_crossings_in_trial(session):
     return np.insert(np.diff(session.crossing_trial_mapping),0,1) > 0
     
-def get_trial_times(session,valid_trials=None):
+def get_first_crossing_trial_times(session,valid_trials=None):
     first_crossings_in_trial = get_first_crossings_in_trial(session)
     if valid_trials is not None:
         valid_trials = get_crossing_expansion(session,valid_trials)

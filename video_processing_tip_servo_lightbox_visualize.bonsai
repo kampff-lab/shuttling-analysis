@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.470.0">
+<WorkflowBuilder Version="1.0.481.0">
   <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
@@ -7,7 +7,7 @@
           <q1:PlaybackMode>Events</q1:PlaybackMode>
           <q1:FileName>..\front_video.avi</q1:FileName>
           <q1:PlaybackRate>60</q1:PlaybackRate>
-          <q1:Playing>true</q1:Playing>
+          <q1:Playing>false</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>
             <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
@@ -284,6 +284,19 @@
                 </q2:RegionOfInterest>
               </Transform>
             </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Item1</Selector>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>0</q2:X>
+                  <q2:Y>0</q2:Y>
+                  <q2:Width>0</q2:Width>
+                  <q2:Height>0</q2:Height>
+                </q2:RegionOfInterest>
+              </Transform>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge>
@@ -324,6 +337,11 @@
             <Edge>
               <From>6</From>
               <To>8</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>6</From>
+              <To>22</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -409,6 +427,11 @@
             <Edge>
               <From>21</From>
               <To>20</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>22</From>
+              <To>23</To>
               <Label>Source</Label>
             </Edge>
           </Edges>

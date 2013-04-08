@@ -100,7 +100,10 @@ def make_crossings(path="."):
     cross_in = mpl.mlab.find(crosses > 0)
     cross_out = mpl.mlab.find(crosses < 0)
     ici = cross_in[1:] - cross_out[0:len(cross_out)-1]
-    valid_crosses = np.insert(ici > 120,0,True)
+    if len(cross_in) > 0:
+        valid_crosses = np.insert(ici > 120,0,True)
+    else:
+        valid_crosses = np.array([],dtype=bool)
     cross_times = timestamps[cross_in[valid_crosses]]
     np.savetxt(filename,cross_times,'%s')
     return True

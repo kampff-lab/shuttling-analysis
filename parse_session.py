@@ -122,6 +122,8 @@ def parse_session(path,name,analysis=True):
     
     reward_times = [dateutil.parser.parse(time) for time in reward_times]
     inter_reward_intervals = np.diff(reward_times)
+    if len(reward_times) > 0:
+        inter_reward_intervals = np.insert(inter_reward_intervals,0,reward_times[0] - start_time)
 
     os.chdir(cwd)
     return session(

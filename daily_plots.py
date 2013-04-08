@@ -11,8 +11,12 @@ import plot_session as plts
 import process_session as procs
 import matplotlib.pyplot as plt
 import analysis_utilities as utils
+import process_database as procdb
+import plot_database as plotdb
 
-daily_figures_storage = r'C:/Users/IntelligentSystems/Documents/Insync/kampff.lab@gmail.com/protocols/shuttling/figures'
+storage_base = r'C:/Users/IntelligentSystems/Documents/Insync/kampff.lab@gmail.com/'
+daily_figures_storage = storage_base + r'protocols/shuttling/figures'
+subject_database_storage = storage_base + r'animals'
 
 def save_figure(fig):
     filename = fig.get_label().replace(' ','_').replace('/','_')
@@ -36,8 +40,20 @@ def session_summary_servoassay(datafolders):
         # Load data
         sessions = load_data.load_path(path)
         
+        # Load database
+        database_file = os.path.join(subject_database_storage,name + '.csv')
+        database = procdb.load_database(database_file)
+        
+        # Plot weight distribution over time
+        fig = plotdb.plot_weight_distribution(name,database,sessions)
+        save_figure(fig)
+        
         # Plot trial times
         fig = plts.plot_trial_times_end_to_end(name,sessions)
+        save_figure(fig)
+        
+        # Plot effective trial times
+        fig = plts.plot_effective_trial_times_end_to_end(name,sessions)
         plt.ylim([0,10])
         save_figure(fig)
 
@@ -61,7 +77,7 @@ def session_summary_servoassay(datafolders):
         
         # Plot nose tip height across sessions
         merged_sessions = procs.merge_sessions(name,sessions)
-        fig = plts.plot_tip_spatial_height_interp(merged_sessions,vmin=450,vmax=520)
+        fig = plts.plot_tip_spatial_height_interp(merged_sessions,vmin=480,vmax=550)
         plt.xlim(valid_positions)
         save_figure(fig)
         
