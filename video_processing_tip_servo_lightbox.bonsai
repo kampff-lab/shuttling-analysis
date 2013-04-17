@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.461.0">
+<WorkflowBuilder Version="1.0.490.0">
   <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.Scripting;assembly=Bonsai.Scripting" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
@@ -64,7 +64,7 @@ def unload():
             </Expression>
             <Expression xsi:type="Select">
               <Transform xsi:type="q2:Threshold">
-                <q2:ThresholdValue>2</q2:ThresholdValue>
+                <q2:ThresholdValue>4</q2:ThresholdValue>
                 <q2:MaxValue>255</q2:MaxValue>
                 <q2:ThresholdType>Binary</q2:ThresholdType>
               </Transform>
@@ -112,7 +112,10 @@ def unload():
             <Expression xsi:type="WorkflowOutput" />
             <Expression xsi:type="Zip" />
             <Expression xsi:type="Select">
-              <Transform xsi:type="q2:DrawContours" />
+              <Transform xsi:type="q2:DrawContours">
+                <q2:MaxLevel>1</q2:MaxLevel>
+                <q2:Thickness>-1</q2:Thickness>
+              </Transform>
             </Expression>
             <Expression xsi:type="Do">
               <Sink xsi:type="q3:PythonTextWriter">
@@ -377,6 +380,15 @@ def unload():
                 </q2:RegionOfInterest>
               </Transform>
             </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Smooth">
+                <q2:SmoothType>Blur</q2:SmoothType>
+                <q2:Size1>5</q2:Size1>
+                <q2:Size2>5</q2:Size2>
+                <q2:Sigma1>0</q2:Sigma1>
+                <q2:Sigma2>0</q2:Sigma2>
+              </Transform>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge>
@@ -441,7 +453,7 @@ def unload():
             </Edge>
             <Edge>
               <From>9</From>
-              <To>10</To>
+              <To>30</To>
               <Label>Source</Label>
             </Edge>
             <Edge>
@@ -549,6 +561,11 @@ def unload():
               <To>28</To>
               <Label>Source</Label>
             </Edge>
+            <Edge>
+              <From>30</From>
+              <To>10</To>
+              <Label>Source</Label>
+            </Edge>
           </Edges>
         </Workflow>
       </Expression>
@@ -579,5 +596,6 @@ def unload():
     <Type>Bonsai.Vision.SortBinaryRegions, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.BehaviorAnalysis.TipTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
     <Type>Bonsai.Vision.RoiActivity, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Smooth, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
   </ExtensionTypes>
 </WorkflowBuilder>

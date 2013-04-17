@@ -8,6 +8,7 @@ Created on %(date)s
 import cv
 import bisect
 import numpy as np
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as hcl
 from scipy.stats import norm
@@ -16,6 +17,7 @@ import image_processing as imgproc
 import process_session
 from rasterplot import rasterplot
 import matplotlib.gridspec as gridspec
+import dateutil
 
 def click_data_action(figure,ondataclick):
     def onclick(event):
@@ -664,28 +666,38 @@ def plot_distance_statistics(name,distances,clusters):
     plt.figure(name + ' cluster dendrogram')
     hcl.dendrogram(clusters)
     
-def plot_poke_activation(session):
-    fig = plt.figure(session.name + ' poke activation')
-    left_plot = plt.plot(session.left_poke[0],'y')
-    right_plot = plt.plot(session.right_poke[0],'k')
+def plot_session_activity(session):
+    legend_plots = []
+    legend_labels = []
     
-    reward_lines = None
+    fig = plt.figure(session.name + ' session activity')
+    ax1 = fig.add_subplot('111')
+    legend_plots.append(ax1.plot_date(mdates.datestr2num(session.left_poke[1]),session.left_poke[0] - np.min(session.left_poke[0]),'y')[0])
+    legend_labels.append('Left Poke')
+    
+    legend_plots.append(ax1.plot_date(mdates.datestr2num(session.right_poke[1]),session.right_poke[0] - np.min(session.right_poke[0]),'k')[0])
+    legend_labels.append('Right Poke')
+    plt.xlabel('Time')
+    plt.ylabel('Poke Activation (a.u.)')
+    
+    if session.front_activity is not None:
+        ax2 = ax1.twinx()
+        activity_time = mdates.datestr2num([session.frame_time[i] for i in range(len(session.front_activity))])
+        legend_plots.append(ax2.plot_date(activity_time,session.front_activity, 'g')[0])
+        legend_labels.append('Front Activity')
+        plt.ylabel('Front motion (pixels/frame)')
+
+    ylim = ax1.get_ylim()    
     if len(session.left_rewards) > 0:
-        left_rewards = [bisect.bisect_left(session.left_poke[1],reward) for reward in session.left_rewards]
-        reward_lines = plt.vlines(left_rewards,0,100,'r')
+        left_rewards = mdates.datestr2num([session.left_poke[1][bisect.bisect_left(session.left_poke[1],reward)] for reward in session.left_rewards])
+        legend_plots.append(ax1.vlines(left_rewards,ylim[0],ylim[1],'r'))
+        legend_labels.append('Rewards')
 
     if len(session.right_rewards) > 0:
-        right_rewards = [bisect.bisect_left(session.right_poke[1],reward) for reward in session.right_rewards]        
-        reward_lines = plt.vlines(right_rewards,0,100,'r')
-        
-    plt.xlabel('Samples')
-    plt.ylabel('Activation (a.u.)')
+        right_rewards = mdates.datestr2num([session.right_poke[1][bisect.bisect_left(session.right_poke[1],reward)] for reward in session.right_rewards])
+        ax1.vlines(right_rewards,ylim[0],ylim[1],'r')
     
-    if reward_lines is None:
-        plt.legend( (left_plot[0], right_plot[0]), ('Left Poke', 'Right Poke') )
-    else:
-        plt.legend( (left_plot[0], right_plot[0], reward_lines), ('Left Poke', 'Right Poke', 'Rewards') )
-        
+    ax2.legend(tuple(legend_plots),tuple(legend_labels))
     plt.title('left/right poke activation')
     return fig
     

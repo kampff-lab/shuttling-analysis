@@ -6,6 +6,7 @@ Created on Mon Mar 11 23:46:23 2013
 """
 
 import os
+import glob
 import load_data
 import plot_session as plts
 import process_session as procs
@@ -18,11 +19,14 @@ storage_base = r'C:/Users/IntelligentSystems/Documents/Insync/kampff.lab@gmail.c
 daily_figures_storage = storage_base + r'protocols/shuttling/figures'
 subject_database_storage = storage_base + r'animals'
 
-def save_figure(fig):
-    filename = fig.get_label().replace(' ','_').replace('/','_')
+def get_figurefilename(label,basepath='.'):
+    return os.path.join(basepath,label.replace(' ','_').replace('/','_'))
+
+def save_figure(fig,basepath='.'):
+    filename = get_figurefilename(fig.get_label(),basepath)
     fig.savefig(filename + '.png')
 
-def session_summary_servoassay(datafolders):
+def session_summary_servoassay(datafolders,updatedaily=False):
     currdir = os.getcwd()
     
     valid_positions = [200,1000]
@@ -48,6 +52,10 @@ def session_summary_servoassay(datafolders):
         fig = plotdb.plot_weight_distribution(name,database,sessions)
         save_figure(fig)
         
+        # Plot deprivation times and reward amount
+        fig = plotdb.plot_servo_assay_deprivation(name,database,sessions)
+        save_figure(fig)
+        
         # Plot trial times
         fig = plts.plot_trial_times_end_to_end(name,sessions)
         save_figure(fig)
@@ -62,18 +70,20 @@ def session_summary_servoassay(datafolders):
         plt.ylim(speed_limits)
         save_figure(fig)
         
-        fig = plts.plot_average_tip_speed_direction_trials(name,sessions,crop=valid_positions)
-        plt.ylim(speed_limits)
-        save_figure(fig)
+        # Plot left-right speed
+        #fig = plts.plot_average_tip_speed_direction_trials(name,sessions,crop=valid_positions)
+        #plt.ylim(speed_limits)
+        #save_figure(fig)
         
         # Plot average tip height under different conditions
         fig = plts.plot_average_tip_height_end_to_end(name,sessions,crop=valid_positions)
         plt.ylim(tip_height_limits)
         save_figure(fig)
         
-        fig = plts.plot_average_tip_height_direction_trials(name,sessions,crop=valid_positions)
-        plt.ylim(tip_height_limits)
-        save_figure(fig)
+        # Plot left-right height
+        #fig = plts.plot_average_tip_height_direction_trials(name,sessions,crop=valid_positions)
+        #plt.ylim(tip_height_limits)
+        #save_figure(fig)
         
         # Plot nose tip height across sessions
         merged_sessions = procs.merge_sessions(name,sessions)
@@ -86,17 +96,23 @@ def session_summary_servoassay(datafolders):
         plt.xlim(valid_positions)
         save_figure(fig)
 
-        # Individual session plots        
+        # Individual session plots
+        activityfolder = 'activity'
+        trajectoriesfolder = 'trajectories'
+        utils.mkdir_p(activityfolder)
+        utils.mkdir_p(trajectoriesfolder)
         for session in sessions:
-            # Plot nose tip trajectories
-            fig = plts.plot_tip_trajectories(session,crop=valid_positions)
-            plt.xlim([0,1280])
-            plt.ylim([680,0])
-            save_figure(fig)
-            
-            # Plot poke activation        
-            fig = plts.plot_poke_activation(session)
-            save_figure(fig)
+            if True:
+                # Plot nose tip trajectories
+                fig = plts.plot_tip_trajectories(session,crop=valid_positions)
+                plt.xlim([0,1280])
+                plt.ylim([680,0])
+                save_figure(fig,trajectoriesfolder)
+                
+            if len(glob.glob(get_figurefilename(session.name,activityfolder) + "*")) == 0 or updatedaily:
+                # Plot poke activation        
+                fig = plts.plot_session_activity(session)
+                save_figure(fig,activityfolder)
         del sessions
         plt.close('all')
         

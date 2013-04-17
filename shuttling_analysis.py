@@ -25,27 +25,40 @@ backgroundfolder = 'Background'
 playerpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
 editorpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Editor.exe'
 
-def analysis_pipeline(datafolders):
+def analysis_pipeline(datafolders,preprocessing=True):
     
-    for path in datafolders:    
-        print "Pre-processing "+ path + "..."
-        print "Generating crossings..."
-        newcrossings = make_crossings(path)
-        analysispath = os.path.join(path,analysisfolder)
-        currdir = os.getcwd()
-        os.chdir(analysispath)
-        videoanalysis = os.path.join(dname,'video_analysis.bonsai')
-        if newcrossings:
-            print "Filtering crossings..."
-            subprocess.call([editorpath,videoanalysis,'--start'])
-            os.chdir(currdir)
+    if preprocessing:
+        for path in datafolders:
+            # Check for front activity file and regenerate if necessary
+            front_activity_path = os.path.join(path,'front_activity.csv')
+            if not os.path.exists(front_activity_path):
+                analysispath = os.path.join(path,analysisfolder)
+                os.chdir(analysispath)
+                print 'Generating front activity data...'
+                activitydetector = os.path.join(dname,'video_activity_detector.bonsai')
+                subprocess.call([playerpath,activitydetector])
             
-    for path in datafolders:
-        print "Checking backgrounds for " + path + "..."
-        analysispath = os.path.join(path,analysisfolder)
-        backgroundsready = make_backgrounds(analysispath)
-        if not backgroundsready:
-            raise Exception("Aborted due to missing backgrounds!")
+        for path in datafolders:
+            print "Pre-processing "+ path + "..."
+            print "Generating crossings..."
+            newcrossings = make_crossings(path)
+            analysispath = os.path.join(path,analysisfolder)
+            currdir = os.getcwd()
+            os.chdir(analysispath)
+            
+            # Filter crossings
+            videoanalysis = os.path.join(dname,'video_analysis.bonsai')
+            if newcrossings:
+                print "Filtering crossings..."
+                subprocess.call([editorpath,videoanalysis,'--start'])
+                os.chdir(currdir)
+                
+        for path in datafolders:
+            print "Checking backgrounds for " + path + "..."
+            analysispath = os.path.join(path,analysisfolder)
+            backgroundsready = make_backgrounds(analysispath)
+            if not backgroundsready:
+                raise Exception("Aborted due to missing backgrounds!")
 
     print "Running analysis pipeline..."
     for path in datafolders:
@@ -153,24 +166,6 @@ def delete_video_analysis(path=None):
         remove_file('trial_time.csv')
         
     os.chdir(currdir)
-
-def refresh_analysis(datafolders=None):
-    if datafolders is None:
-#        basefolder = 'F:\Protocols\Shuttling\Data'
-#        basefolder = r'F:\Protocols\Behavior\Shuttling\LightDarkFixed\Data'
-#        datafolders = [path + '\\Analysis' for path in utils.flatten(utils.directory_tree(basefolder,2))]
-#        
-#        basefolder = r'F:\Protocols\Behavior\Shuttling\LightDarkVariable\Data'
-#        datafolders += [path + '\\Analysis' for path in utils.flatten(utils.directory_tree(basefolder,2))]
-        # manual overwrite of datafolder to run only on reanalyzed files
-        f = open(r'C:\Users\IntelligentSystems\Documents\Insync\kampff.lab@gmail.com\users\tschroder\analysis_filelist.txt')
-        datafolders = [x.rstrip('\n') for x in f]        
-        
-    for path in datafolders:
-        try:
-            shuttling_analysis(path)
-        except Exception, e:
-            print "Failed to process '" + path + "' with error: %s!" % e
 
 def shuttling_analysis(path):
     if not os.path.exists(path):

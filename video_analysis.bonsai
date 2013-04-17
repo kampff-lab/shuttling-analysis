@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.470.0">
+<WorkflowBuilder Version="1.0.497.0">
   <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
           <q1:PlaybackMode>Video</q1:PlaybackMode>
           <q1:FileName>..\front_video.avi</q1:FileName>
-          <q1:PlaybackRate>60</q1:PlaybackRate>
+          <q1:PlaybackRate>240</q1:PlaybackRate>
           <q1:Playing>false</q1:Playing>
           <q1:ActionMapping />
           <q1:EventCategories>

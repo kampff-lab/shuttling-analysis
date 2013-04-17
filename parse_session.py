@@ -31,16 +31,39 @@ def parse_session(path,name,analysis=True):
     left_rewards = utils.ensure_list(np.genfromtxt(r'..\left_rewards.csv',dtype=str))
     right_rewards = utils.ensure_list(np.genfromtxt(r'..\right_rewards.csv',dtype=str))
     reward_times = filter(None,utils.flatten(itertools.izip_longest(left_rewards,right_rewards)))
-    with open(r'..\front_video.csv') as front_video:
-        start_time = next((dateutil.parser.parse(str.split(line)[0]) for line in front_video),None)
-        
+    frame_time = np.genfromtxt(r'..\front_video.csv',dtype=str,usecols=0)
+    start_time = dateutil.parser.parse(frame_time[0])
+    
+    # Default member placeholders
+    mean = None
+    centroid_x = None
+    centroid_y = None
+    tip_horizontal = None
+    tip_vertical = None
+    tip_horizontal_path = None
+    tip_horizontal_path_indices = None
+    tip_vertical_path = None
+    step_activity = None
+    steps = None
+    left_crossings = None
+    right_crossings = None
+    crossing_direction = None
+    trial_time = None
+    crossing_trial_mapping = None
+    step_times = None
+    light_trials = None
+    crossing_light_condition = None
+    left_poke = None
+    right_poke = None
+    front_activity = None
+    
     if analysis:
+        if os.path.exists(r'..\front_activity.csv'):
+            front_activity = np.genfromtxt(r'..\front_activity.csv')
+        
         if os.path.exists(r'..\left_poke.csv'):
             left_poke = [np.genfromtxt(r'..\left_poke.csv',usecols=0),np.genfromtxt(r'..\left_poke.csv',usecols=1,dtype=str)]
             right_poke = [np.genfromtxt(r'..\right_poke.csv',usecols=0),np.genfromtxt(r'..\right_poke.csv',usecols=1,dtype=str)]
-        else:
-            left_poke = None
-            right_poke = None
         
         mean = utils.loadfromcsv('mean.csv')
         centroid_x = utils.loadfromcsv('centroid_x.csv')
@@ -89,27 +112,6 @@ def parse_session(path,name,analysis=True):
                 steps[len(steps)-1-s][i] = tmp
             for j in range(len(tip_horizontal_path[i])):
                 tip_horizontal_path[i][j] = 1078 + (tip_horizontal_path[i][j] * -1)
-    else:
-        mean = None
-        centroid_x = None
-        centroid_y = None
-        tip_horizontal = None
-        tip_vertical = None
-        tip_horizontal_path = None
-        tip_horizontal_path_indices = None
-        tip_vertical_path = None
-        step_activity = None
-        steps = None
-        left_crossings = None
-        right_crossings = None
-        crossing_direction = None
-        trial_time = None
-        crossing_trial_mapping = None
-        step_times = None
-        light_trials = None
-        crossing_light_condition = None
-        left_poke = None
-        right_poke = None
 
     if os.path.exists(r'..\left_trials.csv'):
         left_trials = np.genfromtxt(r'..\left_trials.csv',dtype=bool)
@@ -130,6 +132,7 @@ def parse_session(path,name,analysis=True):
     path=[path],
     name=name,
     mean=mean,
+    front_activity=front_activity,
     centroid_x=centroid_x,
     centroid_y=centroid_y,
     tip_horizontal=tip_horizontal,
@@ -143,6 +146,7 @@ def parse_session(path,name,analysis=True):
     crossing_direction=crossing_direction,
     left_crossings=left_crossings,
     right_crossings=right_crossings,
+    frame_time=frame_time,
     trial_time=trial_time,
     start_time=start_time,
     left_rewards=left_rewards,
