@@ -14,8 +14,10 @@ import matplotlib.pyplot as plt
 import analysis_utilities as utils
 import process_database as procdb
 import plot_database as plotdb
+import cPickle as pickle
 
 storage_base = r'C:/Users/IntelligentSystems/Documents/Insync/kampff.lab@gmail.com/'
+pickled_sessions_storage = storage_base + r'protocols/shuttling/data/mc_lesionsham'
 daily_figures_storage = storage_base + r'protocols/shuttling/figures'
 subject_database_storage = storage_base + r'animals'
 
@@ -44,6 +46,11 @@ def session_summary_servoassay(datafolders,updatedaily=False):
         # Load data
         sessions = load_data.load_path(path)
         
+        # Save pickled session
+        pickled_filename = os.path.join(pickled_sessions_storage,name + '.pickle')
+        with open(pickled_filename,'wb') as pickled_file:
+            pickle.dump(sessions,pickled_file,pickle.HIGHEST_PROTOCOL)
+        
         # Load database
         database_file = os.path.join(subject_database_storage,name + '.csv')
         database = procdb.load_database(database_file)
@@ -63,6 +70,10 @@ def session_summary_servoassay(datafolders,updatedaily=False):
         # Plot effective trial times
         fig = plts.plot_effective_trial_times_end_to_end(name,sessions)
         plt.ylim([0,10])
+        save_figure(fig)
+        
+        # Plot min trial times
+        fig = plts.plot_min_trial_times(name,sessions)
         save_figure(fig)
 
         # Plot average tip speed under different conditions

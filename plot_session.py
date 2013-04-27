@@ -17,7 +17,6 @@ import image_processing as imgproc
 import process_session
 from rasterplot import rasterplot
 import matplotlib.gridspec as gridspec
-import dateutil
 
 def click_data_action(figure,ondataclick):
     def onclick(event):
@@ -223,6 +222,27 @@ def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda
     plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
     plt.title('interval between start of first crossing and poke head entry')
+    return fig
+    
+def plot_min_trial_times(name,sessions):
+    fig = plt.figure(name + ' min trial times')
+    sorted_session_trial_times = [np.sort(session.inter_reward_intervals) for session in sessions]
+    min_trial_times = [(sorted_trial_times[0].total_seconds() if sorted_trial_times.any() else None) for sorted_trial_times in sorted_session_trial_times]
+
+    valid_times = [min_trial_time if min_trial_time else 0 for min_trial_time in min_trial_times]
+    valid_faces = plt.bar(range(len(sessions)),valid_times)
+    
+    ylim = plt.gca().get_ylim()[1]
+    invalid_times = [0 if min_trial_time else ylim for min_trial_time in min_trial_times]
+    if np.sum(invalid_times) > 0:
+        invalid_faces = plt.bar(range(len(sessions)),invalid_times,color='r')
+        plt.legend([valid_faces[0],invalid_faces[0]],('rewarded','no rewards'))
+    else:
+        plt.legend([valid_faces[0]],['rewarded'])
+    
+    plt.xlabel('sessions')
+    plt.ylabel('time to reward (s)')
+    plt.title('minimum trial time across sessions')
     return fig
         
 def plot_progression(session):
