@@ -18,6 +18,38 @@ import process_session
 from rasterplot import rasterplot
 import matplotlib.gridspec as gridspec
 
+protocol_colors = {
+    'stable':'g',
+    'centerfree':'r',
+    'stabletocenterfree':'orange',
+    'centerfreetostable':'orange',
+    'randomizedcenterfree_day1':'b',
+    'randomizedcenterfree_day2':'b',
+    'randomizedcenterfree_day3':'b',
+    'randomizedcenterfree_day4':'b',
+    'degradationrandomizedcenterfree_day1':'b',
+    'degradationrandomizedcenterfree_day2':'b',
+    'permutationfreepair_day1':'violet',
+    'permutationfreepair_day2':'violet',
+    'permutationfreepair_day3':'violet',
+    'permutationfreepair_day4':'violet',
+    'permutationtofullyreleased':'purple',
+    'fullyreleased':'purple'
+}
+
+def get_protocol_color(label):
+    return protocol_colors.get(label,'g')
+    
+def shade_session_protocols(sessions,session_xdata,axis=None):
+    session_labels = [session.session_labels.get('protocol') for session in sessions]
+    prev_x = None
+    for i,(label,x) in enumerate(zip(session_labels,session_xdata)):
+        if i > 0:
+            if axis is None:
+                axis = plt.gca()
+            axis.axvspan(prev_x,x,facecolor=get_protocol_color(label),alpha=0.5)
+        prev_x = x
+
 def click_data_action(figure,ondataclick):
     def onclick(event):
         if event.button == 3 and event.xdata is not None and event.ydata is not None:
@@ -218,7 +250,8 @@ def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda
     fig = plt.figure(name + ' effective trial times')
     alternating_color_map(sessions,colors)
     effective_trial_times = [process_session.get_first_crossing_trial_times(session,conditionselector(session)) for session in sessions]
-    plot_end_to_end(effective_trial_times)    
+    plot_end_to_end(effective_trial_times)
+    shade_session_protocols(sessions,process_session.get_boundary_indices(effective_trial_times))
     plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
     plt.title('interval between start of first crossing and poke head entry')

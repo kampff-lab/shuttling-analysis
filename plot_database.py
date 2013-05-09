@@ -8,6 +8,7 @@ Created on Fri Mar 29 17:53:25 2013
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import process_database as procdb
+import plot_session as plotses
 
 def plot_weight_distribution(name,database,sessions):
     fig = plot_weights(name,database)
@@ -57,6 +58,9 @@ def plot_servo_assay_deprivation(name,database,sessions):
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
     ax1.plot(session_times,deprivation_hours,linestyle='-',marker='o')    
     ax2.plot(session_times,reward_counts,linestyle='-',marker='o',color='g')
+
+    # Shade session protocols
+    plotses.shade_session_protocols(sessions,session_times,ax2)
     
     plt.gcf().autofmt_xdate()
     ax1.set_ylabel('Deprivation Interval',color='b')
