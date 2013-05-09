@@ -58,8 +58,15 @@ def parse_session(path,name,analysis=True):
     front_activity = None
     crossing_labels = None
     step_trials = None
+    session_labels = {}
     
     if analysis:
+        if os.path.exists(r'..\session_labels.csv'):
+            labels = np.genfromtxt(r'..\session_labels.csv',dtype=str,delimiter=':')
+            if labels.ndim == 1:
+                labels = labels.reshape(1,-1)
+            session_labels = {kv[0]:kv[1] for kv in labels}
+        
         if os.path.exists(r'..\front_activity.csv'):
             front_activity = np.genfromtxt(r'..\front_activity.csv')
         
@@ -175,6 +182,7 @@ def parse_session(path,name,analysis=True):
     manipulation_trials=manipulation_trials,
     session_type=session_type,
     crossing_labels=crossing_labels,
+    session_labels=session_labels,
     step_trials=step_trials,
     light_trials=light_trials,
     crossing_light_condition=crossing_light_condition,

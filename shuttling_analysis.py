@@ -8,6 +8,7 @@ Created on Sun Sep 02 16:56:25 2012
 import os
 import glob
 import shutil
+import filecmp
 import subprocess
 import analysis_utilities as utils
 import parse_session as parser
@@ -28,6 +29,9 @@ editorpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x6
 def analysis_pipeline(datafolders,preprocessing=True):
     
     if preprocessing:
+        print 'Generating labels...'
+        make_lesionsham_session_label(datafolders)
+        
         for path in datafolders:
             # Check for front activity file and regenerate if necessary
             front_activity_path = os.path.join(path,'front_activity.csv')
@@ -81,6 +85,29 @@ def background_check(path):
         last_background = last_background[separator:].replace('_',':')
         return (last_background > last_crossing,last_crossing.replace(':','_'))
     return (True,None)
+    
+def get_lesionsham_session_label(path):
+    protocolfilefolder = os.path.join(dname,'protocolfiles/lesionsham')
+    trialfiles = [f for f in glob.glob(path + r'\step*_trials.csv')]
+    for folder in os.listdir(protocolfilefolder):
+        match = True
+        targetfolder = os.path.join(protocolfilefolder,folder)
+        for f1,f2 in zip(trialfiles,os.listdir(targetfolder)):
+            targetfile = os.path.join(targetfolder,f2)
+            if not filecmp.cmp(f1,targetfile):
+                match = False
+                break
+        
+        if match:
+            return folder
+    return None
+    
+def make_lesionsham_session_label(datafolders):
+    for path in datafolders:
+        label = get_lesionsham_session_label(path)
+        session_labels_file = os.path.join(path,'session_labels.csv')
+        if not os.path.exists(session_labels_file):
+            np.savetxt(session_labels_file,[['protocol',label]],delimiter=':',fmt='%s')
 
 def make_crossings(path="."):
     if not isinstance(path,basestring):
