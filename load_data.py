@@ -9,16 +9,19 @@ import os
 import parse_session as parser
 import analysis_utilities as utils
 
-def load_path(basefolder):
+def load_pathlist(pathlist):
     sessions = []
-    datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1) if os.path.exists(path + '\\Analysis')]
-    for path in datafolders:
+    for path in pathlist:
         path_parts = os.path.split(os.path.split(path)[0])
         date = path_parts[1]
         path_parts = os.path.split(path_parts[0])
         subject = path_parts[1]        
         sessions.append(parser.parse_session(path,subject + ' ' + date))
     return sessions
+
+def load_path(basefolder):
+    datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1) if os.path.exists(path + '\\Analysis')]
+    return load_pathlist(datafolders)
     
 def annotate_jpak345(sessions):
     sessions[0].session_type = 'habituation'

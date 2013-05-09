@@ -19,6 +19,7 @@ import cPickle as pickle
 storage_base = r'C:/Users/IntelligentSystems/Documents/Insync/kampff.lab@gmail.com/'
 pickled_sessions_storage = storage_base + r'protocols/shuttling/data/mc_lesionsham'
 daily_figures_storage = storage_base + r'protocols/shuttling/figures'
+comparison_figures_storage = storage_base + r'protocols/shuttling/figures/comparison'
 subject_database_storage = storage_base + r'animals'
 
 def get_figurefilename(label,basepath='.'):
@@ -28,7 +29,7 @@ def save_figure(fig,basepath='.'):
     filename = get_figurefilename(fig.get_label(),basepath)
     fig.savefig(filename + '.png')
 
-def session_summary_servoassay(datafolders,updatedaily=False):
+def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,datapickle=False,sessionslice=slice(None),storagefolder=None):
     currdir = os.getcwd()
     
     valid_positions = [200,1000]
@@ -39,17 +40,21 @@ def session_summary_servoassay(datafolders,updatedaily=False):
         name = pathsplit[1]
         pathsplit = os.path.split(pathsplit[0])
         protocol = os.path.split(pathsplit[0])[1]
-        figurefolder = os.path.join(daily_figures_storage,protocol,name)
+        if storagefolder is None:
+            figurefolder = os.path.join(daily_figures_storage,protocol,name)
+        else:
+            figurefolder = storagefolder
         utils.mkdir_p(figurefolder)
         os.chdir(figurefolder)
         
         # Load data
-        sessions = load_data.load_path(path)
+        sessions = load_data.load_path(path)[sessionslice]
         
         # Save pickled session
-        pickled_filename = os.path.join(pickled_sessions_storage,name + '.pickle')
-        with open(pickled_filename,'wb') as pickled_file:
-            pickle.dump(sessions,pickled_file,pickle.HIGHEST_PROTOCOL)
+        if datapickle:
+            pickled_filename = os.path.join(pickled_sessions_storage,name + '.pickle')
+            with open(pickled_filename,'wb') as pickled_file:
+                pickle.dump(sessions,pickled_file,pickle.HIGHEST_PROTOCOL)
         
         # Load database
         database_file = os.path.join(subject_database_storage,name + '.csv')
@@ -108,22 +113,23 @@ def session_summary_servoassay(datafolders,updatedaily=False):
         save_figure(fig)
 
         # Individual session plots
-        activityfolder = 'activity'
-        trajectoriesfolder = 'trajectories'
-        utils.mkdir_p(activityfolder)
-        utils.mkdir_p(trajectoriesfolder)
-        for session in sessions:
-            if True:
-                # Plot nose tip trajectories
-                fig = plts.plot_tip_trajectories(session,crop=valid_positions)
-                plt.xlim([0,1280])
-                plt.ylim([680,0])
-                save_figure(fig,trajectoriesfolder)
-                
-            if len(glob.glob(get_figurefilename(session.name,activityfolder) + "*")) == 0 or updatedaily:
-                # Plot poke activation        
-                fig = plts.plot_session_activity(session)
-                save_figure(fig,activityfolder)
+        if plotdaily:
+            activityfolder = 'activity'
+            trajectoriesfolder = 'trajectories'
+            utils.mkdir_p(activityfolder)
+            utils.mkdir_p(trajectoriesfolder)
+            for session in sessions:
+                if True:
+                    # Plot nose tip trajectories
+                    fig = plts.plot_tip_trajectories(session,crop=valid_positions)
+                    plt.xlim([0,1280])
+                    plt.ylim([680,0])
+                    save_figure(fig,trajectoriesfolder)
+                    
+                if len(glob.glob(get_figurefilename(session.name,activityfolder) + "*")) == 0 or updatedaily:
+                    # Plot poke activation        
+                    fig = plts.plot_session_activity(session)
+                    save_figure(fig,activityfolder)
         del sessions
         plt.close('all')
         

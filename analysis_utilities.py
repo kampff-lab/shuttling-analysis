@@ -12,6 +12,13 @@ import string
 import numpy as np
 import scipy.stats as stats
 
+def is_dict_subset(sd,d):
+    for item in sd.items():
+        val = d.get(item[0])
+        if val != item[1]:
+            return False
+    return True
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
@@ -36,6 +43,9 @@ def find_gt(l,v):
         
 def find_lt(l,v):
     return next((i for i,x in enumerate(l) if x < v), len(l))
+    
+def find_between(l,minv,maxv):
+    return next((i for i,x in enumerate(l) if x < maxv and x > minv), len(l))
 
 def test_consecutive(x, y):
     if len(x) > 0 and x[-1][-1] == (y-1):

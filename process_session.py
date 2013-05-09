@@ -7,6 +7,7 @@ Created on %(date)s
 
 import os
 import cv
+import bisect
 import itertools
 import matplotlib.mlab as mlab
 import numpy as np
@@ -96,8 +97,31 @@ def weighted_image_mean(weights,filenames,resultpath):
             cv.Add(image,result,result)
     cv.SaveImage(resultpath,result)
     
+def get_crossing_label_filter(session,labels):
+    return lambda i:utils.is_dict_subset(labels,session.crossing_labels[i])
+    
 def get_boundary_indices(data):
     return np.cumsum([len(data[i]) for i in range(len(data)-1)])
+    
+def get_crossing_timestamps(session,xboundary=640,trialfilter=lambda i:True):
+    timestamps = session.trial_time
+    find_crossing = lambda i,xtip:utils.find_between(xtip,-1,xboundary) if session.crossing_labels[i]['direction'] == 'left' else utils.find_gt(xtip,xboundary)    
+    result = []
+    for i,xtip in enumerate(session.tip_horizontal):
+        if not trialfilter(i):
+            continue
+        crossing_index = find_crossing(i,xtip)
+        if crossing_index < len(timestamps[i]):
+            result.append(timestamps[i][crossing_index])
+    return result
+    
+def get_frame_time_slice(session,anchor,frames_before,frames_after):
+    index = bisect.bisect_left(session.frame_time,anchor)
+    return (session.frame_time[index-frames_before],session.frame_time[index+frames_after])
+    
+def get_crossing_time_slices(session,frames_before,frames_after,xboundary=640,trialfilter=lambda i:True):
+    crossings = get_crossing_timestamps(session,xboundary,trialfilter)
+    return [get_frame_time_slice(session,crossing,frames_before,frames_after) for crossing in crossings]
     
 def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     #valid_indices = [i for i,x in enumerate(xtip) if x > 0]

@@ -56,6 +56,8 @@ def parse_session(path,name,analysis=True):
     left_poke = None
     right_poke = None
     front_activity = None
+    crossing_labels = None
+    step_trials = None
     
     if analysis:
         if os.path.exists(r'..\front_activity.csv'):
@@ -98,10 +100,26 @@ def parse_session(path,name,analysis=True):
         steps = [[np.insert(np.diff(trial),0,0) > 0 for trial in step] for step in step_threshold]
         step_times_files = ['step%s_times.csv' % (s) for s in range(len(stepfiles))]
         step_times = [utils.ensure_list(np.genfromtxt(f,dtype=str)) if os.path.exists(f) else np.array([]) for f in step_times_files]
+        step_trial_files = [r'..\step%s_trials.csv' % (s) for s in range(1,7)]
+        step_trials = np.array([utils.ensure_list(np.genfromtxt(f,dtype=bool)) if os.path.exists(f) else np.array([]) for f in step_trial_files])
         
         tip_horizontal_path = [[x for x in trial if x >= 0] for trial in tip_horizontal]
         tip_vertical_path = [[x for x in trial if x >= 0] for trial in tip_vertical]
         tip_horizontal_path_indices = [[i for i,x in enumerate(trial) if x >= 0] for trial in tip_horizontal];
+        
+        crossing_labels = []
+        for i in range(len(trial_time)):
+            labels = {}
+            trial_number = crossing_trial_mapping[i]
+            step_state = [step_trial[min(trial_number,len(step_trial)-1)] for step_trial in step_trials]
+            direction_label = 'left' if tip_horizontal_path[i][0] > 640 else 'right'
+            steady_crossing_label = 'steady' if tip_horizontal[i][0] < 0 and tip_horizontal[i][-1] < 0 else 'exploratory'
+            stable_crossing_label = 'stable' if np.all(step_state) else 'unstable'
+            labels['direction'] = direction_label
+            labels['type'] = steady_crossing_label
+            labels['state'] = stable_crossing_label
+            crossing_labels.append(labels)
+        
         crossing_direction = [x[0] > 640 for x in tip_horizontal_path]
         left_crossings = [i for i,x in enumerate(crossing_direction) if x]
         right_crossings = [i for i,x in enumerate(crossing_direction) if not x]
@@ -156,6 +174,8 @@ def parse_session(path,name,analysis=True):
     crossing_trial_mapping=crossing_trial_mapping,
     manipulation_trials=manipulation_trials,
     session_type=session_type,
+    crossing_labels=crossing_labels,
+    step_trials=step_trials,
     light_trials=light_trials,
     crossing_light_condition=crossing_light_condition,
     left_poke=left_poke,

@@ -145,6 +145,76 @@ def make_backgrounds(path=None):
                 
     os.chdir(currdir)
     return True
+    
+
+    
+def make_crossing_clips(session,frames_before=240,frames_after=240,xboundary=640,filterlabels=None,clipslice=slice(None),filename='player.csv'):
+    currdir = os.getcwd()
+    os.chdir(session.path[0])
+    
+    def write_crossing_slice(f,slices):
+        for time_slice in slices:
+            f.write('%s WindowOpening\n' % (time_slice[0]))
+            f.write('%s WindowClosing\n' % (time_slice[1]))
+    
+    if filterlabels is not None:
+        trials_filter = process_session.get_crossing_label_filter(session,filterlabels)
+    else:
+        trials_filter = lambda i:True
+    time_slices = process_session.get_crossing_time_slices(session,frames_before,frames_after,xboundary,trialfilter=trials_filter)
+    
+    with open(filename,'w') as f:
+        write_crossing_slice(f,time_slices[clipslice])
+        
+    os.chdir(currdir)
+    
+def reconstruct_rewards(path,lthreshold=400,rthreshold=400):
+    currdir = os.getcwd()
+    os.chdir(path)
+    
+    left_activity = np.genfromtxt(r'left_poke.csv',usecols=0)
+    left_times = np.genfromtxt(r'left_poke.csv',usecols=1,dtype=str)
+    right_activity = np.genfromtxt(r'right_poke.csv',usecols=0)
+    right_times = np.genfromtxt(r'right_poke.csv',usecols=1,dtype=str)
+    
+    left_activations = (left_activity > lthreshold).nonzero()[0]
+    right_activations = (right_activity > rthreshold).nonzero()[0]
+    
+    def get_next_reward(activations,times,index,last_reward_time):
+        for i in range(index,len(activations)):
+            if times[activations[i]] > last_reward_time:
+                return i
+        return None
+
+    left_index = 0
+    right_index = 0
+    left_rewards = []
+    right_rewards = []
+    left_reward = True
+    last_reward_time = None
+    while True:
+        if left_reward:
+            reward_index = get_next_reward(left_activations,left_times,left_index,last_reward_time)
+            if reward_index is None:
+                break
+            reward = left_times[left_activations[reward_index]]
+            left_rewards.append(reward)
+            left_index = reward_index
+        else:
+            reward_index = get_next_reward(right_activations,right_times,right_index,last_reward_time)
+            if reward_index is None:
+                break
+            reward = right_times[right_activations[reward_index]]
+            right_rewards.append(reward)
+            right_index = reward_index
+        
+        last_reward_time = reward
+        left_reward = not left_reward
+    
+    np.savetxt('left_rewards.csv',left_rewards,'%s')
+    np.savetxt('right_rewards.csv',right_rewards,'%s')
+    
+    os.chdir(currdir)
 
 def remove_file(path):
     for filename in glob.glob(path):

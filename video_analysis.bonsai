@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="1.0.497.0">
-  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="https://horizongir.org/bonsai">
+<WorkflowBuilder Version="1.0.514.0">
+  <Workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns="https://horizongir.org/bonsai">
     <Nodes>
       <Expression xsi:type="Source">
         <Source xsi:type="q1:VideoEventPlayer">
