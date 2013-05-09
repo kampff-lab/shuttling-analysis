@@ -26,10 +26,18 @@ def get_figurefilename(label,basepath='.'):
     return os.path.join(basepath,label.replace(' ','_').replace('/','_'))
 
 def save_figure(fig,basepath='.'):
+    utils.mkdir_p(basepath)
     filename = get_figurefilename(fig.get_label(),basepath)
     fig.savefig(filename + '.png')
 
-def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,datapickle=False,sessionslice=slice(None),storagefolder=None):
+def session_summary_servoassay(datafolders,
+                               plotdaily=True,
+                               updatedaily=False,
+                               foldercategories=False,
+                               usepickle=False,
+                               datapickle=False,
+                               sessionslice=slice(None),
+                               storagefolder=None):
     currdir = os.getcwd()
     
     valid_positions = [200,1000]
@@ -46,13 +54,19 @@ def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,data
             figurefolder = storagefolder
         utils.mkdir_p(figurefolder)
         os.chdir(figurefolder)
+        basepath = '.'
         
         # Load data
-        sessions = load_data.load_path(path)[sessionslice]
+        pickled_filename = os.path.join(pickled_sessions_storage,name + '.pickle')
+        if usepickle:
+            with open(pickled_filename,'rb') as pickle_file:
+                sessions = pickle.load(pickle_file)
+        else:
+            sessions = load_data.load_path(path)
+        sessions = sessions[sessionslice]
         
         # Save pickled session
         if datapickle:
-            pickled_filename = os.path.join(pickled_sessions_storage,name + '.pickle')
             with open(pickled_filename,'wb') as pickled_file:
                 pickle.dump(sessions,pickled_file,pickle.HIGHEST_PROTOCOL)
         
@@ -61,30 +75,42 @@ def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,data
         database = procdb.load_database(database_file)
         
         # Plot weight distribution over time
+        if foldercategories:
+            basepath = 'weight'
         fig = plotdb.plot_weight_distribution(name,database,sessions)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot deprivation times and reward amount
+        if foldercategories:
+            basepath = 'deprivation'
         fig = plotdb.plot_servo_assay_deprivation(name,database,sessions)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot trial times
+        if foldercategories:
+            basepath = 'trial_times'
         fig = plts.plot_trial_times_end_to_end(name,sessions)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot effective trial times
+        if foldercategories:
+            basepath = 'effective_trial_times'
         fig = plts.plot_effective_trial_times_end_to_end(name,sessions)
         plt.ylim([0,10])
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot min trial times
+        if foldercategories:
+            basepath = 'min_trial_times'
         fig = plts.plot_min_trial_times(name,sessions)
-        save_figure(fig)
+        save_figure(fig,basepath)
 
         # Plot average tip speed under different conditions
+        if foldercategories:
+            basepath = 'speed'
         fig = plts.plot_average_tip_speed_end_to_end(name,sessions,crop=valid_positions)
         plt.ylim(speed_limits)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot left-right speed
         #fig = plts.plot_average_tip_speed_direction_trials(name,sessions,crop=valid_positions)
@@ -92,9 +118,11 @@ def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,data
         #save_figure(fig)
         
         # Plot average tip height under different conditions
+        if foldercategories:
+            basepath = 'height'
         fig = plts.plot_average_tip_height_end_to_end(name,sessions,crop=valid_positions)
         plt.ylim(tip_height_limits)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot left-right height
         #fig = plts.plot_average_tip_height_direction_trials(name,sessions,crop=valid_positions)
@@ -102,22 +130,24 @@ def session_summary_servoassay(datafolders,plotdaily=True,updatedaily=False,data
         #save_figure(fig)
         
         # Plot nose tip height across sessions
+        if foldercategories:
+            basepath = 'position_height'
         merged_sessions = procs.merge_sessions(name,sessions)
         fig = plts.plot_tip_spatial_height_interp(merged_sessions,vmin=480,vmax=550)
         plt.xlim(valid_positions)
-        save_figure(fig)
+        save_figure(fig,basepath)
         
         # Plot nose tip speed across sessions
+        if foldercategories:
+            basepath = 'position_speed'
         fig = plts.plot_tip_spatial_speed_interp(merged_sessions,vmin=0,vmax=20)
         plt.xlim(valid_positions)
-        save_figure(fig)
+        save_figure(fig,basepath)
 
         # Individual session plots
         if plotdaily:
             activityfolder = 'activity'
             trajectoriesfolder = 'trajectories'
-            utils.mkdir_p(activityfolder)
-            utils.mkdir_p(trajectoriesfolder)
             for session in sessions:
                 if True:
                     # Plot nose tip trajectories

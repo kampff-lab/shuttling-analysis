@@ -103,6 +103,9 @@ def get_crossing_label_filter(session,labels):
 def get_boundary_indices(data):
     return np.cumsum([len(data[i]) for i in range(len(data)-1)])
     
+def get_all_boundary_indices(data):
+    return np.cumsum([len(data[i]) for i in range(len(data))])
+    
 def get_crossing_timestamps(session,xboundary=640,trialfilter=lambda i:True):
     timestamps = session.trial_time
     find_crossing = lambda i,xtip:utils.find_between(xtip,-1,xboundary) if session.crossing_labels[i]['direction'] == 'left' else utils.find_gt(xtip,xboundary)    

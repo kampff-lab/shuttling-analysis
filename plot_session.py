@@ -40,14 +40,15 @@ protocol_colors = {
 def get_protocol_color(label):
     return protocol_colors.get(label,'g')
     
-def shade_session_protocols(sessions,session_xdata,axis=None):
+def shade_session_protocols(sessions,session_xdata,axis=None,plotzero=True):
+    if axis is None:
+        axis = plt.gca()    
+    
     session_labels = [session.session_labels.get('protocol') for session in sessions]
-    prev_x = None
+    prev_x = 0
     for i,(label,x) in enumerate(zip(session_labels,session_xdata)):
-        if i > 0:
-            if axis is None:
-                axis = plt.gca()
-            axis.axvspan(prev_x,x,facecolor=get_protocol_color(label),alpha=0.5)
+        if i > 0 or plotzero:
+            axis.axvspan(prev_x,x,facecolor=get_protocol_color(label),alpha=0.5,lw=0)
         prev_x = x
 
 def click_data_action(figure,ondataclick):
@@ -155,6 +156,7 @@ def plot_average_tip_height_end_to_end(name,sessions,conditionselector=lambda x:
     alternating_color_map(sessions,colors)
     average_height = [process_session.get_average_crossing_tip_height(session,conditionselector(session),crop) for session in sessions]
     plot_end_to_end_xy(average_height)
+    shade_session_protocols(sessions,np.cumsum([epochlen for x,y,epochlen in average_height]))
     plt.xlabel('crossings (single animal, session colored)')
     plt.ylabel('average tip height (pixels)')
     plt.title('average height of the tip of the nose during successive crossings')
@@ -192,6 +194,7 @@ def plot_average_tip_speed_end_to_end(name,sessions,conditionselector=lambda x:N
     alternating_color_map(sessions,colors)
     average_speed = [process_session.get_average_crossing_tip_speed(session,conditionselector(session),crop) for session in sessions]
     plot_end_to_end_xy(average_speed)
+    shade_session_protocols(sessions,np.cumsum([epochlen for x,y,epochlen in average_speed]))
     plt.xlabel('crossings (single animal, session colored)')
     plt.ylabel('average tip speed (pixels / frame)')
     plt.title('average speed of the tip of the nose during successive crossings')
@@ -251,7 +254,7 @@ def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda
     alternating_color_map(sessions,colors)
     effective_trial_times = [process_session.get_first_crossing_trial_times(session,conditionselector(session)) for session in sessions]
     plot_end_to_end(effective_trial_times)
-    shade_session_protocols(sessions,process_session.get_boundary_indices(effective_trial_times))
+    shade_session_protocols(sessions,process_session.get_all_boundary_indices(effective_trial_times))
     plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
     plt.title('interval between start of first crossing and poke head entry')

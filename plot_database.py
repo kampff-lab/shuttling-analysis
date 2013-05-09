@@ -60,7 +60,7 @@ def plot_servo_assay_deprivation(name,database,sessions):
     ax2.plot(session_times,reward_counts,linestyle='-',marker='o',color='g')
 
     # Shade session protocols
-    plotses.shade_session_protocols(sessions,session_times,ax2)
+    plotses.shade_session_protocols(sessions,session_times,ax2,plotzero=False)
     
     plt.gcf().autofmt_xdate()
     ax1.set_ylabel('Deprivation Interval',color='b')
