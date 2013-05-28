@@ -106,6 +106,9 @@ def get_boundary_indices(data):
 def get_all_boundary_indices(data):
     return np.cumsum([len(data[i]) for i in range(len(data))])
     
+def get_session_duration(session):
+    return dateutil.parser.parse(session.frame_time[-1]) - session.start_time
+    
 def get_crossing_timestamps(session,xboundary=640,trialfilter=lambda i:True):
     timestamps = session.trial_time
     find_crossing = lambda i,xtip:utils.find_between(xtip,-1,xboundary) if session.crossing_labels[i]['direction'] == 'left' else utils.find_gt(xtip,xboundary)    
@@ -215,15 +218,19 @@ def get_crossing_expansion(session,trial_variable):
 def get_first_crossings_in_trial(session):
     return np.insert(np.diff(session.crossing_trial_mapping),0,1) > 0
     
-def get_first_crossing_trial_times(session,valid_trials=None):
+def get_first_crossing_start_stop_times(session,valid_trials=None):
     first_crossings_in_trial = get_first_crossings_in_trial(session)
     if valid_trials is not None:
         valid_trials = get_crossing_expansion(session,valid_trials)
         first_crossings_in_trial &= valid_trials
         
-    return [(session.reward_times[session.crossing_trial_mapping[i]] - dateutil.parser.parse(session.trial_time[i][path[0]])).total_seconds()
-    for i,path in enumerate(np.array(session.tip_horizontal_path_indices)) if first_crossings_in_trial[i]
+    return [(dateutil.parser.parse(session.trial_time[i][path[0]]),session.reward_times[session.crossing_trial_mapping[i]])
+    for i,path in enumerate(np.array(session.tip_horizontal_path_indices))
+    if first_crossings_in_trial[i]
     if session.crossing_trial_mapping[i] < len(session.reward_times)]
+        
+def get_first_crossing_trial_times(session,valid_trials=None):
+    return [(reward_time - start_time).total_seconds() for start_time,reward_time in get_first_crossing_start_stop_times(session,valid_trials)]
     
 # Gets an array of the average height of the nose tip for each crossing
 # Outputs a tuple/list of [trial_variable,trial_indices,numberoftrials]

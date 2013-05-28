@@ -17,6 +17,8 @@ import analysis_utilities as utils
 import process_session
 from rasterplot import rasterplot
 import matplotlib.gridspec as gridspec
+import matplotlib.cbook as cbook
+import signal_processing as signalproc
 
 protocol_colors = {
     'stable':'g',
@@ -79,6 +81,57 @@ def plot_time_distributions(name,sessions):
     plt.hist(utils.flatten([utils.flatten(process_session.get_clipped_trajectories(session)) for session in sessions]),100)
     plt.xlabel('horizontal progression (pixels)')
     plt.ylabel('total time (frames)')
+    
+def iter_poly_fit(x,y,order):
+    done = False
+    coeffs = None
+    while not done:
+      done = True
+      coeffs = np.polyfit(x,y,order)
+      fit = np.poly1d(coeffs)
+      residuals = y - fit(x)
+      std = np.std(residuals)
+      badindices = np.where(residuals > 2*std)[0]
+      if badindices.size > 0:
+        done = False
+        x = np.delete(x, badindices)
+        y = np.delete(y, badindices)
+    return coeffs
+    
+def plot_epoch_fit(data,deg=15):
+    def _polynomial(x, *p):
+        """Polynomial fitting function of arbitrary degree."""
+        poly = 0.
+        for i, n in enumerate(p):
+            poly += n * x**i
+        return poly
+
+    data = utils.flatten([x for x in data])
+    indices = range(len(data))
+    coeffs = iter_poly_fit(indices,data,deg)
+    polyline = np.poly1d(coeffs)
+    yfit = polyline(indices)
+    plt.plot(indices,yfit)
+    
+    
+# Iterative poly fit
+#    offset = 0
+#    for epoch in data:
+#        epochlen = len(epoch)
+#        indices = range(offset,offset+epochlen)
+#        coeffs = iter_poly_fit(indices,epoch,deg)
+#        polyline = np.poly1d(coeffs)
+#        yfit = polyline(indices)
+        
+# Polynomial curve fit
+#        indices = np.array(range(epochlen))
+#        p0 = np.ones(deg,)
+#        sigma = np.std(epoch)
+#        coeff, var_matrix = curve_fit(_polynomial, indices, np.array(epoch), p0=p0, sigma=sigma)
+#        yfit = [_polynomial(xx, *tuple(coeff)) for xx in indices]
+#        indices = range(offset,offset+epochlen)
+#        offset += epochlen
+#        plt.plot(indices,yfit)
         
 def plot_end_to_end(data):
     offset = 0
@@ -249,15 +302,45 @@ def plot_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None):
     click_playback(fig,sessions)
     return fig
     
-def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r']):
+def plot_effective_trial_times_end_to_end(name,sessions,conditionselector=lambda x:None,colors=['b','r'],shade_sessions=True):
     fig = plt.figure(name + ' effective trial times')
     alternating_color_map(sessions,colors)
     effective_trial_times = [process_session.get_first_crossing_trial_times(session,conditionselector(session)) for session in sessions]
     plot_end_to_end(effective_trial_times)
-    shade_session_protocols(sessions,process_session.get_all_boundary_indices(effective_trial_times))
+    if shade_sessions:
+        shade_session_protocols(sessions,process_session.get_all_boundary_indices(effective_trial_times))
     plt.xlabel('trials (single animal, session colored)')
     plt.ylabel('time to reward (s)')
     plt.title('interval between start of first crossing and poke head entry')
+    return fig
+    
+def plot_effective_trial_times_in_time(name,sessions,conditionselector=lambda x:None,colors=['b','r'],shade_sessions=True):
+    fig = plt.figure(name + ' effective trial times')
+    alternating_color_map(sessions,colors)
+    
+    def get_trial_times_in_time(start_stop_times,session):
+        x = np.array([(reward_time - session.start_time).total_seconds() / 60 for start_time,reward_time in start_stop_times])
+        y = np.array([(reward_time - start_time).total_seconds() for start_time,reward_time in start_stop_times])
+        epochlen = process_session.get_session_duration(session).total_seconds() / 60
+        return x,y,epochlen
+    
+    effective_trial_times_in_time = [get_trial_times_in_time(process_session.get_first_crossing_start_stop_times(session,conditionselector(session)),session)
+    for session in sessions]
+    plot_end_to_end_xy(effective_trial_times_in_time)
+    if shade_sessions:
+        cumulative_session_time = np.cumsum([epochlen for x,y,epochlen in effective_trial_times_in_time])
+        shade_session_protocols(sessions,cumulative_session_time)
+    plt.xlabel('time in assay (min)')
+    plt.ylabel('time to reward (s)')
+    plt.title('interval between start of first crossing and poke head entry')
+    return fig
+    
+def plot_smooth_trial_times(name,sessions,**kwargs):
+    fig = plt.figure(name + ' smooth trial times')
+    effective_trial_times = [process_session.get_first_crossing_trial_times(session) for session in sessions]
+    trial_time_series = np.array([x for x in cbook.flatten(effective_trial_times)])
+    smooth_series = signalproc.smooth(trial_time_series,window_len=15,window='blackman')
+    plt.plot(smooth_series,**kwargs)
     return fig
     
 def plot_min_trial_times(name,sessions):
