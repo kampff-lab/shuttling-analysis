@@ -6,8 +6,13 @@ Created on Tue Jun 05 16:13:44 2012
 """
 
 import os
+import pickle
 import parse_session as parser
 import analysis_utilities as utils
+
+def load_pickle(filename):
+    with open(filename,'rb') as picklefile:
+        return pickle.load(picklefile)
 
 def load_pathlist(pathlist):
     sessions = []
