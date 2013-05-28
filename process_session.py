@@ -6,16 +6,16 @@ Created on %(date)s
 """
 
 import os
-import cv
+#import cv
 import bisect
 import itertools
 import matplotlib.mlab as mlab
 import numpy as np
 import dateutil
-import scipy.cluster.hierarchy as hcl
+#import scipy.cluster.hierarchy as hcl
 import parse_session
 import analysis_utilities as utils
-import image_processing as imgproc
+#import image_processing as imgproc
 from scipy.interpolate import UnivariateSpline
 
 # for shuttling assay number 1 !!!

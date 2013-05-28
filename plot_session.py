@@ -5,7 +5,7 @@ Created on %(date)s
 @author: %(username)s
 """
 
-import cv
+#import cv
 import bisect
 import numpy as np
 import matplotlib.dates as mdates
@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import scipy.cluster.hierarchy as hcl
 from scipy.stats import norm
 import analysis_utilities as utils
-import image_processing as imgproc
+#import image_processing as imgproc
 import process_session
 from rasterplot import rasterplot
 import matplotlib.gridspec as gridspec
