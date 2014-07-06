@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.514.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Events</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>400</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>player.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT12S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="q1:RepeatCurrentDirectory">
+        <q1:WorkingDirectories>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_20\2013_03_31-18_26\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_22\2013_04_07-16_55\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_24\2013_04_14-15_56\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_26\2013_04_21-16_54\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_28\2013_04_28-16_59\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_21\2013_03_31-18_46\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_23\2013_04_07-16_33\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_25\2013_04_14-16_19\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_27\2013_04_21-16_36\Analysis</q1:string>
+          <q1:string>G:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_29\2013_04_28-17_18\Analysis</q1:string>
+        </q1:WorkingDirectories>
+      </Expression>
+      <Expression xsi:type="q1:VideoTiles">
+        <q1:Size>
+          <q1:Width>512</q1:Width>
+          <q1:Height>940</q1:Height>
+        </q1:Size>
+        <q1:TileLayout>
+          <q1:X>1</q1:X>
+          <q1:Y>5</q1:Y>
+        </q1:TileLayout>
+      </Expression>
+      <Expression xsi:type="WindowWorkflow">
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="WorkflowOutput" />
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>0</q2:X>
+                  <q2:Y>209</q2:Y>
+                  <q2:Width>1280</q2:Width>
+                  <q2:Height>470</q2:Height>
+                </q2:RegionOfInterest>
+              </Transform>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="Slice">
+        <Start>4</Start>
+        <Step>5</Step>
+        <Stop>10</Stop>
+      </Expression>
+      <Expression xsi:type="q1:ColorWheel">
+        <q1:Colors>Red;LimeGreen</q1:Colors>
+      </Expression>
+      <Expression xsi:type="Skip">
+        <Count>1</Count>
+      </Expression>
+      <Expression xsi:type="Do">
+        <Sink xsi:type="q2:VideoWriter">
+          <q2:FileName>C:\Users\IntelligentSystems\Desktop\stack_trial5.avi</q2:FileName>
+          <q2:Suffix>None</q2:Suffix>
+          <q2:Buffered>true</q2:Buffered>
+          <q2:FourCC>FMP4</q2:FourCC>
+          <q2:FrameRate>120</q2:FrameRate>
+          <q2:FrameSize>
+            <q2:Width>0</q2:Width>
+            <q2:Height>0</q2:Height>
+          </q2:FrameSize>
+          <q2:ResizeInterpolation>NearestNeighbor</q2:ResizeInterpolation>
+        </Sink>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="Merge" />
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>8</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>5</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>10</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>6</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>6</From>
+        <To>7</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>6</From>
+        <To>9</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RepeatCurrentDirectory, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.VideoTiles, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.ColorWheel, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.VideoWriter, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

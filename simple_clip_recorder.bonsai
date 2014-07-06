@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q2:FileCapture">
+          <q2:FileName>C:\kampff\Insync\kampff.lab@gmail.com\protocols\shuttling\Videos\CISS 2012\Surprise\surprise0_JPAK03.mp4</q2:FileName>
+          <q2:PlaybackRate>1E-06</q2:PlaybackRate>
+          <q2:Loop>false</q2:Loop>
+          <q2:Playing>true</q2:Playing>
+        </Source>
+      </Expression>
+      <Expression xsi:type="q3:ToggleSwitch">
+        <q3:Enabled>false</q3:Enabled>
+      </Expression>
+      <Expression xsi:type="Do">
+        <Sink xsi:type="q2:VideoWriter">
+          <q2:FileName>aligned_clip.avi</q2:FileName>
+          <q2:Suffix>None</q2:Suffix>
+          <q2:Buffered>false</q2:Buffered>
+          <q2:FourCC>FMP4</q2:FourCC>
+          <q2:FrameRate>120</q2:FrameRate>
+          <q2:FrameSize>
+            <q2:Width>0</q2:Width>
+            <q2:Height>0</q2:Height>
+          </q2:FrameSize>
+          <q2:ResizeInterpolation>NearestNeighbor</q2:ResizeInterpolation>
+        </Sink>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.Vision.FileCapture, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.ToggleSwitch, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.VideoWriter, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

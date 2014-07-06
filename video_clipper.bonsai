@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step0_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step1_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step2_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step3_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step4_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step5_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>annotations.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT2S</q1:EventOffset>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="Do">
+        <Sink xsi:type="q2:VideoWriter">
+          <q2:FileName>clip.avi</q2:FileName>
+          <q2:Suffix>None</q2:Suffix>
+          <q2:Buffered>true</q2:Buffered>
+          <q2:FourCC>FMP4</q2:FourCC>
+          <q2:FrameRate>120</q2:FrameRate>
+          <q2:FrameSize>
+            <q2:Width>0</q2:Width>
+            <q2:Height>0</q2:Height>
+          </q2:FrameSize>
+          <q2:ResizeInterpolation>NearestNeighbor</q2:ResizeInterpolation>
+        </Sink>
+      </Expression>
+      <Expression xsi:type="SkipUntil" />
+      <Expression xsi:type="TakeUntil" />
+      <Expression xsi:type="Source">
+        <Source xsi:type="q3:Keyboard" />
+      </Expression>
+      <Expression xsi:type="Where">
+        <Condition xsi:type="q3:KeyPressed">
+          <q3:Key>A</q3:Key>
+        </Condition>
+      </Expression>
+      <Expression xsi:type="RemoveTimestamp" />
+      <Expression xsi:type="Where">
+        <Condition xsi:type="q3:KeyPressed">
+          <q3:Key>S</q3:Key>
+        </Condition>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>7</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>6</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>8</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>6</From>
+        <To>3</To>
+        <Label>Other</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>8</From>
+        <To>4</To>
+        <Label>Other</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.VideoWriter, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.Keyboard, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.KeyPressed, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

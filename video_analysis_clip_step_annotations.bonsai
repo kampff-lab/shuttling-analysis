@@ -1,0 +1,271 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.521.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
+          <q1:Playing>false</q1:Playing>
+          <q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton ShiftKey ControlKey Space Prior PageUp D0 D1 Shift</Key>
+              <Name>on0</Name>
+              <CategoryName />
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton ShiftKey ControlKey A P Q Shift</Key>
+              <Name>on0</Name>
+              <CategoryName />
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton ShiftKey Menu Space Next PageDown D0 D2 Shift</Key>
+              <Name>on1</Name>
+              <CategoryName />
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel MButton XButton1 XButton2 ShiftKey ControlKey Menu Pause Capital CapsLock KanaMode HanguelMode HangulMode JunjaMode A B C D E F G P Q R S T U V W Shift</Key>
+              <Name>on1</Name>
+              <CategoryName />
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel ShiftKey ControlKey Menu Pause Space Prior PageUp Next PageDown End D0 D1 D2 D3 Shift</Key>
+              <Name>on2</Name>
+              <CategoryName />
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 A D E Shift</Key>
+              <Name>on2</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>MButton ShiftKey Capital CapsLock Space Home D0 D4 Shift</Key>
+              <Name>on3</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton ShiftKey Menu B P R Shift</Key>
+              <Name>on3</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 ShiftKey ControlKey Capital CapsLock KanaMode HanguelMode HangulMode Space Prior PageUp Home Left D0 D1 D4 D5 Shift</Key>
+              <Name>on4</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>MButton ShiftKey Capital CapsLock D P T Shift</Key>
+              <Name>on4</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton MButton XButton2 ShiftKey Menu Capital CapsLock Space Next PageDown Home Up D0 D2 D4 D6 Shift</Key>
+              <Name>on5</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton Back Tab ShiftKey ControlKey FinalMode HanjaMode KanjiMode A H I P Q X Y Shift</Key>
+              <Name>on5</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel MButton XButton1 XButton2 ShiftKey ControlKey Menu Pause Capital CapsLock KanaMode HanguelMode HangulMode JunjaMode Space Prior PageUp Next PageDown End Home Left Up Right D0 D1 D2 D3 D4 D5 D6 D7 Shift</Key>
+              <Name>on6</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 ShiftKey ControlKey Capital CapsLock KanaMode HanguelMode HangulMode A D E P Q T U Shift</Key>
+              <Name>on6</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>Back ShiftKey FinalMode Space Down D0 D8 Shift</Key>
+              <Name>on7</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton Back Tab A H I Shift</Key>
+              <Name>on7</Name>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton ShiftKey ControlKey Space Prior PageUp D0 D1 Alt</Key>
+              <Name>on0</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton ShiftKey ControlKey A P Q Alt</Key>
+              <Name>on0</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton ShiftKey Menu Space Next PageDown D0 D2 Alt</Key>
+              <Name>on1</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel MButton XButton1 XButton2 ShiftKey ControlKey Menu Pause Capital CapsLock KanaMode HanguelMode HangulMode JunjaMode A B C D E F G P Q R S T U V W Alt</Key>
+              <Name>on1</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel ShiftKey ControlKey Menu Pause Space Prior PageUp Next PageDown End D0 D1 D2 D3 Alt</Key>
+              <Name>on2</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 A D E Alt</Key>
+              <Name>on2</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>MButton ShiftKey Capital CapsLock Space Home D0 D4 Alt</Key>
+              <Name>on3</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton ShiftKey Menu B P R Alt</Key>
+              <Name>on3</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 ShiftKey ControlKey Capital CapsLock KanaMode HanguelMode HangulMode Space Prior PageUp Home Left D0 D1 D4 D5 Alt</Key>
+              <Name>on4</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>MButton ShiftKey Capital CapsLock D P T Alt</Key>
+              <Name>on4</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>RButton MButton XButton2 ShiftKey Menu Capital CapsLock Space Next PageDown Home Up D0 D2 D4 D6 Alt</Key>
+              <Name>on5</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton Back Tab ShiftKey ControlKey FinalMode HanjaMode KanjiMode A H I P Q X Y Alt</Key>
+              <Name>on5</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton RButton Cancel MButton XButton1 XButton2 ShiftKey ControlKey Menu Pause Capital CapsLock KanaMode HanguelMode HangulMode JunjaMode Space Prior PageUp Next PageDown End Home Left Up Right D0 D1 D2 D3 D4 D5 D6 D7 Alt</Key>
+              <Name>on6</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton MButton XButton1 ShiftKey ControlKey Capital CapsLock KanaMode HanguelMode HangulMode A D E P Q T U Alt</Key>
+              <Name>on6</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>Back ShiftKey FinalMode Space Down D0 D8 Alt</Key>
+              <Name>on7</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>LButton Back Tab A H I Alt</Key>
+              <Name>on7</Name>
+              <CategoryName>StepAnnotations/Trial/right_steps.csv</CategoryName>
+              <EventType>WindowClosing</EventType>
+            </q1:ActionMapping>
+          </q1:ActionMapping>
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>StepAnnotations/Trial/left_steps.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>StepAnnotations/Trial/right_steps.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>player.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>..\left_rewards.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>..\right_rewards.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="WindowWorkflow">
+        <Name>RemoveTimestamp</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="WorkflowOutput" />
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>0</q2:X>
+                  <q2:Y>0</q2:Y>
+                  <q2:Width>0</q2:Width>
+                  <q2:Height>0</q2:Height>
+                </q2:RegionOfInterest>
+              </Transform>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="q1:RepeatCurrentDirectory">
+        <q1:FileName>C:\kampff\Insync\kampff.lab@gmail.com\protocols\shuttling\analysis\clipDirectories.csv</q1:FileName>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RepeatCurrentDirectory, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

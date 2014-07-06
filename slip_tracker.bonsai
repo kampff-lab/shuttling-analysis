@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:q4="clr-namespace:Bonsai.Scripting;assembly=Bonsai.Scripting" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>400</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT1.5S</q1:EventOffset>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Zip" />
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="RemoveTimestamp" />
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q1:TimestampImageFileMatch">
+          <q1:BackgroundFolder>Background</q1:BackgroundFolder>
+          <q1:MatchMethod>Closest</q1:MatchMethod>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:Subtract" />
+      </Expression>
+      <Expression xsi:type="Do">
+        <Sink xsi:type="q4:PythonTextWriter">
+          <q4:Script>def process(input):
+    for x in input:
+        print x.Activity.Val0,
+    print</q4:Script>
+          <q4:FileName>slip_activity.csv</q4:FileName>
+          <q4:Append>false</q4:Append>
+          <q4:Suffix>None</q4:Suffix>
+        </Sink>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:RoiActivity">
+          <q2:Regions>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>73</q2:X>
+                <q2:Y>607</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>176</q2:X>
+                <q2:Y>607</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>176</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>73</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>225</q2:X>
+                <q2:Y>607</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>354</q2:X>
+                <q2:Y>607</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>354</q2:X>
+                <q2:Y>651</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>225</q2:X>
+                <q2:Y>651</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>415</q2:X>
+                <q2:Y>606</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>524</q2:X>
+                <q2:Y>606</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>524</q2:X>
+                <q2:Y>650</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>415</q2:X>
+                <q2:Y>650</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>583</q2:X>
+                <q2:Y>602</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>703</q2:X>
+                <q2:Y>602</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>702</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>583</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>767</q2:X>
+                <q2:Y>600</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>882</q2:X>
+                <q2:Y>600</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>882</q2:X>
+                <q2:Y>650</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>767</q2:X>
+                <q2:Y>650</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>934</q2:X>
+                <q2:Y>598</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>1057</q2:X>
+                <q2:Y>598</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>1057</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>934</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+            <q2:ArrayOfCvPoint>
+              <q2:CvPoint>
+                <q2:X>1111</q2:X>
+                <q2:Y>597</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>1212</q2:X>
+                <q2:Y>597</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>1212</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+              <q2:CvPoint>
+                <q2:X>1111</q2:X>
+                <q2:Y>652</q2:Y>
+              </q2:CvPoint>
+            </q2:ArrayOfCvPoint>
+          </q2:Regions>
+        </Transform>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>5</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>1</To>
+        <Label>Other</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>7</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>6</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.TimestampImageFileMatch, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Scripting.PythonTextWriter, Bonsai.Scripting, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.RoiActivity, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

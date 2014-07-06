@@ -1,0 +1,304 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.521.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>20</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:EventOffsetFrames>0</q1:EventOffsetFrames>
+          <q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>A</Key>
+              <Name>Step</Name>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D1</Key>
+              <Name>Contact</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D2</Key>
+              <Name>EarFlick</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D3</Key>
+              <Name>FreezeOnset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D4</Key>
+              <Name>FreezeOffset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D5</Key>
+              <Name>Jump</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D6</Key>
+              <Name>ExploreRailOnset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D7</Key>
+              <Name>ExploreRailOffset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D8</Key>
+              <Name>RearOnset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D9</Key>
+              <Name>RearOffset</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>D0</Key>
+              <Name>FinishAcross</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>P</Key>
+              <Name>GoBack</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+            <q1:ActionMapping xsi:type="RecordEvent">
+              <Key>R</Key>
+              <Name>Reward</Name>
+              <CategoryName>ethogram.csv</CategoryName>
+              <EventType>WindowOpening</EventType>
+            </q1:ActionMapping>
+          </q1:ActionMapping>
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>ethogram.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>stable_left_steps.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>unstable_left_steps.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>player.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>..\left_rewards.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>..\right_rewards.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="WindowWorkflow">
+        <Name>RemoveTimestamp</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="WorkflowOutput" />
+            <Expression xsi:type="RemoveTimestamp" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Subtract" />
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q1:TimestampImageFileMatch">
+                <q1:BackgroundFolder>Background</q1:BackgroundFolder>
+                <q1:MatchMethod>Closest</q1:MatchMethod>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Take">
+              <Count>1</Count>
+            </Expression>
+            <Expression xsi:type="CombineLatest" />
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Crop">
+                <q2:RegionOfInterest>
+                  <q2:X>0</q2:X>
+                  <q2:Y>0</q2:Y>
+                  <q2:Width>0</q2:Width>
+                  <q2:Height>0</q2:Height>
+                </q2:RegionOfInterest>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Threshold">
+                <q2:ThresholdValue>4</q2:ThresholdValue>
+                <q2:MaxValue>255</q2:MaxValue>
+                <q2:ThresholdType>Binary</q2:ThresholdType>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:FindContours">
+                <q2:Mode>List</q2:Mode>
+                <q2:Method>CHAIN_APPROX_NONE</q2:Method>
+                <q2:Offset>
+                  <q2:X>0</q2:X>
+                  <q2:Y>0</q2:Y>
+                </q2:Offset>
+                <q2:MinArea>100</q2:MinArea>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:DrawContours">
+                <q2:MaxLevel>1</q2:MaxLevel>
+                <q2:Thickness>-1</q2:Thickness>
+              </Transform>
+            </Expression>
+            <Expression xsi:type="Select">
+              <Transform xsi:type="q2:Smooth">
+                <q2:SmoothType>Blur</q2:SmoothType>
+                <q2:Size1>10</q2:Size1>
+                <q2:Size2>10</q2:Size2>
+                <q2:Sigma1>0</q2:Sigma1>
+                <q2:Sigma2>0</q2:Sigma2>
+              </Transform>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>0</From>
+              <To>4</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>6</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>3</From>
+              <To>11</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>4</From>
+              <To>5</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>5</From>
+              <To>6</To>
+              <Label>Other</Label>
+            </Edge>
+            <Edge>
+              <From>6</From>
+              <To>3</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>7</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>8</From>
+              <To>9</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>9</From>
+              <To>10</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>10</From>
+              <To>7</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>11</From>
+              <To>8</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="q1:RepeatCurrentDirectory">
+        <q1:FileName>C:\Users\gonca_000\Documents\Insync\kampff.lab@gmail.com\protocols\shuttling\analysis\clipDirectories.csv</q1:FileName>
+      </Expression>
+      <Expression xsi:type="Sample" />
+      <Expression xsi:type="Source">
+        <Source xsi:type="q3:Keyboard" />
+      </Expression>
+      <Expression xsi:type="Where">
+        <Condition xsi:type="q3:KeyPressed">
+          <q3:Key>S</q3:Key>
+        </Condition>
+      </Expression>
+      <Expression xsi:type="Do">
+        <Sink xsi:type="q2:SaveImage">
+          <q2:FileName>C:\Users\gonca_000\Desktop\snapshot.png</q2:FileName>
+          <q2:Suffix>FileCount</q2:Suffix>
+        </Sink>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>7</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>6</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>6</From>
+        <To>4</To>
+        <Label>Other</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.TimestampImageFileMatch, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Crop, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Threshold, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.FindContours, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.DrawContours, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Smooth, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RepeatCurrentDirectory, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.Keyboard, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.KeyPressed, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.SaveImage, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

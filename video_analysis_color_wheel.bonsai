@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.514.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q3="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Events</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>60</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>right_stable_crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="WindowWorkflow">
+        <Name>RemoveTimestamp</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput" />
+            <Expression xsi:type="WorkflowOutput" />
+            <Expression xsi:type="RemoveTimestamp" />
+          </Nodes>
+          <Edges>
+            <Edge>
+              <From>0</From>
+              <To>2</To>
+              <Label>Source</Label>
+            </Edge>
+            <Edge>
+              <From>2</From>
+              <To>1</To>
+              <Label>Source</Label>
+            </Edge>
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="q1:ColorWheel">
+        <q1:Colors>Red;#C0C000;Cyan;Navy</q1:Colors>
+      </Expression>
+      <Expression xsi:type="q1:RepeatCurrentDirectory">
+        <q1:WorkingDirectories>
+          <q1:string>F:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_21\2013_04_15-12_25\Analysis</q1:string>
+          <q1:string>F:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_21\2013_04_16-11_35\Analysis</q1:string>
+          <q1:string>F:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_21\2013_04_17-11_39\Analysis</q1:string>
+          <q1:string>F:\Protocols\Behavior\Shuttling\LightDarkServoStable\Data\JPAK_21\2013_04_18-11_31\Analysis</q1:string>
+        </q1:WorkingDirectories>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.ColorWheel, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RepeatCurrentDirectory, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

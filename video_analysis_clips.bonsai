@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.IO;assembly=Bonsai.IO" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Events</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>120</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>player.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT12S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="q1:RepeatCurrentDirectory">
+        <q1:WorkingDirectories>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_20/2013_04_05-11_47/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_21/2013_04_05-12_21/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_22/2013_04_12-14_59/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_23/2013_04_12-14_26/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_24/2013_04_19-12_45/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_25/2013_04_19-13_20/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_26/2013_04_26-14_25/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_27/2013_04_26-13_52/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_28/2013_05_03-15_32/Analysis</q1:string>
+          <q1:string>G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_29/2013_05_03-16_06/Analysis</q1:string>
+        </q1:WorkingDirectories>
+      </Expression>
+      <Expression xsi:type="TakeUntil" />
+      <Expression xsi:type="Source">
+        <Source xsi:type="q2:Keyboard" />
+      </Expression>
+      <Expression xsi:type="Where">
+        <Condition xsi:type="q2:KeyPressed">
+          <q2:Key>N</q2:Key>
+        </Condition>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>5</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>3</To>
+        <Label>Other</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.RepeatCurrentDirectory, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.Keyboard, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.IO.KeyPressed, Bonsai.IO, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

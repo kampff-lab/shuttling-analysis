@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>100</q1:PlaybackRate>
+          <q1:Playing>true</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>-PT1.5S</q1:EventOffset>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Zip" />
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="RemoveTimestamp" />
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q1:TimestampImageFileMatch">
+          <q1:BackgroundFolder>Background</q1:BackgroundFolder>
+          <q1:MatchMethod>Closest</q1:MatchMethod>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:Subtract" />
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q1:NoseTracking">
+          <q1:Threshold>3</q1:Threshold>
+          <q1:MinAreaEnter>3000</q1:MinAreaEnter>
+          <q1:MinAreaExit>1000</q1:MinAreaExit>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:Smooth">
+          <q2:SmoothType>Blur</q2:SmoothType>
+          <q2:Size1>10</q2:Size1>
+          <q2:Size2>10</q2:Size2>
+          <q2:Sigma1>0</q2:Sigma1>
+          <q2:Sigma2>0</q2:Sigma2>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:Threshold">
+          <q2:ThresholdValue>3</q2:ThresholdValue>
+          <q2:MaxValue>255</q2:MaxValue>
+          <q2:ThresholdType>Binary</q2:ThresholdType>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:Skeletonization">
+          <q2:DistanceType>L2</q2:DistanceType>
+          <q2:LaplacianAperture>7</q2:LaplacianAperture>
+          <q2:RidgeThreshold>-300</q2:RidgeThreshold>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:FindContours">
+          <q2:Mode>External</q2:Mode>
+          <q2:Method>CHAIN_APPROX_NONE</q2:Method>
+          <q2:Offset>
+            <q2:X>0</q2:X>
+            <q2:Y>0</q2:Y>
+          </q2:Offset>
+          <q2:MinArea>2000</q2:MinArea>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:DrawContours">
+          <q2:MaxLevel>1</q2:MaxLevel>
+          <q2:Thickness>-1</q2:Thickness>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:FindContours">
+          <q2:Mode>External</q2:Mode>
+          <q2:Method>CHAIN_APPROX_NONE</q2:Method>
+          <q2:Offset>
+            <q2:X>0</q2:X>
+            <q2:Y>0</q2:Y>
+          </q2:Offset>
+          <q2:MinArea>40</q2:MinArea>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:BinaryRegionAnalysis" />
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:RangeThreshold">
+          <q2:Lower>
+            <q2:Val0>3</q2:Val0>
+            <q2:Val1>0</q2:Val1>
+            <q2:Val2>0</q2:Val2>
+            <q2:Val3>0</q2:Val3>
+          </q2:Lower>
+          <q2:Upper>
+            <q2:Val0>20</q2:Val0>
+            <q2:Val1>255</q2:Val1>
+            <q2:Val2>255</q2:Val2>
+            <q2:Val3>255</q2:Val3>
+          </q2:Upper>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:ImageMoments" />
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>5</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>2</From>
+        <To>4</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>4</From>
+        <To>1</To>
+        <Label>Other</Label>
+      </Edge>
+      <Edge>
+        <From>5</From>
+        <To>7</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>6</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>8</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>7</From>
+        <To>14</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>8</From>
+        <To>10</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>9</From>
+        <To>12</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>10</From>
+        <To>11</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>11</From>
+        <To>9</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>12</From>
+        <To>13</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>14</From>
+        <To>15</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.TimestampImageFileMatch, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Subtract, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.BehaviorAnalysis.NoseTracking, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Smooth, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Threshold, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.Skeletonization, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.FindContours, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.DrawContours, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.BinaryRegionAnalysis, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.RangeThreshold, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.ImageMoments, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>

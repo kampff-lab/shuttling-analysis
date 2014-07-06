@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="1.0.516.0">
+  <Workflow xmlns:q1="clr-namespace:Bonsai.BehaviorAnalysis;assembly=Bonsai.BehaviorAnalysis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:q2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision" xmlns="https://horizongir.org/bonsai">
+    <Nodes>
+      <Expression xsi:type="Source">
+        <Source xsi:type="q1:VideoEventPlayer">
+          <q1:PlaybackMode>Video</q1:PlaybackMode>
+          <q1:FileName>..\front_video.avi</q1:FileName>
+          <q1:PlaybackRate>240</q1:PlaybackRate>
+          <q1:Playing>false</q1:Playing>
+          <q1:ActionMapping />
+          <q1:EventCategories>
+            <q1:EventDescriptorCategory>crossings.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step0_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step1_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step2_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step3_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step4_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>step5_times.csv</q1:EventDescriptorCategory>
+            <q1:EventDescriptorCategory>annotations.csv</q1:EventDescriptorCategory>
+          </q1:EventCategories>
+          <q1:EventOffset>PT0S</q1:EventOffset>
+          <q1:DefaultDuration>PT1S</q1:DefaultDuration>
+        </Source>
+      </Expression>
+      <Expression xsi:type="Merge" />
+      <Expression xsi:type="Select">
+        <Transform xsi:type="q2:RangeThreshold">
+          <q2:Lower>
+            <q2:Val0>0</q2:Val0>
+            <q2:Val1>0</q2:Val1>
+            <q2:Val2>0</q2:Val2>
+            <q2:Val3>0</q2:Val3>
+          </q2:Lower>
+          <q2:Upper>
+            <q2:Val0>255</q2:Val0>
+            <q2:Val1>255</q2:Val1>
+            <q2:Val2>255</q2:Val2>
+            <q2:Val3>255</q2:Val3>
+          </q2:Upper>
+        </Transform>
+      </Expression>
+      <Expression xsi:type="RemoveTimestamp" />
+    </Nodes>
+    <Edges>
+      <Edge>
+        <From>0</From>
+        <To>1</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>1</From>
+        <To>3</To>
+        <Label>Source</Label>
+      </Edge>
+      <Edge>
+        <From>3</From>
+        <To>2</To>
+        <Label>Source</Label>
+      </Edge>
+    </Edges>
+  </Workflow>
+  <ExtensionTypes>
+    <Type>Bonsai.BehaviorAnalysis.VideoEventPlayer, Bonsai.BehaviorAnalysis, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Vision.RangeThreshold, Bonsai.Vision, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+    <Type>Bonsai.Expressions.RemoveTimestampBuilder, Bonsai, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</Type>
+  </ExtensionTypes>
+</WorkflowBuilder>
