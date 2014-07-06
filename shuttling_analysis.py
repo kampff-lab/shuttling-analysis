@@ -15,6 +15,7 @@ import parse_session as parser
 import process_session
 import numpy as np
 import matplotlib as mpl
+import process_trajectories as proctraj
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -23,8 +24,14 @@ dname = os.path.dirname(abspath)
 # current bonsai
 analysisfolder = 'Analysis'
 backgroundfolder = 'Background'
-playerpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
-editorpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Editor.exe'
+#playerpath = r'E:\Software\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
+editorpath = r'D:\Bonsai\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Editor.exe'
+playerpath = r'D:\Bonsai\Bonsai.Packages\Externals\Bonsai\Bonsai.Editor\bin\x64\Release\Bonsai.Player.exe'
+
+def subject_analysis(datafolders,preprocessing=False):
+    for basefolder in datafolders:
+        datafolders = [path for path in utils.directory_tree(basefolder,1)]
+        analysis_pipeline(datafolders,preprocessing=preprocessing)
 
 def analysis_pipeline(datafolders,preprocessing=True):
     
@@ -173,27 +180,59 @@ def make_backgrounds(path=None):
     os.chdir(currdir)
     return True
     
-
+def update_clipdirectories(workingdirs,currdir):
+    global dname
+    os.chdir(dname)
+    with open('clipDirectories.csv','w') as f:
+        for dirname in workingdirs:
+            f.write(dirname + '\n')
+    os.chdir(currdir)
     
-def make_crossing_clips(session,frames_before=240,frames_after=240,xboundary=640,filterlabels=None,clipslice=slice(None),filename='player.csv'):
-    currdir = os.getcwd()
-    os.chdir(session.path[0])
-    
+def write_time_slices(filename,time_slices):
     def write_crossing_slice(f,slices):
         for time_slice in slices:
             f.write('%s WindowOpening\n' % (time_slice[0]))
             f.write('%s WindowClosing\n' % (time_slice[1]))
     
-    if filterlabels is not None:
-        trials_filter = process_session.get_crossing_label_filter(session,filterlabels)
-    else:
-        trials_filter = lambda i:True
-    time_slices = process_session.get_crossing_time_slices(session,frames_before,frames_after,xboundary,trialfilter=trials_filter)
-    
     with open(filename,'w') as f:
-        write_crossing_slice(f,time_slices[clipslice])
-        
+        write_crossing_slice(f,time_slices)
+    
+def make_clips(session,labelfilter=None,slicesel=None,filename='player.csv'):
+    currdir = os.getcwd()
+    analysis_path = proctraj.get_analysis_path(session.video)
+    if slicesel is None:
+        indices = proctraj.get_labeled_indices(session.labels,labelfilter)
+        time_slices = [(session.time[session.slices[i].start], session.time[session.slices[i].stop-1]) for i in indices]
+    else:
+        time_slices = [(session.time[s.start], session.time[s.stop-1]) for s in slicesel]
+    
+    os.chdir(analysis_path)
+    write_time_slices(filename,time_slices)
     os.chdir(currdir)
+    return analysis_path
+    
+def make_crossing_clips(sessions,frames_before=240,frames_after=240,xboundary=640,labelfilter=None,clipslice=slice(None),filename='player.csv'):
+    currdir = os.getcwd()
+    workingdirs = []
+    for session in sessions:
+        os.chdir(session.path[0])
+        workingdirs.append(session.path[0])
+        
+        def write_crossing_slice(f,slices):
+            for time_slice in slices:
+                f.write('%s WindowOpening\n' % (time_slice[0]))
+                f.write('%s WindowClosing\n' % (time_slice[1]))
+        
+        if labelfilter is not None:
+            trials_filter = process_session.get_crossing_label_filter(session,labelfilter)
+        else:
+            trials_filter = lambda i:True
+        time_slices = process_session.get_crossing_time_slices(session,frames_before,frames_after,xboundary,trialfilter=trials_filter,crossingslice=clipslice)
+        
+        with open(filename,'w') as f:
+            write_crossing_slice(f,time_slices)
+    
+    update_clipdirectories(workingdirs,currdir)
     
 def reconstruct_rewards(path,lthreshold=400,rthreshold=400):
     currdir = os.getcwd()
@@ -273,7 +312,7 @@ def shuttling_analysis(path):
     print "Processing "+ path + "..."
     os.chdir(path)
     
-    delete_video_analysis()
+#    delete_video_analysis()
 #==============================================================================
 #    if os.path.exists('mean.csv') or os.path.exists('step0.csv'):
 #        print "Deleting existing data..."
@@ -342,15 +381,30 @@ def shuttling_analysis(path):
 #==============================================================================
 #        del session
 
-    stepfile = 'step0_times.csv'
-    if not os.path.exists(stepfile) or os.stat(stepfile).st_size == 0 or True:
-        print "Extracting step times..."
-        session = parser.parse_session(path,path,True)
-        process_session.make_step_times(session)
-        print "Saving step frames..."
-        buildsteppath = dname + r'\stepper_steps\build_step_frames'
-        os.system(buildsteppath)
-        print "Saving average step frames..."
-        process_session.make_step_means(session)
+#    if not os.path.exists('trajectories.csv'):
+#        videoprocessing = dname + r'\nose_tracker.bonsai'
+#        print "Analysing tip trajectories..."
+#        subprocess.call([playerpath, videoprocessing])
+#        
+#    if not os.path.exists('slip_activity.csv'):
+#        videoprocessing = dname + r'\slip_tracker.bonsai'
+#        print "Analysing slip activity..."
+#        subprocess.call([playerpath, videoprocessing])
+#        
+#    if not os.path.exists('trajectory_steps.csv'):
+#        videoprocessing = dname + r'\step_activity_tracker.bonsai'
+#        print "Analysing step activities..."
+#        subprocess.call([playerpath, videoprocessing])
+
+#    stepfile = 'step0_times.csv'
+#    if not os.path.exists(stepfile) or os.stat(stepfile).st_size == 0 or True:
+#        print "Extracting step times..."
+#        session = parser.parse_session(path,path,True)
+#        process_session.make_step_times(session)
+#        print "Saving step frames..."
+#        buildsteppath = dname + r'\stepper_steps\build_step_frames'
+#        os.system(buildsteppath)
+#        print "Saving average step frames..."
+#        process_session.make_step_means(session)
 
     os.chdir(currdir)

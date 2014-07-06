@@ -7,7 +7,7 @@ Created on Tue May 28 10:40:33 2013
 
 import numpy
 
-def smooth(x,window_len=11,window='hanning'):
+def smooth(x,window_len=11,window='blackman'):
     """smooth the data using a window with requested size.
     
     This method is based on the convolution of a scaled window with the signal.

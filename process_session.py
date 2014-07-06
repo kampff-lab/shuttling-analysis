@@ -6,16 +6,16 @@ Created on %(date)s
 """
 
 import os
-import cv
+#import cv
 import bisect
 import itertools
 import matplotlib.mlab as mlab
 import numpy as np
 import dateutil
-import scipy.cluster.hierarchy as hcl
+#import scipy.cluster.hierarchy as hcl
 import parse_session
 import analysis_utilities as utils
-import image_processing as imgproc
+#import image_processing as imgproc
 from scipy.interpolate import UnivariateSpline
 
 # for shuttling assay number 1 !!!
@@ -109,6 +109,9 @@ def get_all_boundary_indices(data):
 def get_session_duration(session):
     return dateutil.parser.parse(session.frame_time[-1]) - session.start_time
     
+def get_trial_times(session):
+    return [i.total_seconds() for i in session.inter_reward_intervals] if len(session.inter_reward_intervals) > 0 else [get_session_duration(session).total_seconds()]
+    
 def get_crossing_timestamps(session,xboundary=640,trialfilter=lambda i:True):
     timestamps = session.trial_time
     find_crossing = lambda i,xtip:utils.find_between(xtip,-1,xboundary) if session.crossing_labels[i]['direction'] == 'left' else utils.find_gt(xtip,xboundary)    
@@ -125,9 +128,9 @@ def get_frame_time_slice(session,anchor,frames_before,frames_after):
     index = bisect.bisect_left(session.frame_time,anchor)
     return (session.frame_time[index-frames_before],session.frame_time[index+frames_after])
     
-def get_crossing_time_slices(session,frames_before,frames_after,xboundary=640,trialfilter=lambda i:True):
+def get_crossing_time_slices(session,frames_before,frames_after,xboundary=640,trialfilter=lambda i:True,crossingslice=slice(None)):
     crossings = get_crossing_timestamps(session,xboundary,trialfilter)
-    return [get_frame_time_slice(session,crossing,frames_before,frames_after) for crossing in crossings]
+    return [get_frame_time_slice(session,crossing,frames_before,frames_after) for crossing in crossings[crossingslice]]
     
 def get_directionless_tip_trajectory(xtip,ytip,cdirection):
     #valid_indices = [i for i,x in enumerate(xtip) if x > 0]
@@ -250,8 +253,9 @@ def get_average_crossing_tip_height(session,valid_trials=None,crop=default_crop)
 # Gets an array of the average height of the nose tip for each crossing
 # Outputs a tuple/list of [trial_variable,trial_indices,numberoftrials]
 # This allows for plotting data end-to-end and retain valid offsets for different colorings
-def get_average_crossing_tip_speed(session,valid_trials=None,crop=default_crop):
-    average_speeds = np.array([np.mean(np.sqrt(np.power(np.diff(get_clipped_trial_variable(session,i,trialx,crop)),2) + np.power(np.diff(get_clipped_trial_variable(session,i,trialy,crop)),2))) for i,(trialx,trialy) in enumerate(zip(session.tip_horizontal,session.tip_vertical))])
+def get_average_crossing_tip_speed(session,valid_trials=None,crop=default_crop,trial_slice=slice(None)):
+#    average_speeds = np.array([np.mean(np.sqrt(np.power(np.diff(get_clipped_trial_variable(session,i,trialx,crop)),2) + np.power(np.diff(get_clipped_trial_variable(session,i,trialy,crop)),2))) for i,(trialx,trialy) in enumerate(zip(session.tip_horizontal,session.tip_vertical))])
+    average_speeds = np.array([np.mean(np.abs(np.diff(get_clipped_trial_variable(session,i,session.tip_horizontal[i],crop)))) for i in np.arange(len(session.tip_horizontal))[trial_slice]])
     if(valid_trials is not None):
         valid_trials = get_crossing_expansion(session,valid_trials)
         zipped_trials = map(np.array, zip(*[(i,x) for i,(x,v) in enumerate(zip(average_speeds,valid_trials)) if v]))

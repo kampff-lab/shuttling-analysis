@@ -7,26 +7,52 @@ Created on Tue Jun 05 16:13:44 2012
 
 import os
 import pickle
+import numpy as np
 import parse_session as parser
 import analysis_utilities as utils
+
+class session(object):
+  def __init__(self, **kwargs): self.__dict__ = kwargs
+  def __eq__(self, r2): return self.__dict__ == r2.__dict__
+  def __ne__(self, r2): return self.__dict__ != r2.__dict__
 
 def load_pickle(filename):
     with open(filename,'rb') as picklefile:
         return pickle.load(picklefile)
+        
+def save_pickle(path,obj):
+    with open(path,'wb') as pickled_file:
+        pickle.dump(obj,pickled_file,pickle.HIGHEST_PROTOCOL)
 
-def load_pathlist(pathlist):
+def load_pathlist(pathlist,analysis,loader):
     sessions = []
     for path in pathlist:
+        path = path + '\\Analysis'
         path_parts = os.path.split(os.path.split(path)[0])
         date = path_parts[1]
         path_parts = os.path.split(path_parts[0])
-        subject = path_parts[1]        
-        sessions.append(parser.parse_session(path,subject + ' ' + date))
+        subject = path_parts[1]
+        sessions.append(loader(path,subject + ' ' + date,analysis))
     return sessions
 
-def load_path(basefolder):
-    datafolders = [path + '\\Analysis' for path in utils.directory_tree(basefolder,1) if os.path.exists(path + '\\Analysis')]
-    return load_pathlist(datafolders)
+def load_trajectories(path,name,analysis):
+    return np.genfromtxt(path+'\\trajectories.csv')
+    
+def get_path_videos(basefolder,indices):
+    datafolders = [path for path in [utils.directory_tree(basefolder,1)[i] for i in indices] if os.path.exists(path + '\\Analysis')]
+    return [path + '\\front_video.avi' for path in datafolders]
+    
+def load_path_trajectories(basefolder,indices):
+    datafolders = [path for path in [utils.directory_tree(basefolder,1)[i] for i in indices] if os.path.exists(path + '\\Analysis')]
+    return load_pathlist(datafolders,False,load_trajectories)
+    
+def load_path_sessions(basefolder,indices,analysis=True):
+    datafolders = [path for path in [utils.directory_tree(basefolder,1)[i] for i in indices] if os.path.exists(path + '\\Analysis')]
+    return load_pathlist(datafolders,analysis,parser.parse_session)
+
+def load_path(basefolder,folderslices=slice(None),analysis=True):
+    datafolders = [path for path in utils.directory_tree(basefolder,1)[folderslices] if os.path.exists(path + '\\Analysis')]
+    return load_pathlist(datafolders,analysis,parser.parse_session)
     
 def annotate_jpak345(sessions):
     sessions[0].session_type = 'habituation'

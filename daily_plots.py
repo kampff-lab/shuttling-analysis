@@ -99,6 +99,13 @@ def session_summary_servoassay(datafolders,
         plt.ylim([0,10])
         save_figure(fig,basepath)
         
+        # Plot effective trial times in time
+        if foldercategories:
+            basepath = 'effective_trial_times_in_time'
+        fig = plts.plot_effective_trial_times_in_time(name,sessions)
+        plt.ylim([0,10])
+        save_figure(fig,basepath)
+        
         # Plot min trial times
         if foldercategories:
             basepath = 'min_trial_times'
