@@ -5,7 +5,18 @@ Created on Sat Nov 23 16:12:45 2013
 @author: gonca_000
 """
 
+import os
 import numpy as np
+
+max_height_cm = 24.0
+height_pixel_to_cm = max_height_cm / 680.0
+width_pixel_to_cm = 50.0 / 1280.0
+rail_height_pixels = 100
+frames_per_second = 120.0
+
+# stores tip trajectories from shuttling task
+# * data rows are frames
+# * data cols are [xleft,yleft,xright,yright]
 
 class trajectories:
     def __init__(self, data, slices=None, **kwargs):
@@ -19,6 +30,10 @@ class trajectories:
         
     def tolist(self):
         return [self.data[s,:] for s in self.slices]
+        
+def scale(ts,sx=width_pixel_to_cm,sy=height_pixel_to_cm,by=rail_height_pixels,my=max_height_cm):
+    scaled = [0,my,0,my] - (ts.data + [0,by,0,by]) * [-sx,sy,-sx,sy]
+    return trajectories(scaled,ts.slices)
     
 def crossings(ts,center=640):
     return trajectories(ts.data,[s for s in ts.slices if
@@ -40,3 +55,9 @@ def crop(ts,crop=[200,1000]):
         return slice(s.start+min_index,s.start+max_index+1)
     return trajectories(ts.data,[crop_slice(s) for s in ts.slices
     if np.any(test_slice(s))])
+        
+def genfromtxt(path):
+    trajectoriespath = os.path.join(path, 'Analysis/trajectories.csv')
+    data = np.genfromtxt(trajectoriespath)
+    return scale(crop(crossings(trajectories(data))))
+    

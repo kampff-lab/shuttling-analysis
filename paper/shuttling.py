@@ -6,9 +6,14 @@ Created on Mon Dec 16 15:32:27 2013
 """
 
 import os
-import glob
 import poke
-import numpy as np
+
+class shuttling:
+    def __init__(self, path, leftpoke, rightpoke, rewards):
+        self.path = path
+        self.leftpoke = leftpoke
+        self.rightpoke = rightpoke
+        self.rewards = rewards
         
 def genfromtxt(path):
     leftpokepath = os.path.join(path, 'left_poke.csv')
@@ -20,7 +25,3 @@ def genfromtxt(path):
     rightpoke = poke.genfromtxt(rightpokepath, rightrewardpath)
     
     return shuttling(path, leftpoke, rightpoke, (leftpoke+rightpoke).rewards)
-    
-def findsessions(folder):
-    sessionpaths = glob.glob(os.path.join(folder,'**/front_video.csv'))
-    return [os.path.split(path)[0] for path in sessionpaths]
