@@ -13,6 +13,9 @@ import scipy.stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+lesion_order = np.array([0, 4, 12, 10, 2, 18, 8, 14, 20, 16, 6])
+control_order = lesion_order+1
+
 class figure1c:
     def __init__(self, lesions, controls):
         self.lesions = lesions
@@ -47,7 +50,14 @@ class figure1c:
         def plotstatsummary(ax,data,color,offset=0):
             mean,error = getstatsummary(data)
             x = (np.arange(len(mean))*scale)+(len(data)/2)+offset
-            plt.errorbar(x,mean,error,fmt='--',color=color,ecolor='k',linewidth=2,capthick=2,markersize=0)    
+            plt.errorbar(x,mean,error,fmt=None,color=color,ecolor='k',linewidth=2,capthick=2,markersize=0)
+        
+        def drawseparators(ax,xticks):
+            ylims = plt.ylim()
+            for i in range(len(xticks)-1):
+                separatorxi = (xticks[i]+xticks[i+1])/2
+                ax.plot((separatorxi,separatorxi),ylims,'k--')
+            plt.ylim(ylims)
         
         scale = 46
         lesiontimes = gettrialstats(self.lesions)
@@ -63,14 +73,16 @@ class figure1c:
         
         handles, labels = ax.get_legend_handles_labels()
         plt.legend((handles[0],handles[len(controltimes)]),(labels[0],labels[len(controltimes)]))
-        ax.set_xticks([scale*i+len(controltimes)-0.5 for i in range(3)])
+        xticks = [scale*i+len(controltimes)-0.5 for i in range(3)]
+        ax.set_xticks(xticks)
         ax.set_xticklabels(['stable','partial','unstable'])
+        drawseparators(ax,xticks)
         plt.ylabel('nose height (cm)')
         
             
 def genfromtxt(folders):
-    lesionfolders = [folders[i] for i in range(2,len(folders),2)]
-    controlfolders = [folders[i] for i in range(1,len(folders),2)]
+    lesionfolders = [folders[i] for i in lesion_order[1:]]
+    controlfolders = [folders[i] for i in control_order]
                     
     print "Processing lesions..."
     lesions = sessions.genfromsubjects(lesionfolders,[4,10,-1],trajectories)

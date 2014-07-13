@@ -15,7 +15,9 @@ generate_figs = True
 barlabels = []
 left_volumes = []
 right_volumes = []
-lesion_order = [0, 2, 6, 5, 1, 4, 3]
+lesion_order = np.array([0, 4, 12, 10, 2, 18, 8, 14, 20, 16, 6])
+control_order = lesion_order+1
+# JPAK 20,24,38,36,22,52,28,48,54,50,26
 
 ####################### Load and Render Functions #############################
     

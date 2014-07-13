@@ -56,6 +56,18 @@ def crop(ts,crop=[200,1000]):
     return trajectories(ts.data,[crop_slice(s) for s in ts.slices
     if np.any(test_slice(s))])
         
+def left(ts):
+    return trajectories(ts.data,[s for s in ts.slices
+    if ts.data[s.start,0] > ts.data[s.stop,0]])
+        
+def right(ts):
+    return trajectories(ts.data,[s for s in ts.slices
+    if ts.data[s.start,0] < ts.data[s.stop,0]])
+        
+def crossindices(ts,center=25.0):
+    return np.array([next(i+s.start for i,x in enumerate(ts.data[s,0]) if x < center)
+    for s in ts.slices[1:]])
+        
 def genfromtxt(path):
     trajectoriespath = os.path.join(path, 'Analysis/trajectories.csv')
     data = np.genfromtxt(trajectoriespath)

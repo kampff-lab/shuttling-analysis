@@ -15,6 +15,7 @@ from process_ethograms import *
 import shuttling_analysis
 import process_trajectories as proctraj
 import process_stepactivity as procsteps
+import plot_utilities as pltutils
 import parse_session
 import dateutil
 from scipy.stats.stats import nanmean, nanstd, sem
@@ -30,21 +31,30 @@ def vline(x):
     
 ### MANIPULATION ETHOGRAM ###
     
-paths = np.array([r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_20/2013_04_05-11_47/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_21/2013_04_05-12_21/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_22/2013_04_12-14_59/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_23/2013_04_12-14_26/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_24/2013_04_19-12_45/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_25/2013_04_19-13_20/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_26/2013_04_26-14_25/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_27/2013_04_26-13_52/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_28/2013_05_03-15_32/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_29/2013_05_03-16_06/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_36/2013_07_12-10_43/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_37/2013_07_12-11_16/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_38/2013_07_12-12_33/Analysis',
-r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_39/2013_07_12-12_00/Analysis'])
-lesion_shuffle = paths[[1,5,13,3,11,9,7,0,4,12,2,10,8,6]]
+paths = np.array([r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_20/2013_04_05-11_47/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_21/2013_04_05-12_21/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_22/2013_04_12-14_59/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_23/2013_04_12-14_26/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_24/2013_04_19-12_45/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_25/2013_04_19-13_20/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_26/2013_04_26-14_25/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_27/2013_04_26-13_52/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_28/2013_05_03-15_32/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_29/2013_05_03-16_06/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_36/2013_07_12-10_43/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_37/2013_07_12-11_16/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_38/2013_07_12-12_33/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_39/2013_07_12-12_00/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_48/2014_03_07-11_36/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_49/2014_03_07-12_10/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_50/2014_03_07-12_56/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_51/2014_03_07-13_31/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_52/2014_03_14-17_02/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_53/2014_03_14-16_25/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_54/2014_03_14-18_25/Analysis',
+r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_55/2014_03_14-17_49/Analysis'])
+lesion_shuffle = paths[[1,5,13,11,3,19,9,15,21,17,7,   0,4,12,10,2,18,8,14,20,16,6]]
+#lesion_shuffle = paths[[1,5,13,3,11,9,7,0,4,12,2,10,8,6]]
 #lesion_shuffle = paths[[0,4,12,2,10,8,6,1,5,13,3,11,9,7]]
 #lesion_shuffle = paths[[0,2,4,6,8,10,12,1,3,5,7,9,11,13]]
     
@@ -68,13 +78,15 @@ blind_ethograms = [load_ethogram(path + r'/blind_ethogram.csv') for path in lesi
 blind_ethograms2 = [load_ethogram(path + r'/blind_ethogram2.csv') for path in lesion_shuffle]
 
 def make_ethogram(ethograms,label=True,title=None,legend=True):
+    midpoint = int(len(ethograms) / 2)
     [plot_ethogram(etho,'jpak',(len(ethograms)-1)*2-i*2,legend=False) for i,etho in enumerate(ethograms)]
     ytks = [i*2+0.5 for i in range(len(ethograms))]
     #rats = [39,37,29,27,25,23,21,38,36,28,26,24,22,20]
     #ytklabels = ['jpak' + str(r) if label else '' for r in rats]
-    ytklabels = [('C' if i < 7 else 'L') + chr(ord('a')+(i%7)) if label else '' for i in range(len(ethograms)-1,-1,-1)]
+    ytklabels = [('C' if i < midpoint else 'L') + chr(ord('a')+(i%midpoint)) if label else '' for i in range(len(ethograms)-1,-1,-1)]
     plt.yticks(ytks,ytklabels)
-    hline(13.5)
+    #hline(13.5)
+    hline(ytks[midpoint]-1)
     xlabel('time from first contact (s)')
     xlim([0,3])
     ethogram_artists = [plt.Rectangle((0,0),1,1,fc=color) for color in event_color_scheme.values()[0:4]]
@@ -89,6 +101,7 @@ make_ethogram(ethograms,title='Goncalo',legend=False)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 make_ethogram(blind_ethograms,label=True)
+pltutils.fix_font_size()
 #make_ethogram(blind_ethograms,label=True,title='ethogram of first contact with manipulated rail')
 
 fig = plt.figure()

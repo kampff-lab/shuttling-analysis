@@ -13,6 +13,9 @@ import scipy.stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+lesion_order = np.array([0, 4, 12, 10, 2, 18, 8, 14, 20, 16, 6])
+control_order = lesion_order+1
+
 class figure1b:
     def __init__(self, lesions, controls):
         self.lesions = lesions
@@ -67,8 +70,8 @@ class figure1b:
         
             
 def genfromtxt(folders):
-    lesionfolders = [folders[i] for i in range(0,len(folders),2)]
-    controlfolders = [folders[i] for i in range(1,len(folders),2)]
+    lesionfolders = [folders[i] for i in lesion_order]
+    controlfolders = [folders[i] for i in control_order]
                     
     print "Processing lesions..."
     lesions = sessions.genfromsubjects(lesionfolders,range(1,5),shuttling)

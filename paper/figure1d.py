@@ -14,6 +14,9 @@ import scipy.stats
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+lesion_order = np.array([0, 4, 12, 10, 2, 18, 8, 14, 20, 16, 6])
+control_order = lesion_order+1
+
 class figure1d:
     def __init__(self, lesions, controls):
         self.lesions = lesions
@@ -90,21 +93,21 @@ class figure1d:
         controlstats = [[a[i,0] for a in controlstats] for i in range(nsessions)]
         
         ### SIGNIFICANCE (BETWEEN GROUPS) ###
-        significance = 0.05
-        for i in range(len(xticks)):
-            sigtest = scipy.stats.ttest_ind(lesionstats[i],controlstats[i])[1]
-            print sigtest,"groups"
-            testlabel = str.format("*",sigtest) if sigtest < significance else 'n.s.'
-            pltutils.hbracket(xticks[i],maxstd+maxstd*bracketmaxscale,2,label=testlabel,tickheight=brackettickheight)
+        #significance = 0.05
+        #for i in range(len(xticks)):
+        #    sigtest = scipy.stats.ttest_ind(lesionstats[i],controlstats[i])[1]
+        #    print sigtest,"groups"
+        #    testlabel = str.format("*",sigtest) if sigtest < significance else 'n.s.'
+        #    pltutils.hbracket(xticks[i],maxstd+maxstd*bracketmaxscale,2,label=testlabel,tickheight=brackettickheight)
             
         #################################
         
         ### SIGNIFICANCE (BETWEEN CONDITIONS) ###
-        significance = 0.05
-        sigtest = scipy.stats.ttest_ind(lesionstats[0]+controlstats[0],lesionstats[-1]+controlstats[-1])[1]
-        print sigtest,"conditions"
-        testlabel = str.format("*",sigtest) if sigtest < significance else 'n.s.'
-        pltutils.hbracket(xticks[1],minstd+minstd*bracketmaxscale,(xticks[-1]-xticks[0])/10,label=testlabel,tickheight=-1.5*brackettickheight)
+        #significance = 0.05
+        #sigtest = scipy.stats.ttest_ind(lesionstats[0]+controlstats[0],lesionstats[-1]+controlstats[-1])[1]
+        #print sigtest,"conditions"
+        #testlabel = str.format("*",sigtest) if sigtest < significance else 'n.s.'
+        #pltutils.hbracket(xticks[1],minstd+minstd*bracketmaxscale,(xticks[-1]-xticks[0])/10,label=testlabel,tickheight=-1.5*brackettickheight)
         #####################################
         
         #ax.set_ylim([-1,7.5])
@@ -115,8 +118,8 @@ class figure1d:
         plt.ylabel('time to cross obstacles (s)')
             
 def genfromtxt(folders):
-    lesionfolders = [folders[i] for i in range(0,len(folders),2)]
-    controlfolders = [folders[i] for i in range(1,len(folders),2)]
+    lesionfolders = [folders[i] for i in lesion_order[1:]]
+    controlfolders = [folders[i] for i in control_order]
                     
     print "Processing lesions..."
     lesions = sessions.genfromsubjects(lesionfolders,[4,10,-1],trajectories)
