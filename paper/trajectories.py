@@ -44,6 +44,10 @@ def lengthfilter(ts,minlength=None,maxlength=None):
     return trajectories(ts.data,[s for s in ts.slices if
     s.stop-s.start >= minlength and (maxlength is None or s.stop-s.start <= maxlength)])
     
+def heightfilter(ts,minheight=None,maxheight=None):
+    return trajectories(ts.data,[s for s in ts.slices if
+    min(ts.data[s,1]) > minheight and max(ts.data[s,1]) < maxheight])
+    
 def crop(ts,crop=[200,1000]):
     def test_slice(s):
         return (ts.data[s,0] > crop[0]) & (ts.data[s,0] < crop[1])
@@ -55,6 +59,11 @@ def crop(ts,crop=[200,1000]):
         return slice(s.start+min_index,s.start+max_index+1)
     return trajectories(ts.data,[crop_slice(s) for s in ts.slices
     if np.any(test_slice(s))])
+
+def mirrorleft(ts):
+    return trajectories(ts.data,[slice(s.stop,s.start,-1)
+    if ts.data[s.start,0] > ts.data[s.stop,0] else s
+    for s in ts.slices])
         
 def left(ts):
     return trajectories(ts.data,[s for s in ts.slices
