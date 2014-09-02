@@ -9,6 +9,7 @@ import os
 import glob
 import shutil
 import filecmp
+import dateutil
 import subprocess
 import numpy as np
 
@@ -115,6 +116,15 @@ def make_videoanalysis(path):
         videoprocessing = os.path.join(dname, r'bonsai/video_preprocessor.bonsai')
         print "Analysing video frames..."
         subprocess.call([playerpath, videoprocessing])
+        
+    videotimepath = 'videotime.csv'
+    if not os.path.exists(videotimepath):
+        frametimespath = os.path.join(path, '../front_video.csv')
+        frametimes = np.genfromtxt(frametimespath,dtype=str)
+        print "Generating relative frame times..."
+        datetimes = [dateutil.parser.parse(timestr) for timestr in frametimes]
+        videotime = [(time - datetimes[0]).total_seconds() for time in datetimes]    
+        np.savetxt(videotimepath, np.array(videotime), fmt='%s')
 
     os.chdir(currdir)
     
