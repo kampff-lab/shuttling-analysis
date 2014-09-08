@@ -5,7 +5,10 @@ Created on Wed Oct 09 14:09:10 2013
 @author: IntelligentSystems
 """
 
+import attributeselector
+import collectionselector
 import matplotlib.pyplot as plt
+from matplotlib.widgets import CheckButtons
 
 def hbracket(x,y,width,label=None,tickheight=1,color='k'):
     ax = plt.gca()
@@ -32,3 +35,54 @@ def fix_font_size():
     for item in ([ax.title, ax.xaxis.label, ax.yaxis.label] +
              ax.get_xticklabels() + ax.get_yticklabels()):
         item.set_fontsize(15)
+        
+def featuretiles(data,plotter,labels=None,facecolors='b'):
+    fig = plt.figure()
+    ndims = data.shape[1]
+    selectors = []
+    
+    def onplot(ind):
+        plt.sca(viewax)
+        viewax.clear()
+        plotter(ind)
+            
+    def onselect(ind):
+        for sel in selectors:
+            sel.ind = ind
+            sel.updateselection()
+        onplot(ind)
+
+    halfdims = int(ndims / 2)
+    rowhalf = halfdims + ndims % 2
+    viewax = plt.subplot2grid((ndims,ndims),(rowhalf,0),rowspan=halfdims,colspan=halfdims)
+    
+    for i in range(ndims):
+        for j in range(i,ndims):
+            ax = fig.add_subplot(ndims,ndims,i*ndims+j+1)
+            ax.set_xticklabels([])
+            ax.set_yticklabels([])
+            if i == j:
+                ax.plot(data[:,i])
+                if labels is not None:
+                    ax.set_xlabel(labels[i])
+            else:
+                selectors.append(featureview(data[:,i],data[:,j],None,ax,onselect,facecolors))
+                #ax.plot(data[:,i],data[:,j],'.')
+        
+def featureview(f1,f2,plotter=None,ax=None,onselection=None,facecolors='b'):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+    pts = ax.scatter(f1,f2,facecolors=facecolors,edgecolors='none')
+
+    def onkeypress(evt):
+        if plotter is None:
+            return
+        if evt.key == 'v':
+            ind = selector.ind
+            if len(ind) > 0:
+                plotter(ind)
+    
+    ax.figure.canvas.mpl_connect('key_press_event',onkeypress)
+    selector = collectionselector.CollectionSelector(ax,pts,color_other='b',onselection=onselection)
+    return selector

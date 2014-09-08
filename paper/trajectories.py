@@ -37,6 +37,16 @@ class trajectories:
     def tolist(self):
         return [self.data[s,:] for s in self.slices]
         
+def concatenate(tss):
+    data = np.concatenate([ts.data for ts in tss],axis=0)
+    offset = 0
+    slices = []
+    for ts in tss:
+        for s in ts.slices:
+            slices.append(slice(s.start+offset,s.stop+offset,s.step))
+        offset += ts.data.shape[0]
+    return trajectories(data,np.array(slices))
+        
 def scale(ts,
           sx=width_pixel_to_cm,
           sy=height_pixel_to_cm,
@@ -90,6 +100,26 @@ def mirrorleft(ts):
     if ts.data[s.start,0] > ts.data[s.stop,0] else s
     for s in ts.slices]))
         
+def samedirection(ts):
+    def mirrortrial(s):
+        result = ts.data[s,:]
+        if ts.data[s.start,0] > ts.data[s.stop,0]:
+            x = result[:,0]
+            result = result.copy()
+            result[:,0] = -x + np.min(x) + np.max(x)
+        return result    
+    return [mirrortrial(s) for s in ts.slices]
+    
+def samedirectionspeed(ts,sp):
+    def mirrortrial(s):
+        result = sp.data[s,:]
+        if ts.data[s.start,0] > ts.data[s.stop,0]:
+            xsp = result[:,0]
+            result = result.copy()
+            result[:,0] = -xsp
+        return result
+    return [mirrortrial(s) for s in ts.slices]
+        
 def left(ts):
     return trajectories(ts.data,np.array([s for s in ts.slices
     if ts.data[s.start,0] > ts.data[s.stop,0]]))
@@ -101,9 +131,17 @@ def right(ts):
 def crossindices(ts,center=25.0):
     return np.array([next(i+s.start for i,x in enumerate(ts.data[s,0]) if
     x < center) for s in ts.slices[1:]])
-        
+
 def genfromtxt(path):
     trajectoriespath = os.path.join(path, 'Analysis/trajectories.csv')
     data = np.genfromtxt(trajectoriespath)
-    return scale(crop(crossings(trajectories(data))))
+    return crop(crossings(trajectories(data)))
+    #return scale(crop(crossings(trajectories(data))))
     
+## FEATURES ##
+# minx, maxx, miny, maxy, length, meany, stdy, meanx, stdx
+def features(ts,funs):
+    if np.iterable(ts):
+        return np.array([[f(t[:,i]) for i,f in funs] for t in ts])
+    else:
+        return np.array([[f(ts.data[s,i]) for i,f in funs] for s in ts.slices])
