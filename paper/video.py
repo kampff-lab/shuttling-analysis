@@ -35,11 +35,12 @@ class video:
             else:
                 break
             
-def mvshow(winname, frames, fps=25):
-    interval = int(1000.0 / fps)
+def mvshow(winname, frames, interval = 1000.0 / 25, stepkey = -1):
     for frame in frames:
+        key = None
         cv2.imshow(winname,frame)
-        key = cv2.waitKey(interval)
+        while key != stepkey:
+            key = cv2.waitKey(interval)
         if key == 27: # Escape
             break
     cv2.destroyWindow(winname)

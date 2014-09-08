@@ -28,6 +28,8 @@ def gettrialindices(path):
         trials.append(trial)
     return np.array(trials)
     
-def gettrialstate(stepstatepath,trials):
-    stepstate = np.genfromtxt(stepstatepath,dtype=bool)
-    return np.array([stepstate[t] for t in trials])
+def gettrialstate(stepstatepath,trials,wraparound=False):
+    stepstate = np.atleast_1d(np.genfromtxt(stepstatepath,dtype=bool))
+    if wraparound:
+        return np.array([stepstate[t % len(stepstate)] for t in trials])
+    return np.array([stepstate[min(t, len(stepstate)-1)] for t in trials])
