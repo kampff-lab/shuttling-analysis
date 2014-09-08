@@ -53,14 +53,14 @@ def contains_label_filter(labels):
 def plot_trajectories_stacked(name,trajectories,slices,video=None,steps=None,labels=None,labelfilter=None):
     fig = plt.figure(name + ' trajectories')
     cmap = plt.cm.autumn
-    norm = plt.cm.colors.Normalize(vmin=0,vmax=10)
+    norm = plt.cm.colors.Normalize(vmin=0,vmax=0.35)
     lims = [np.inf,-np.inf,np.inf,-np.inf]
     first= [True]
     def plot_trajectory(i,s):
         if callable(labelfilter) and not labelfilter(i,labels):
             return
         x = trajectories[s,0]
-        y = trajectories[s,1] + i * 100
+        y = trajectories[s,1] - i * 5
         speed = np.insert(proctraj.get_trajectory_speed(trajectories[s,0:2]),0,0)
         
         ###### Plotting manipulation line #####################################
@@ -101,7 +101,7 @@ def plot_trajectories_stacked(name,trajectories,slices,video=None,steps=None,lab
     [plot_trajectory(i,s) for i,s in enumerate(slices)]
     plt.xlim(lims[0],lims[1])
     plt.ylim(lims[2],lims[3])
-    plt.gca().invert_yaxis()
+    #plt.gca().invert_yaxis()
     if video is not None:
         plot_trajectories_player(fig,video,trajectories,slices,30)
     return fig
