@@ -13,8 +13,8 @@ def gettrialindices(path):
     leftrewardspath = os.path.join(path, 'left_rewards.csv')
     rightrewardspath = os.path.join(path, 'right_rewards.csv')
     frametimespath = os.path.join(path, 'front_video.csv')
-    leftrewards = np.genfromtxt(leftrewardspath,dtype=str)
-    rightrewards = np.genfromtxt(rightrewardspath,dtype=str)
+    leftrewards = np.atleast_1d(np.genfromtxt(leftrewardspath,dtype=str))
+    rightrewards = np.atleast_1d(np.genfromtxt(rightrewardspath,dtype=str))
     frametimes = np.genfromtxt(frametimespath,dtype=str)
     rewards = (r for sl in (t for t in itertools.izip_longest(leftrewards,rightrewards)) for r in sl)
 
