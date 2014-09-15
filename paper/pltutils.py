@@ -5,10 +5,24 @@ Created on Wed Oct 09 14:09:10 2013
 @author: IntelligentSystems
 """
 
-import attributeselector
+import numpy as np
 import collectionselector
+import scipy.stats as scistats
 import matplotlib.pyplot as plt
-from matplotlib.widgets import CheckButtons
+
+def regressionline(xi,yi,ax=None,**kwargs):
+    if ax is None:
+        ax = plt.gca()
+    w0,w1,r,p,err = scistats.linregress(xi,yi)
+    if np.isnan(w0):
+        return
+        
+    line = w0*xi + w1
+    kwargs['marker'] = None
+    r_string = r'$r_s=%.2f,$' % r**2
+    p_string = r'$p < 0.01$' if p < 0.01 else r'$p = %.2f$' % p
+    ax.text(max(xi), max(line), r_string+'\n'+p_string,verticalalignment='center')
+    return ax.plot(xi,line,**kwargs)
 
 def hbracket(x,y,width,label=None,tickheight=1,color='k'):
     ax = plt.gca()
