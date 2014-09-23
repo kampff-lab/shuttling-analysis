@@ -10,6 +10,7 @@ import glob
 import shutil
 import filecmp
 import dateutil
+import datetime
 import subprocess
 import numpy as np
 import pandas as pd
@@ -24,6 +25,7 @@ whiskertime_key = 'video/whisker/time'
 leftpoke_key = 'task/poke/left/activity'
 rightpoke_key = 'task/poke/right/activity'
 rewards_key = 'task/rewards'
+info_key = 'sessioninfo'
 
 max_height_cm = 24.0
 max_width_cm = 50.0
@@ -39,10 +41,12 @@ labelh5filename = 'labels.hdf5'
 analysisfolder = 'Analysis'
 backgroundfolder = 'Background'
 playerpath = os.path.join(dname, r'../bonsai.lesions/Bonsai.Player.exe')
+databasepath = 'C:/Users/Gon\xe7alo/kampff.lab@gmail.com/animals/'
 
 def process_subjects(datafolders,preprocessing=True,overwrite=False):
     for basefolder in datafolders:
-        datafolders = [path for path in directorytree(basefolder,1)]
+        datafolders = [path for path in directorytree(basefolder,1)
+                       if os.path.isdir(path)]
         process_sessions(datafolders,preprocessing,overwrite)
         
 def process_sessions(datafolders,preprocessing=True,overwrite=None):
@@ -111,6 +115,15 @@ def indexseries(series,index):
     series.index = index
     return series
     
+def readdatabase(name):
+    path = databasepath + name + '.csv'
+    return pd.read_csv(path,
+                       header=None,
+                       names=['time','event','value'],
+                       dtype={'time':pd.datetime,'event':str,'value':str},
+                       parse_dates=[0],
+                       index_col='time')
+    
 def readpoke(path):
     return pd.read_csv(path,
                        sep=' ',
@@ -138,7 +151,7 @@ def createdataset(path,overwrite=False):
             print "Skipped!"
             return
 
-    # Load raw data    
+    # Load raw data
     fronttime = readtimestamps(os.path.join(path, 'front_video.csv'))
     toptime = readtimestamps(os.path.join(path, 'top_video.csv'))
     whiskertime = readtimestamps(os.path.join(path, 'whisker_video.csv'))
@@ -213,6 +226,38 @@ def createdataset(path,overwrite=False):
     trialseries.index = trialindex
     trialseries = trialseries.reindex(fronttime,method='ffill')
     
+    # Generate session info
+    session = fronttime[0].replace(second=0, microsecond=0)
+    subjectfolder = os.path.split(path)[0]
+    subject = os.path.split(subjectfolder)[1]
+    protocol = sessionlabel(path)
+    database = readdatabase(subject)
+    weights = database[(database.event == 'Weight') &
+                       (database.index < fronttime[0])]
+    weight = float(weights.ix[weights.index[-1]].value)
+    cagemate = database[database.event == 'Housed'].ix[0].value
+    lefthistology = database.event == 'Histology\LesionLeft'
+    righthistology = database.event == 'Histology\LesionRight'
+    lesionleft = float(database[lefthistology].value if lefthistology.any() else 0)
+    lesionright = float(database[righthistology].value if righthistology.any() else 0)
+    watertimes = database[(database.event == 'WaterDeprivation') &
+                          (database.index < fronttime[0])]
+    if len(watertimes) > 0:
+        deprivation = fronttime[0] - watertimes.index[-1]
+    else:
+        deprivation = 0
+    info = pd.DataFrame([[subject,session,protocol,
+                          weight,deprivation,lesionleft,lesionright,cagemate]],
+                        columns=['subject',
+                                 'session',
+                                 'protocol',
+                                 'weight',
+                                 'deprivation',
+                                 'lesionleft',
+                                 'lesionright',
+                                 'cagemate'])
+    info.set_index(['subject','session'],inplace=True)
+    
     # Generate big data table
     frontactivity = pd.concat([trialseries,
                                trajectories,
@@ -228,6 +273,7 @@ def createdataset(path,overwrite=False):
     leftpoke.to_hdf(h5path, leftpoke_key)
     rightpoke.to_hdf(h5path, rightpoke_key)
     rewards.to_hdf(h5path, rewards_key)
+    info.to_hdf(h5path, info_key)
 
 def sessionlabel(path):
     protocolfilefolder = os.path.join(dname,'../protocolfiles/lesionsham')

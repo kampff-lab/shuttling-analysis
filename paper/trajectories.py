@@ -135,7 +135,7 @@ def crossindices(ts,center=25.0):
 def genfromtxt(path):
     trajectoriespath = os.path.join(path, 'Analysis/trajectories.csv')
     data = np.genfromtxt(trajectoriespath)
-    return crop(crossings(trajectories(data)))
+    return crossings(trajectories(data))
     #return scale(crop(crossings(trajectories(data))))
     
 ## FEATURES ##

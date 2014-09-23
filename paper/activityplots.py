@@ -88,7 +88,8 @@ def clearcollection(handles):
 
 def sessionsummary(path):
     labelh5path = labelpath(path)
-    activity, crossings = activitytables.read_crossings(path)
+    activity = activitytables.read_activity(path)
+    crossings = activitytables.read_crossings(path,activity)
     rewards = activitytables.read_rewards(path)
     
     selected = []

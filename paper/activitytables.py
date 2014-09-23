@@ -10,9 +10,25 @@ import sessions
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-from preprocess import storepath, labelpath, frontactivity_key, rewards_key
+from preprocess import storepath, labelpath
+from preprocess import frontactivity_key, rewards_key, info_key
 from preprocess import max_width_cm, width_pixel_to_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
+
+def grouplesionvolumes(data,info):
+    lesionvolume = info['lesionleft'] + info['lesionright']
+    lesionvolume.name = 'lesionvolume'
+    g = pd.concat([data,lesionvolume,info['cagemate']],axis=1)
+    lesionorder = g[g['lesionvolume'] > 0].sort('lesionvolume',ascending=False)
+    controls = lesionorder.groupby('cagemate',sort=False).median().index
+    controlorder = g.reset_index().set_index('subject').ix[controls]
+    controlorder.set_index('session',append=True,inplace=True)
+    result = pd.concat([controlorder,lesionorder])
+    result['lesion'] = result['lesionvolume'] > 0
+    result.reset_index(inplace=True)
+    result.set_index(['lesion','subject','session'],inplace=True)
+    result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
+    return result
 
 def geomediancost(median,xs):
     return np.linalg.norm(xs-median,axis=1).sum()
@@ -38,18 +54,18 @@ def read_activity(path):
 def read_rewards(path):
     return pd.read_hdf(storepath(path), rewards_key)
     
-def read_crossings(path):
-    activity = read_activity(path)
+def read_crossings(path, activity):
     crosses = crossings(activity)
     labelh5path = labelpath(path)
     if os.path.exists(labelh5path):
         crosses.label = pd.read_hdf(labelh5path, 'label')
-    return activity,crosses
+    return crosses
     
 def read_crossings_group(folders):
     crossings = []
     for path in folders:
-        activity,cr = read_crossings(path)
+        activity = read_activity(path)
+        cr = read_crossings(path, activity)
         cr['session'] = os.path.split(path)[1]
         crossings.append(cr)
     return pd.concat(crossings)
@@ -65,15 +81,39 @@ def appendlabels(data,labelspath):
                     value = value
                 data[label] = value
     
-def read_crossings_subjects(folders, days=None):
+def read_subjects(folders, days=None,
+                  key=frontactivity_key, selector=None):
+    if isinstance(folders, str):
+        folders = [folders]
+                      
     subjects = []
     for path in folders:
-        crossings = read_crossings_group(sessions.findsessions(path, days))
-        crossings['subject'] = os.path.split(path)[1]
-        labelsfile = os.path.join(path, 'labels.csv')
-        appendlabels(crossings,labelsfile)
-        subjects.append(crossings)
+        subject = read_sessions(sessions.findsessions(path, days),
+                                key,selector)
+        subjects.append(subject)
     return pd.concat(subjects)
+    
+def read_sessions(folders, key=frontactivity_key, selector=None):
+    if isinstance(folders, str):
+        folders = [folders]
+    
+    sessions = []
+    for path in folders:
+        session = pd.read_hdf(storepath(path), key)
+        if selector is not None:
+            session = selector(session)
+
+        if key != info_key:
+            info = pd.read_hdf(storepath(path), info_key)
+            info.reset_index(inplace=True)
+            keys = [n for n in session.index.names if n is not None]
+            session.reset_index(inplace=True)
+            session['subject'] = info.subject.iloc[0]
+            session['session'] = info.session.iloc[0]
+            session.set_index(['subject', 'session'], inplace=True)
+            session.set_index(keys, append=True, inplace=True)
+        sessions.append(session)
+    return pd.concat(sessions)
     
 def slowdown(crossings):
     return pd.DataFrame(
