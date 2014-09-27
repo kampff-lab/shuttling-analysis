@@ -80,9 +80,9 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
         make_videoanalysis(analysispath)
         
     print "Generating datasets..."
-    for path in datafolders:
+    for i,path in enumerate(datafolders):
         print "Generating dataset for "+ path + "..."
-        createdataset(path,overwrite=True)
+        createdataset(i,path,overwrite=True)
         
 def storepath(path):
     return os.path.join(path, analysisfolder, h5filename)
@@ -141,7 +141,7 @@ def readstep(path,name):
                        false_values=['False'],
                        names=[name])[name]
         
-def createdataset(path,overwrite=False):
+def createdataset(session,path,overwrite=False):
     h5path = storepath(path)
     if os.path.exists(h5path):
         if overwrite:
@@ -227,13 +227,13 @@ def createdataset(path,overwrite=False):
     trialseries = trialseries.reindex(fronttime,method='ffill')
     
     # Generate session info
-    session = fronttime[0].replace(second=0, microsecond=0)
+    starttime = fronttime[0].replace(second=0, microsecond=0)
     subjectfolder = os.path.split(path)[0]
     subject = os.path.split(subjectfolder)[1]
     protocol = sessionlabel(path)
     database = readdatabase(subject)
     weights = database[(database.event == 'Weight') &
-                       (database.index < fronttime[0])]
+                       (database.index < starttime)]
     weight = float(weights.ix[weights.index[-1]].value)
     cagemate = database[database.event == 'Housed'].ix[0].value
     lefthistology = database.event == 'Histology\LesionLeft'
@@ -241,15 +241,16 @@ def createdataset(path,overwrite=False):
     lesionleft = float(database[lefthistology].value if lefthistology.any() else 0)
     lesionright = float(database[righthistology].value if righthistology.any() else 0)
     watertimes = database[(database.event == 'WaterDeprivation') &
-                          (database.index < fronttime[0])]
+                          (database.index < starttime)]
     if len(watertimes) > 0:
-        deprivation = fronttime[0] - watertimes.index[-1]
+        deprivation = starttime - watertimes.index[-1]
     else:
         deprivation = 0
-    info = pd.DataFrame([[subject,session,protocol,
+    info = pd.DataFrame([[subject,session,starttime,protocol,
                           weight,deprivation,lesionleft,lesionright,cagemate]],
                         columns=['subject',
                                  'session',
+                                 'starttime',
                                  'protocol',
                                  'weight',
                                  'deprivation',

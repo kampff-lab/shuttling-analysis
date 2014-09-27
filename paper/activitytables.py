@@ -15,7 +15,7 @@ from preprocess import frontactivity_key, rewards_key, info_key
 from preprocess import max_width_cm, width_pixel_to_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
 
-def grouplesionvolumes(data,info):
+def groupbylesionvolumes(data,info):
     lesionvolume = info['lesionleft'] + info['lesionright']
     lesionvolume.name = 'lesionvolume'
     g = pd.concat([data,lesionvolume,info['cagemate']],axis=1)
@@ -24,9 +24,11 @@ def grouplesionvolumes(data,info):
     controlorder = g.reset_index().set_index('subject').ix[controls]
     controlorder.set_index('session',append=True,inplace=True)
     result = pd.concat([controlorder,lesionorder])
-    result['lesion'] = result['lesionvolume'] > 0
+    result['lesion'] = ['lesion' if v > 0 else 'control'
+                        for v in result['lesionvolume']]
     result.reset_index(inplace=True)
-    result.set_index(['lesion','subject','session'],inplace=True)
+    result.sort(['session','lesion'],inplace=True)
+    result.set_index(['session','lesion','subject'],inplace=True)
     result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
     return result
 

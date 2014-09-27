@@ -14,14 +14,58 @@ import activitytables
 from preprocess import labelpath
 from collectionselector import CollectionSelector
 
-def barplot(data,column,by=None,ax=None):
+def sessionmetric(data,yerr=None,connect=True,ax=None):
     if ax is None:
         ax = plt.gca()
-        
-    groups = data.groupby(by)
-    for group in groups:
-        print group.key
+    xticks = []
+    groupcount = 0
 
+    groupcenters = []
+    groupmeans = []
+    grouperr = []
+    for session,subjectgroups in data.groupby(level=0):
+        nsubjects = len(subjectgroups)
+        step = 0.5 / nsubjects
+        offset = -0.25
+        ax.set_color_cycle(None)
+        groupedsubjects = subjectgroups.groupby(level=1)
+        groupcount = len(groupedsubjects)
+        for i,(groupname,subjects) in enumerate(groupedsubjects):
+            x = session + offset + step * np.arange(len(subjects))
+            _,caps,_ = plt.errorbar(x,subjects.icol(0),subjects.icol(1),
+                                      fmt=None,label=groupname,
+                                      zorder=100,capthick=1,alpha=0.4)
+            for cap in caps:
+                cap.remove()
+
+            if i >= len(groupcenters):
+                groupcenters.append([])
+                groupmeans.append([])
+                grouperr.append([])
+            groupcenters[i].append((x[-1] + x[0]) / 2.0)
+            groupmeans[i].append(subjects.icol(0).mean())
+            grouperr[i].append(subjects.icol(0).std())
+            offset += step * len(subjects)
+        xticks.append(session)
+    
+    ax.set_color_cycle(None)
+    for center,mean,err in zip(groupcenters,groupmeans,grouperr):
+        plt.errorbar(center,mean,err,
+                     fmt='--' if connect else None,ecolor='k',
+                     linewidth=2,capthick=2,markersize=0)
+                     
+    if not connect:
+        ylims = ax.get_ylim()
+        for left,right in zip(xticks,xticks[1:]):
+            boundary = (left + right) / 2.0
+            ax.plot((boundary,boundary),ylims,'k--')
+        ax.set_ylim(ylims)
+        
+    ax.set_xticks(xticks)
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[:groupcount],labels[:groupcount])
+    ax.set_xlabel(data.index.names[0])
+        
 def fpshist(activity,ax=None):
     if ax is None:
         ax = plt.gca()
