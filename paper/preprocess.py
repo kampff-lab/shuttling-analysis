@@ -43,6 +43,23 @@ backgroundfolder = 'Background'
 playerpath = os.path.join(dname, r'../bonsai.lesions/Bonsai.Player.exe')
 databasepath = 'C:/Users/Gon\xe7alo/kampff.lab@gmail.com/animals/'
 
+def parserois(soup):
+    detectors = []
+    xdetectors = soup.find_all('Regions')
+    for detector in xdetectors:
+        rois = []
+        xrois = detector.find_all('ArrayOfCvPoint')
+        for roi in xrois:
+            points = []
+            xpoints = roi.find_all('CvPoint')
+            for point in xpoints:
+                x = int(point.find_all('X')[0].text)
+                y = int(point.find_all('Y')[0].text)
+                points.append((x,y))
+            rois.append(points)
+        detectors.append(rois)
+    return detectors
+
 def process_subjects(datafolders,preprocessing=True,overwrite=False):
     for basefolder in datafolders:
         datafolders = [path for path in directorytree(basefolder,1)
@@ -208,6 +225,7 @@ def createdataset(session,path,overwrite=False):
     rightrewards['side'] = 'right'
     rewards = pd.concat([leftrewards,rightrewards])
     rewards.sort(columns=['time'],inplace=True)
+    rewards.reset_index(drop=True,inplace=True)
     
     # Compute trial indices and environment state
     trialindex = pd.concat([fronttime[0:1],rewards.time])
@@ -228,10 +246,13 @@ def createdataset(session,path,overwrite=False):
     
     # Generate session info
     starttime = fronttime[0].replace(second=0, microsecond=0)
-    subjectfolder = os.path.split(path)[0]
-    subject = os.path.split(subjectfolder)[1]
+    dirname = os.path.basename(path)
+    subjectfolder = os.path.dirname(path)
+    subject = os.path.basename(subjectfolder)
     protocol = sessionlabel(path)
     database = readdatabase(subject)
+    birth = database[database.event == 'Birth']
+    age = starttime - birth.index[0]
     weights = database[(database.event == 'Weight') &
                        (database.index < starttime)]
     weight = float(weights.ix[weights.index[-1]].value)
@@ -246,12 +267,14 @@ def createdataset(session,path,overwrite=False):
         deprivation = starttime - watertimes.index[-1]
     else:
         deprivation = 0
-    info = pd.DataFrame([[subject,session,starttime,protocol,
+    info = pd.DataFrame([[subject,session,dirname,starttime,protocol,age,
                           weight,deprivation,lesionleft,lesionright,cagemate]],
                         columns=['subject',
                                  'session',
+                                 'dirname',
                                  'starttime',
                                  'protocol',
+                                 'age',
                                  'weight',
                                  'deprivation',
                                  'lesionleft',
