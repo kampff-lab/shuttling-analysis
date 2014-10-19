@@ -5,16 +5,20 @@ Created on Sun Sep 14 11:42:00 2014
 @author: Gonçalo
 """
 
-import os
 import pltutils
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import activitytables
 from preprocess import labelpath
 from collectionselector import CollectionSelector
 
-def sessionmetric(data,yerr=None,connect=True,ax=None):
+def sessionmetric(data,connect=True,ax=None):
+    if data.ndim != 2:
+        raise ValueError("data must be two-dimensional table (value,error)")
+        
+    if data.index.nlevels != 3:
+        raise ValueError("data has to be multi-level (session,lesion,subject)")
+    
     if ax is None:
         ax = plt.gca()
     xticks = []
