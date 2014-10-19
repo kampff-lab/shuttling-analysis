@@ -122,17 +122,23 @@ def slowdown(crossings):
     [stats.linregress(crossings.entryspeed,crossings.exitspeed)],
      columns=['slope','intercept','r-value','p-value','stderr'])
 
-def crossings(activity):
+def crossings(activity,midcross=True,crop=True):
     # Generate trajectories and crossings
     center = max_width_cm / 2.0
     cropleft = rail_start_pixels * width_pixel_to_cm
     cropright = rail_stop_pixels * width_pixel_to_cm
     xhead = activity.xhead
-    sparsetraj = np.ma.clump_unmasked(np.ma.masked_invalid(activity.xhead))
-    crossings = [s for s in sparsetraj
-    if xhead[s.start] > center and xhead[s.stop-1] < center
-    or xhead[s.start] < center and xhead[s.stop-1] > center]
-    crossings = cropcrossings(xhead,crossings,[cropleft,cropright])
+    crossings = np.ma.clump_unmasked(np.ma.masked_invalid(activity.xhead))
+    if midcross:
+        crossings = [s for s in crossings
+        if xhead[s.start] > center and xhead[s.stop-1] < center
+        or xhead[s.start] < center and xhead[s.stop-1] > center]
+    if crop:
+        crossings = cropcrossings(xhead,crossings,[cropleft,cropright])
+        
+    # Trial info
+    trialinfo = pd.DataFrame([activity.iloc[s.start,0:7] for s in crossings])
+    trialinfo.reset_index(inplace=True,drop=True)
     
     # Generate crossing features
     time = activity.index
@@ -162,6 +168,7 @@ def crossings(activity):
     crossings = pd.DataFrame(crossings,columns=['slices'])
     return pd.concat([crossings,
                       label,
+                      trialinfo,
                       duration,
                       maxheight,
                       maxspeed,
