@@ -48,7 +48,7 @@ def readframe(movie):
                 (255,255,255,255))
     return frame, index
             
-def showmovie(movie,framestart=0,fps=0):
+def showmovie(movie,framestart=0,fps=0,frameend=None):
     key = 0
     interval = 0 if fps == 0 else int(1000.0 / fps)
     movie.capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,framestart)
@@ -56,8 +56,15 @@ def showmovie(movie,framestart=0,fps=0):
     while key != 27:
         cv2.imshow('win',frame)
         key = cv2.waitKey(interval)
+        if key == 32: #space
+            if interval > 0:
+                interval = 0
+            else:
+                interval = 0 if fps == 0 else int(1000.0 / fps)
         if key == 2555904 or key < 0: #right arrow
             frame, index = readframe(movie)
+            if index == frameend:
+                interval = 0
             continue
         elif key == 2424832: #left arrow
             movie.capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,index-1)

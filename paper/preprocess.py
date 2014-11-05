@@ -33,8 +33,18 @@ height_pixel_to_cm = max_height_cm / 680.0
 width_pixel_to_cm = max_width_cm / 1280.0
 rail_height_pixels = 100
 rail_start_pixels = 200
-rail_stop_pixels = 1000
+rail_stop_pixels = 1080
+#rail_stop_pixels = 1000
+rail_start_cm = rail_start_pixels * width_pixel_to_cm
+rail_stop_cm = rail_stop_pixels * width_pixel_to_cm
 frames_per_second = 120.0
+stepcenter_pixels = [(58, 102), (214, 103), (378, 106), (537, 102),
+                     (707, 105), (863, 103), (1026, 97), (1177, 94)]
+stepcenter_pixels = [(y+467,x+21) for x,y in stepcenter_pixels] # crop offset
+stepcenter_pixels = [(y-50,x) for y,x in stepcenter_pixels]
+# small offset for step visualization
+stepcenter_cm = [(y*height_pixel_to_cm,x*width_pixel_to_cm)
+                 for y,x in stepcenter_pixels]
 
 h5filename = 'session.hdf5'
 labelh5filename = 'labels.hdf5'
@@ -210,7 +220,7 @@ def createdataset(session,path,overwrite=False):
     timedelta = pd.DataFrame(fronttime.diff() / np.timedelta64(1,'s'))
     timedelta.index = speed.index
     speed = pd.concat([speed,timedelta],axis=1)
-    speed = speed.div(speed.time,axis='index')    
+    speed = speed.div(speed.time,axis='index')
     speed.columns = ['xhead_speed',
                      'yhead_speed',
                      'xtail_speed',
@@ -251,6 +261,7 @@ def createdataset(session,path,overwrite=False):
     subject = os.path.basename(subjectfolder)
     protocol = sessionlabel(path)
     database = readdatabase(subject)
+    gender = str.lower(database[database.event == 'Gender'].ix[0].value)
     birth = database[database.event == 'Birth']
     age = starttime - birth.index[0]
     weights = database[(database.event == 'Weight') &
@@ -267,13 +278,14 @@ def createdataset(session,path,overwrite=False):
         deprivation = starttime - watertimes.index[-1]
     else:
         deprivation = 0
-    info = pd.DataFrame([[subject,session,dirname,starttime,protocol,age,
+    info = pd.DataFrame([[subject,session,dirname,starttime,protocol,gender,age,
                           weight,deprivation,lesionleft,lesionright,cagemate]],
                         columns=['subject',
                                  'session',
                                  'dirname',
                                  'starttime',
                                  'protocol',
+                                 'gender',
                                  'age',
                                  'weight',
                                  'deprivation',

@@ -47,7 +47,7 @@ def croprect(centroid,shape,frame):
     
 import video
 import matplotlib.pyplot as plt
-import scipy.cluster.hierarchy as hier
+import scipy.cluster.hierarchy as sch
     
 def distancematrix(frames,normType=cv2.cv.CV_L2):
     result = np.zeros((len(frames),len(frames)))
@@ -59,64 +59,93 @@ def distancematrix(frames,normType=cv2.cv.CV_L2):
                 result[j,i] = distance
     return result
     
-def cluster(frames,vid=None,indices=None):
+def cluster(frames,vid=None,indices=None,labels=None):
+    drawlabels = [False]
+    if labels is None:
+        labels = np.zeros(len(frames),dtype=int)
     fig = plt.figure()
     distance = distancematrix(frames,cv2.cv.CV_L1)
-    Z = hier.linkage(distance,'complete')
-    ax1 = plt.subplot2grid((3,2),(1,0), rowspan=2)
-    
-    #im = ax1.imshow(distance)
-    #plt.colorbar(im, ax=ax1)
-    
-    ax2 = plt.subplot2grid((3,2),(0,0))
-    R = hier.dendrogram(Z)
+    Z = sch.linkage(distance,'complete')
+    ax1 = fig.add_axes([0.05,0.1,0.4,0.6])
+    ax2 = fig.add_axes([0.05,0.71,0.4,0.2])
+    R = sch.dendrogram(Z)
+    ax2.set_title('frame clusters')
     leaves = R['leaves']
+    ax2.set_xticks([])
+    ax2.set_yticks([])
     sframes = frames[leaves]
-    
-    distance = distancematrix(sframes,cv2.cv.CV_L1)
-    im = ax1.imshow(distance)
-    plt.colorbar(im, ax=ax1)
-    
+    distance = distance[leaves,:]
+    distance = distance[:,leaves]
+    axcolor = fig.add_axes([0.46,0.1,0.02,0.6])
+    im = ax1.imshow(distance,aspect='auto')
+    plt.colorbar(im, cax=axcolor)
     fn,fm = sframes[0].shape
+    xmin,xmax = ax2.get_xlim()
     ax3 = plt.subplot2grid((3,2),(0,1), rowspan=3)
-    ntiles = int(np.ceil(np.sqrt(len(frames))))
-    tiles = tile(sframes,ntiles,ntiles)
-    ax3.imshow(tiles[0])
+    def drawframes(ax,frameslice=slice(None)):
+        pframes = sframes[frameslice]
+        ntiles = int(np.ceil(np.sqrt(len(pframes))))
+        if ntiles == 0:
+            return
+        tiles = tile(pframes,ntiles,ntiles)
+        ax.clear()
+        ax.imshow(tiles[0])
+        if (labels is not None) and drawlabels[0]:
+            leafslice = leaves[frameslice]
+            plabels = labels[leafslice]
+            xlabels = fm * (np.arange(len(pframes)) % ntiles) + 0.1 * fm
+            ylabels = fn * (np.arange(len(pframes)) / ntiles) + 0.85 * fn
+            [ax.text(x,y,l,color='r') for x,y,l in zip(xlabels,ylabels,plabels)]
+        ax.set_xticks([])
+        ax.set_yticks([])
+    drawframes(ax3)
+    ax3.set_title('sorted frames')
     
-#    artists = []
-#    def onmouseclick(evt):
-#        if evt.inaxes == ax2:        
-#            clusters = hier.fcluster(Z,evt.ydata,'distance')
-#            sframes = frames[np.argsort(clusters)] if np.max(clusters) > 1 else frames
-#            rtiles = tile(sframes,ntiles,ntiles)
-#            tiles[0] = rtiles[0]
-#            ax3.imshow(tiles[0])
-#            fig.canvas.draw_idle()
-#            
-#        if evt.inaxes == ax3:
-#            x = int(evt.xdata / fm)
-#            y = int(evt.ydata / fn)
-#            fi = y * ntiles + x
-#            if vid is not None and indices is not None:
-#                idx = indices[leaves[fi]]
-#                video.showmovie(vid,idx)
-#    
-#    def onmousemove(evt):
-#        while len(artists) > 0:
-#            fig.canvas.draw_idle()
-#            artist = artists.pop()
-#            artist.remove()
-#            
-#        if evt.inaxes == ax2:
-#            y = evt.ydata
-#            xmin,xmax = ax2.get_xlim()
-#            artists.append(ax2.hlines(y,xmin,xmax))
-#            fig.canvas.draw_idle()
-#    h1 = fig.canvas.mpl_connect('motion_notify_event',onmousemove)
-#    h2 = fig.canvas.mpl_connect('button_press_event',onmouseclick)
+    def getframelim(ax):
+        lmin,lmax = ax.get_xlim()
+        lmin = len(leaves) * (lmin / xmax) - 0.5
+        lmax = len(leaves) * (lmax / xmax) - 0.5
+        return lmin,lmax
+        
+    def getframeslice(lmin,lmax):
+        return slice(int(np.ceil(lmin)),int(np.floor(lmax))+1)
     
-    plt.tight_layout()
-#    return h1,h2
+    def onlimitchanged(ax):
+        lmin,lmax = getframelim(ax)
+        frameslice = getframeslice(lmin,lmax)
+        drawframes(ax3,frameslice)
+        ax1.set_xlim(lmin,lmax)
+        
+    def onkeypress(evt):
+        lmin,lmax = getframelim(ax2)
+        frameslice = getframeslice(lmin,lmax)
+        if evt.key == 'l':
+            drawlabels[0] = not drawlabels[0]
+        else:
+            try:
+                label = int(evt.key)
+                labels[leaves[frameslice]] = label
+            except ValueError:
+                return
+        
+        drawframes(ax3,frameslice)
+        fig.canvas.draw_idle()
+    
+    def onmouseclick(evt):
+        if evt.inaxes == ax3:
+            lmin,lmax = getframelim(ax2)
+            frameslice = getframeslice(lmin,lmax)
+            ntiles = int(np.ceil(np.sqrt(frameslice.stop-frameslice.start)))
+            x = int(evt.xdata / fm)
+            y = int(evt.ydata / fn)
+            fi = y * ntiles + x
+            if vid is not None and indices is not None:
+                idx = indices[leaves[fi]]
+                video.showmovie(vid,idx)
+    h1 = fig.canvas.mpl_connect('button_press_event',onmouseclick)
+    h2 = fig.canvas.mpl_connect('key_press_event',onkeypress)
+    h3 = ax2.callbacks.connect('xlim_changed', onlimitchanged) 
+    return Z, R, labels, (h1, h2, h3)
 
 def tile(frames,width,height,labels=None):
     frameshape = np.shape(frames[0])
@@ -146,6 +175,16 @@ def tile(frames,width,height,labels=None):
             page[sliceH,sliceW] = frame
         pages.append(page)
     return pages
+    
+def average(frames,scale=1.0,shift=0.0):
+    if len(frames) == 0:
+        raise ValueError('frames is an empty sequence')
+        
+    result = frames[0].astype(np.float32) * scale + shift
+    for i in range(1,len(frames)):
+        result += frames[i] * scale + shift
+    result /= len(frames)
+    return result
     
 def crop(frames,xslice,yslice):
     return [frame[yslice,xslice] for frame in frames]

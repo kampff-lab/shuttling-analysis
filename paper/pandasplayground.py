@@ -15,8 +15,6 @@ import pandas as pd
 import activitytables
 import activitymovies
 import matplotlib.pyplot as plt
-from scipy.spatial.distance import pdist, squareform
-from scipy.cluster.hierarchy import linkage, dendrogram
 
 days = range(1,5)
 stepcenters = [(58, 102), (214, 103), (378, 106), (537, 102),
@@ -52,9 +50,9 @@ rr = activitytables.read_subjects(datafolders,days=days,
 info = activitytables.read_subjects(datafolders,days=days,
                                     key=activitytables.info_key)
                                     
-# For video analysis
-days = [9]
-datafolders = [r'E:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_24']
+# For video analysis (4,10,12,16)
+days = [0]
+datafolders = [r'E:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_21']
 cr = activitytables.read_subjects(datafolders,days=days)
 rr = activitytables.read_subjects(datafolders,days=days,key=activitytables.rewards_key)
 info = activitytables.read_subjects(datafolders,days=days,key=activitytables.info_key)
@@ -67,7 +65,7 @@ def clusterstepframes(cr,info,leftstep,rightstep):
     steppeaks = siphon.findpeaksMax(stepdiff,1500)
     pksloc = [[stepdiff.index.get_loc(peak) for peak in step] for step in steppeaks]    
     
-    # Tile step frames    
+    # Tile step frames
     vidpaths = activitymovies.getmoviepath(info)
     timepaths = activitymovies.gettimepath(info)
     backpaths = activitymovies.getbackgroundpath(info)
@@ -95,10 +93,10 @@ def clusterstepframes(cr,info,leftstep,rightstep):
     frames = frames[sortindices]
     frameindices = frameindices[sortindices]
     
-    imgproc.cluster(frames,videos[0],frameindices)
-    return frames,stepdiff,steppeaks,pksloc
+    R,labels,h = imgproc.cluster(frames,videos[0],frameindices)
+    return frames,stepdiff,steppeaks,pksloc,R,labels
     
-frames,stepdiff,steppeaks,pksloc = clusterstepframes(cr,info,4,3)
+frames,stepdiff,steppeaks,pksloc,R,labels = clusterstepframes(cr,info,4,3)
 
 # Plot step activity and step candidates
 ax = plt.gca()

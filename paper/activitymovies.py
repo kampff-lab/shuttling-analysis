@@ -10,7 +10,7 @@ import cv2
 import bisect
 import pandas as pd
 
-datafolder = r'E:/Protocols/Shuttling/LightDarkServoStable/Data'
+datafolder = r'D:/Protocols/Shuttling/LightDarkServoStable/Data'
 
 class framesiterable:
     def __init__(self, path, start, stop):
@@ -32,14 +32,60 @@ class framesiterable:
             
 def getrelativepath(sessioninfo,path):
     info = sessioninfo.dirname.reset_index()
-    return info.apply(lambda x:os.path.join(datafolder,
-                                            x.subject,
-                                            x.dirname,
-                                            path),axis=1)
+    result = info.apply(lambda x:os.path.join(datafolder,
+                                              x.subject,
+                                              x.dirname,
+                                              path),axis=1)
+    result.index = sessioninfo.index
+    result.name = 'path'
+    return result
+    
+def readframe(frame):
+    index = movie.capture.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+    result, frame = movie.capture.read()
+    cv2.putText(frame,str(int(index)),(0,30),
+                cv2.cv.CV_FONT_HERSHEY_COMPLEX,1,
+                (255,255,255,255))
+    return frame, index
+    
+def showmovies(movies,fps=0):
+    done = False
+    mvs = movies.reset_index()
+    interval = 0 if fps == 0 else int(1000.0 / fps)
+    for subject,session,index,movie in mvs.values:
+        for frame in movie:
+            cv2.putText(frame,
+                str.format('{0} session {1} ({2})',subject,session,index),
+                (0,30),
+                cv2.cv.CV_FONT_HERSHEY_COMPLEX,1,
+                (255,255,255,255))
+            cv2.imshow('win',frame)
+            key = cv2.waitKey(interval)
+            if key == 2228224: #page down
+                break
+            elif key == 27:
+                done = True
+                break
+        if done:
+            break
+    cv2.destroyWindow('win')
+    
+def showcrossingmovies(crossings,sessioninfo):
+    moviepath = getmoviepath(sessioninfo)
+#    cr = crossings.reset_index('index').join(moviepath)
+    cr = crossings.join(moviepath)
+    cr.set_index('index',append=True,inplace=True)
+    mvs = cr.apply(lambda x:framesiterable(x.path,x.slices.start,x.slices.stop),axis=1)
+    showmovies(mvs,fps=120)
+    
+#def getmovieframe(activity,key,sessioninfo):
+#    entry = sessioninfo.loc[key[0:2]]
+#    subject = key[0]
+#    moviepath = os.path.join(datafolder,subject,entry.dirname,'front_video.avi')
 
 def getmoviepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.avi')
-                                            
+
 def gettimepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.csv')
                                             

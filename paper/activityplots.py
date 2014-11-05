@@ -5,14 +5,86 @@ Created on Sun Sep 14 11:42:00 2014
 @author: Gonçalo
 """
 
+import os
+import cv2
+import video
+import siphon
+import imgproc
 import pltutils
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import NullFormatter
 import activitytables
-from preprocess import labelpath
+import activitymovies
+from preprocess import labelpath, frames_per_second, max_width_cm
+from preprocess import stepcenter_pixels, stepcenter_cm
 from collectionselector import CollectionSelector
 
-def sessionmetric(data,connect=True,ax=None):
+def scatterhist(x,y,bins=10,color=None,histalpha=1,axes=None,
+                xlim=None,ylim=None):
+    if axes is None:
+        axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
+        axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
+        axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
+    else:
+        axScatter,axHistx,axHisty = axes
+    
+    axScatter.scatter(x, y, c=color, edgecolors='none')
+    if xlim is not None:
+        axScatter.set_xlim(xlim)
+    if ylim is not None:
+        axScatter.set_ylim(ylim)
+    
+    # now determine nice limits by hand:
+    axHistx.hist(x, bins=bins, range=xlim,alpha=histalpha,
+                 color=color, edgecolor = 'none')
+    axHisty.hist(y, bins=bins, range=ylim,orientation='horizontal',
+                 color=color, alpha=histalpha, edgecolor = 'none')
+    
+    axHistx.set_xticks([])
+    axHisty.set_yticks([])
+    axHistx.set_xlim(axScatter.get_xlim())
+    axHisty.set_ylim(axScatter.get_ylim())
+
+def clusterstepframes(act,info,leftstep,rightstep):
+    # Compute step times
+    stepactivity = act.iloc[:,16:24]
+    stepdiff = stepactivity.diff()
+    steppeaks = siphon.findpeaksMax(stepdiff,1500)
+    pksloc = [[stepdiff.index.get_loc(peak) for peak in step] for step in steppeaks]    
+    
+    # Tile step frames    
+    vidpaths = activitymovies.getmoviepath(info)
+    timepaths = activitymovies.gettimepath(info)
+    backpaths = activitymovies.getbackgroundpath(info)
+    videos = [video.video(path,timepath) for path,timepath in zip(vidpaths,timepaths)]
+
+    def getstepframes(stepindex,flip=False):
+        stepcenterxcm = stepcenter_cm[stepindex][1]
+        framehead = [p for p in pksloc[stepindex]
+                     if (act.xhead[p] < stepcenterxcm if not flip else act.xhead[p] > stepcenterxcm)]
+        
+        frames = [imgproc.croprect(stepcenter_pixels[stepindex],(200,200),videos[0].frame(p))
+                  for p in framehead]
+        backgrounds = [imgproc.croprect(stepcenter_pixels[stepindex],(200,200),activitymovies.getbackground(backpaths[0],videos[0].timestamps[p]))
+                       for p in framehead]
+        frames = [cv2.subtract(f,b) for f,b in zip(frames,backgrounds)]
+        if flip:
+            frames = [cv2.flip(f,1) for f in frames]
+        return frames,framehead
+
+    leftframes,leftindices = getstepframes(leftstep,False)
+    rightframes,rightindices = getstepframes(rightstep,True)
+    frames = np.array(leftframes + rightframes)
+    frameindices = np.array(leftindices + rightindices)
+    sortindices = np.argsort(frameindices)
+    frames = frames[sortindices]
+    frameindices = frameindices[sortindices]
+    
+    Z, R,labels,h = imgproc.cluster(frames,videos[0],frameindices)
+    return frames,stepdiff,steppeaks,pksloc,Z,R,labels
+
+def sessionmetric(data,connect=True,ax=None,colorcycle=None):
     if data.ndim != 2:
         raise ValueError("data must be two-dimensional table (value,error)")
         
@@ -31,7 +103,7 @@ def sessionmetric(data,connect=True,ax=None):
         nsubjects = len(subjectgroups)
         step = 0.5 / nsubjects
         offset = -0.25
-        ax.set_color_cycle(None)
+        ax.set_color_cycle(colorcycle)
         groupedsubjects = subjectgroups.groupby(level=1)
         groupcount = len(groupedsubjects)
         for i,(groupname,subjects) in enumerate(groupedsubjects):
@@ -52,7 +124,7 @@ def sessionmetric(data,connect=True,ax=None):
             offset += step * len(subjects)
         xticks.append(session)
     
-    ax.set_color_cycle(None)
+    ax.set_color_cycle(colorcycle)
     for center,mean,err in zip(groupcenters,groupmeans,grouperr):
         plt.errorbar(center,mean,err,
                      fmt='--' if connect else None,ecolor='k',
@@ -77,14 +149,20 @@ def fpshist(activity,ax=None):
     ax.set_xlabel('fps')
     ax.set_title('frame rate')
     
-def trajectoryplot(activity,crossings,ax=None,style='k',alpha=1):
+def trajectoryplot(activity,crossings,ax=None,style='k',alpha=1,flip=False,
+                   selector=lambda x:x.yhead,
+                   ylabel = 'y (cm)'):
     if ax is None:
         ax = plt.gca()
-    for s in crossings.slices:
-        ax.plot(activity.xhead[s],activity.yhead[s],style,alpha=alpha)
+    for s,side in crossings[['slices','side']].values:
+        if flip and side == 'leftwards':
+            ax.plot(max_width_cm - activity.xhead[s],
+                    selector(activity)[s],style,alpha=alpha)
+        else:
+            ax.plot(activity.xhead[s],selector(activity)[s],style,alpha=alpha)
     ax.set_title('trajectories')
     ax.set_xlabel('x (cm)')
-    ax.set_ylabel('y (cm)')
+    ax.set_ylabel(ylabel)
     
 def featuresummary(crossings,ax=None,onselect=None):
     if ax is None:
@@ -96,6 +174,7 @@ def featuresummary(crossings,ax=None,onselect=None):
     ax.set_title('trajectory features')
     ax.set_xlabel('duration (s)')
     ax.set_ylabel('max height (cm)')
+    #ax.set_ylabel('min speed (cm / s)')
     return selector
     
 def slowdownsummary(crossings,ax=None,regress=True):
@@ -139,6 +218,9 @@ def sessionsummary(path):
     activity = activitytables.read_activity(path)
     crossings = activitytables.read_crossings(path,activity)
     rewards = activitytables.read_rewards(path)
+    #steptimes = activitytables.steptimes(activity)
+    vidpath = os.path.join(path,'front_video.avi')
+    vid = video.video(vidpath)
     
     selected = []
     def onselect(ind):
@@ -164,6 +246,9 @@ def sessionsummary(path):
         axs[1,2].clear()
         slowdownsummary(crossings[valid],axs[1,2])
         
+        axs[1,1].clear()
+        
+        
         invalid = crossings.label == 'invalid'
         if invalid.any():
             rows = crossings[invalid]
@@ -176,10 +261,15 @@ def sessionsummary(path):
         label = None
         if evt.key == 'q':
             crossings.label.to_hdf(labelh5path, 'label')
-        if evt.key == 'r':
+        if evt.key == 'x':
             label = 'invalid'
-        if evt.key == 'v':
+        if evt.key == 'c':
             label = 'valid'
+        if evt.key == 'z' and len(selector.ind) == 1:
+            frameslice = crossings.iloc[selector.ind[0],:].slices
+            video.showmovie(vid,frameslice.start,
+                            fps=frames_per_second,
+                            frameend=frameslice.stop)
         if label != None:
             crossings.label[selector.ind] = label
             updateplots()

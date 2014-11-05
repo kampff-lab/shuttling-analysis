@@ -39,6 +39,19 @@ def preprocessAdc(path,targetpath):
     ds.tofile(targetpath)
     return ds
     
+def findpeaksMax(ts,thresh,axis=-1):
+    valid = ts > thresh if thresh > 0 else ts < thresh
+    masked = np.ma.masked_where(valid,ts)
+
+    views = np.rollaxis(masked,axis) if ts.ndim > 1 else [masked]
+    clumpedpeaks = []
+    for i,view in enumerate(views):
+        clumped = np.ma.clump_masked(view)
+        peaks = [ts[slce].ix[:,i].argmax() if thresh > 0 else ts[slce].ix[:,i].argmin()
+                 for slce in clumped]
+        clumpedpeaks.append(peaks)
+    return clumpedpeaks if len(clumpedpeaks) > 1 else clumpedpeaks[0]
+    
 def findpeaks(ts,thresh,mindistance=0):
     thresholded = ts > thresh if thresh > 0 else ts < thresh
     crossings = np.insert(np.diff(np.int8(thresholded),0) > 0,0,False)
