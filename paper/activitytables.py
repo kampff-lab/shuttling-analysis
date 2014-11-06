@@ -134,7 +134,7 @@ def findpeaks(ts,thresh,axis=-1):
     return clumpedpeaks if len(clumpedpeaks) > 1 else clumpedpeaks[0]
      
 def steptimes(activity,thresh=1500):
-    stepactivity = activity.iloc[:,16:24]
+    stepactivity = activity.iloc[:,17:25]
     stepdiff = stepactivity.diff()
     steppeaks = findpeaks(stepdiff,thresh)
     data = [(peak,i,stepcenter_cm[i][1],stepcenter_cm[i][0])
@@ -170,7 +170,7 @@ def stepframeindices(activity,crossings,leftstep,rightstep):
         leftwards = trial.side == 'leftwards'
         stepindex = leftstep if leftwards else rightstep
         stepactivity = activity.xs(trial.timeslice,level='time',
-                                   drop_level=False).iloc[:,16:24]
+                                   drop_level=False).iloc[:,17:25]
         stepdiff = stepactivity.diff()
         steppeaks = findpeaks(stepdiff,1500)[stepindex]
         steppeaks = [peak for peak in steppeaks

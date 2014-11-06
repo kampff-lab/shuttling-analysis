@@ -295,7 +295,10 @@ def createdataset(session,path,overwrite=False):
     info.set_index(['subject','session'],inplace=True)
     
     # Generate big data table
-    frontactivity = pd.concat([trialseries,
+    frame = pd.Series(range(len(fronttime)),dtype=np.int32,name='frame')
+    frame = indexseries(frame,fronttime)
+    frontactivity = pd.concat([frame,
+                               trialseries,
                                trajectories,
                                speed,
                                stepactivity,
