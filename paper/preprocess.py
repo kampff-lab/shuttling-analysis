@@ -82,7 +82,7 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
         print 'Generating labels...'
         make_sessionlabels(datafolders)
 
-        # Check for front activity file and regenerate if necessary        
+        # Check for front activity file and regenerate if necessary
         for path in datafolders:
             make_analysisfolder(path)
             front_activity_path = os.path.join(path,'front_activity.csv')
@@ -93,7 +93,7 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
                 activitydetector = os.path.join(dname,'bonsai/video_activity_detector.bonsai')
                 subprocess.call([playerpath,activitydetector])
         
-        # Check for background files and regenerate if necessary        
+        # Check for background files and regenerate if necessary
         for path in datafolders:
             print "Checking backgrounds for " + path + "..."
             analysispath = os.path.join(path,analysisfolder)
@@ -181,7 +181,6 @@ def createdataset(session,path,overwrite=False):
     # Load raw data
     fronttime = readtimestamps(os.path.join(path, 'front_video.csv'))
     toptime = readtimestamps(os.path.join(path, 'top_video.csv'))
-    whiskertime = readtimestamps(os.path.join(path, 'whisker_video.csv'))
     leftrewards = readtimestamps(os.path.join(path, 'left_rewards.csv'))
     rightrewards = readtimestamps(os.path.join(path, 'right_rewards.csv'))
     leftpoke = readpoke(os.path.join(path, 'left_poke.csv'))
@@ -267,9 +266,10 @@ def createdataset(session,path,overwrite=False):
     weights = database[(database.event == 'Weight') &
                        (database.index < starttime)]
     weight = float(weights.ix[weights.index[-1]].value)
-    cagemate = database[database.event == 'Housed'].ix[0].value
+    housed = database.event == 'Housed'
     lefthistology = database.event == 'Histology\LesionLeft'
     righthistology = database.event == 'Histology\LesionRight'
+    cagemate = database[housed].ix[0].value if housed.any() else 'None'
     lesionleft = float(database[lefthistology].value if lefthistology.any() else 0)
     lesionright = float(database[righthistology].value if righthistology.any() else 0)
     watertimes = database[(database.event == 'WaterDeprivation') &
@@ -308,11 +308,16 @@ def createdataset(session,path,overwrite=False):
     fronttime.to_hdf(h5path, fronttime_key)
     frontactivity.to_hdf(h5path, frontactivity_key)
     toptime.to_hdf(h5path, toptime_key)
-    whiskertime.to_hdf(h5path, whiskertime_key)
     leftpoke.to_hdf(h5path, leftpoke_key)
     rightpoke.to_hdf(h5path, rightpoke_key)
     rewards.to_hdf(h5path, rewards_key)
     info.to_hdf(h5path, info_key)
+    
+    # Optional whisker camera info
+    whiskerpath = os.path.join(path, 'whisker_video.csv')
+    if os.path.exists(whiskerpath):
+        whiskertime = readtimestamps(whiskerpath)
+        whiskertime.to_hdf(h5path, whiskertime_key)
 
 def sessionlabel(path):
     protocolfilefolder = os.path.join(dname,'../protocolfiles/lesionsham')
@@ -328,7 +333,7 @@ def sessionlabel(path):
         
         if match:
             return folder
-    return None
+    return 'stable'
 
 def make_sessionlabels(datafolders):
     for path in datafolders:
