@@ -18,6 +18,7 @@ import activitytables
 import activitymovies
 from preprocess import labelpath, frames_per_second, max_width_cm
 from preprocess import stepcenter_pixels, stepcenter_cm
+from preprocess import slipcenter_pixels, slipcenter_cm
 from collectionselector import CollectionSelector
 
 def scatterhist(x,y,bins=10,color=None,histalpha=1,axes=None,
@@ -46,12 +47,12 @@ def scatterhist(x,y,bins=10,color=None,histalpha=1,axes=None,
     axHistx.set_xlim(axScatter.get_xlim())
     axHisty.set_ylim(axScatter.get_ylim())
 
-def clusterstepframes(act,info,leftstep,rightstep):
+def clusterroiframes(act,roiactivity,info,leftroi,rightroi,
+                     roicenter_cm,cropframes):
     # Compute step times
-    stepactivity = act.iloc[:,16:24]
-    stepdiff = stepactivity.diff()
-    steppeaks = siphon.findpeaksMax(stepdiff,1500)
-    pksloc = [[stepdiff.index.get_loc(peak) for peak in step] for step in steppeaks]    
+    roidiff = roiactivity.diff()
+    roipeaks = activitytables.findpeaks(roidiff,1500)
+    pksloc = [[roidiff.index.get_loc(peak) for peak in roi] for roi in roipeaks]
     
     # Tile step frames    
     vidpaths = activitymovies.getmoviepath(info)
@@ -59,22 +60,25 @@ def clusterstepframes(act,info,leftstep,rightstep):
     backpaths = activitymovies.getbackgroundpath(info)
     videos = [video.video(path,timepath) for path,timepath in zip(vidpaths,timepaths)]
 
-    def getstepframes(stepindex,flip=False):
-        stepcenterxcm = stepcenter_cm[stepindex][1]
-        framehead = [p for p in pksloc[stepindex]
-                     if (act.xhead[p] < stepcenterxcm if not flip else act.xhead[p] > stepcenterxcm)]
+    def getroiframes(roiindex,flip=False):
+        roicenterxcm = roicenter_cm[roiindex][1]
+        headdistance = [act.xhead[p] - roicenterxcm for p in pksloc[roiindex]]
+        print headdistance
+        framehead = [p for i,p in enumerate(pksloc[roiindex])
+                     if (-25 < headdistance[i] < -5 if not flip
+                     else 5 < headdistance[i] < 25)]
         
-        frames = [imgproc.croprect(stepcenter_pixels[stepindex],(200,200),videos[0].frame(p))
-                  for p in framehead]
-        backgrounds = [imgproc.croprect(stepcenter_pixels[stepindex],(200,200),activitymovies.getbackground(backpaths[0],videos[0].timestamps[p]))
+        frames = [cropframes(videos[0].frame(p),roiindex) for p in framehead]
+        backgrounds = [cropframes(activitymovies.getbackground(backpaths[0],videos[0].timestamps[p]),roiindex)
                        for p in framehead]
         frames = [cv2.subtract(f,b) for f,b in zip(frames,backgrounds)]
         if flip:
             frames = [cv2.flip(f,1) for f in frames]
         return frames,framehead
 
-    leftframes,leftindices = getstepframes(leftstep,False)
-    rightframes,rightindices = getstepframes(rightstep,True)
+    leftframes,leftindices = getroiframes(leftroi,False)
+    rightframes,rightindices = getroiframes(rightroi,True)
+    print "==========================="
     frames = np.array(leftframes + rightframes)
     frameindices = np.array(leftindices + rightindices)
     sortindices = np.argsort(frameindices)
@@ -82,7 +86,21 @@ def clusterstepframes(act,info,leftstep,rightstep):
     frameindices = frameindices[sortindices]
     
     Z, R,labels,h = imgproc.cluster(frames,videos[0],frameindices)
-    return frames,stepdiff,steppeaks,pksloc,Z,R,labels
+    return frames,roidiff,roipeaks,pksloc,Z,R,labels
+
+def clusterstepframes(act,info,leftstep,rightstep):
+    stepactivity = act.iloc[:,17:25]
+    return clusterroiframes(act,stepactivity,info,leftstep,rightstep,
+                            stepcenter_cm,
+                            lambda f,i:imgproc.croprect(stepcenter_pixels[i],
+                                                        (200,200),f))
+                            
+def clusterslipframes(act,info,leftgap,rightgap):
+    slipactivity = act.iloc[:,25:32]
+    return clusterroiframes(act,slipactivity,info,leftgap,rightgap,
+                            slipcenter_cm,
+                            lambda f,i:imgproc.croprect((slipcenter_pixels[i][0]-100,slipcenter_pixels[i][1]),
+                                                        (300,400),f))
 
 def sessionmetric(data,connect=True,ax=None,colorcycle=None):
     if data.ndim != 2:
@@ -154,7 +172,7 @@ def trajectoryplot(activity,crossings,ax=None,style='k',alpha=1,flip=False,
                    ylabel = 'y (cm)'):
     if ax is None:
         ax = plt.gca()
-    for s,side in crossings[['slices','side']].values:
+    for s,side in crossings[['timeslice','side']].values:
         if flip and side == 'leftwards':
             ax.plot(max_width_cm - activity.xhead[s],
                     selector(activity)[s],style,alpha=alpha)
