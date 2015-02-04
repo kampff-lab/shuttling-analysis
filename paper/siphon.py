@@ -10,7 +10,7 @@ import scipy.signal as signal
 from bisect import bisect_left
 
 def loadts(path,dtype=np.uint16,nchannels=1):
-    data = np.memmap(path,dtype)
+    data = np.memmap(path,dtype,mode='c')
     nsamples = len(data) / nchannels
     return np.reshape(data,(nsamples,nchannels))
     
