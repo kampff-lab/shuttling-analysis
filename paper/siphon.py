@@ -54,7 +54,7 @@ def findpeaksMax(ts,thresh,axis=-1):
     
 def findpeaks(ts,thresh,mindistance=0):
     thresholded = ts > thresh if thresh > 0 else ts < thresh
-    crossings = np.insert(np.diff(np.int8(thresholded),0) > 0,0,False)
+    crossings = np.insert(np.diff(np.int8(thresholded),axis=0) > 0,0,False)
     indices = np.nonzero(crossings)[0]
     if mindistance > 0:
         ici = np.insert(np.diff(indices),0,0)
@@ -65,6 +65,12 @@ def loadwaves(path,nsamples,dtype=np.float32):
     data = np.memmap(path,dtype)
     nwaves = len(data) / (nsamples + 2)
     return np.reshape(data,(nwaves,nsamples + 2))
+    
+def offsetdata(data,offset,axis=-1):
+    return data + (np.arange(data.shape[axis]) * offset)
+    
+def aligndata(data,evts,before,after):
+    return np.array([data[evt-before:evt+after,:] for evt in evts])
     
 def alignspks(spks,evts,before,after):
     return [np.array([s-evt for s in spks if s-evt >= before and s-evt <= after]) for evt in evts]
