@@ -10,13 +10,14 @@ import cv2
 import bisect
 import pandas as pd
 
+#datafolder = r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data'
 datafolder = r'D:/Protocols/Shuttling/LightDarkServoStable/Data'
 
 class framesiterable:
     def __init__(self, path, start, stop):
         self.path = path
-        self.start = start
-        self.stop = stop
+        self.start = int(start)
+        self.stop = int(stop)
         
     def __iter__(self):
         capture = cv2.VideoCapture(self.path)
@@ -136,12 +137,14 @@ def showmovie(movie,fps=0):
     cv2.destroyWindow('win')
     del frames
     
-def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4')):
+def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),isColor=True):
     writer = None
     for frame in frames:
         if writer is None:
-            frameSize = frames[0].shape
-            writer = cv2.VideoWriter(filename,fourcc,fps,frameSize)
-            
+            frameSize = (frame.shape[1],frame.shape[0])
+            writer = cv2.VideoWriter(filename,fourcc,fps,frameSize,isColor)
+
+        if isColor and frame.ndim < 3:
+            frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
         writer.write(frame)
     writer.release()
