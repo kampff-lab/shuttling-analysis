@@ -11,8 +11,10 @@ import video
 import imgproc
 import pltutils
 import numpy as np
+import scipy as sp
 import pandas as pd
 import itertools as it
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import activitytables
@@ -35,6 +37,30 @@ from pandas.tools.plotting import scatter_matrix
 #                              ['y_min','y_max','y_mean',
 #                              'y_std','s_min','s_max','s_mean','s_std','duration'])
 colorcycle = ['b', 'r', 'g', 'c', 'm', 'y', 'k']
+protocolcolors = {
+  'stable': 'b',
+  'stabletocenterfree': {0b11111111:'b',0b11100111:'r'},
+  'centerfree': 'r',
+  'centerfreetostable': {0b11111111:'b',0b11100111:'r'},
+  'randomizedcenterfree_day1': ['b']*20+['m'],
+  'randomizedcenterfree_day2': 'm',
+  'randomizedcenterfree_day3': 'm',
+  'randomizedcenterfree_day4': 'm',
+  'randomizedcenterfree_day5': 'm',
+  'randomizedcenterfree_day6': 'm',
+  'randomizedcenterfree_day7': 'm',
+  'randomizedcenterfree_independent': 'm',
+  'degradationrandomizedcenterfree_day1': ['b']*20+['m'],
+  'degradationrandomizedcenterfree_day2': ['b']*20+['m'],
+  'randomizedcenterfreetopermutation': ['m']*20+['y'],
+  'randomizedcenterfreetofullyreleased': ['m']*20+['w'],
+  'permutationfreepair_day1': 'y',
+  'permutationfreepair_day2': 'y',
+  'permutationfreepair_day3': 'y',
+  'permutationfreepair_day4': 'y',
+  'permutationtofullyreleased': {None:'y',0b10000001:'w'},
+  'fullyreleased': 'w'
+}
 
 heightcutoff = 20.42
 cropstart = str(rail_start_cm)
@@ -45,6 +71,24 @@ positionfilter = str.format('xhead_min >= {0} and xhead_max <= {1}',
 speedfilter = 'xhead_speed_25 > 0'
 ballisticquery = str.format('{0} and {1} and {2}',
                    heightfilter,positionfilter,speedfilter)
+                   
+def getprotocolcolors(info):
+    rows = []
+    for key,row in info.iterrows():
+        colorscheme = protocolcolors[row.protocol]
+        if isinstance(colorscheme, dict):
+            default = colorscheme.get(None)
+            if default is not None:
+                color = colorscheme.get(row.stepstate,default)
+            else:
+                color = colorscheme[row.stepstate]
+        elif isinstance(colorscheme, list):
+            index = int(min(row.trial,len(colorscheme)-1))
+            color = colorscheme[index]
+        else:
+            color = colorscheme
+        rows.append(color)
+    return pd.DataFrame({'color':rows},info.index)
 
 def preprocessing(cr,sact,scr,path):
     if not os.path.exists(path):
@@ -187,7 +231,7 @@ def figure1b(rr,info,path):
     rrgdata = activitytables.groupbylesionvolumes(pd.concat([rrdata,rryerr],axis=1),info)
     
     fig = plt.figure()
-    activityplots.sessionmetric(rrgdata)
+    activityplots.sessionmetric(rrgdata,colorcycle=['b','r'])
     plt.ylabel('time between rewards (s)')
     plt.title('performance curve')
     fname = 'performance_curve.png'
@@ -729,6 +773,35 @@ def figure1k3(info,path):
         plt.savefig(fpath)
         plt.close(fig)
         
+def figure1k4(info,path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    sessiondata = []
+    sessionyerr = []
+    sessions = info.groupby(level=['subject'])
+    for i,(subject,sinfo) in enumerate(sessions):
+        print str.format("Processing {0}...",subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        days = sinfo.index.levels[1][sinfo.index.labels[1]]
+
+#        act,cr,fcr,info = activitytables.read_canonical(subjectpath,days=days)
+#        slipactivity = activitytables.slipactivity(act,cr)
+#        slipactivity = slipactivity[slipactivity.trial > 0]
+        
+        act = activitytables.read_subjects(subjectpath,days=days)
+        slipactivity = activitytables.slipactivity(act).join(act)
+        slipactivity = slipactivity[slipactivity.trial > 0]
+        
+        slipevents = activitytables.countslipevents(slipactivity)
+        slipspertrial = slipevents.groupby(level=['subject','session',
+                                                  'trial']).sum()
+        slipmean = slipspertrial.groupby(level=('subject','session')).mean()
+        slipstd = slipspertrial.groupby(level=('subject','session')).std()
+        sessiondata.append(slipmean)
+        sessionyerr.append(slipstd)
+    return sessiondata,sessionyerr
+        
 def figure1l(info,path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -856,6 +929,15 @@ def __saveselectedtiledclips__(clips,info,path,suffix='.avi'):
         fname = str.format("{0}"+suffix,subject)
         vidpath = os.path.join(path,fname)
         activitymovies.savemovie(frames,vidpath,frames_per_second)
+        
+def __getframes__(cr,info):
+    movies = activitymovies.getmovies(info)
+    for key,group in cr.groupby(level=['subject','session']):
+        movie = movies.loc[key][0]
+        for frametime in group:
+            if pd.isnull(frametime):
+                continue
+            yield movie.frame(movie.frameindex(frametime))
 
 def figure1m(clips,info,path):
     __saveselectedtiledclips__(clips,info,path,'_firststeps.avi')
@@ -874,6 +956,47 @@ def figure2a2(act,cr,info,path):
 def figure2b(act,cr,info,path):
     cr = cr[cr.stepstate3 == False]
     __savetiledclips__(act,cr,info,path,nclips=3)
+    
+def __colortrials__(frames,trialcolors):
+    height = 25
+    margin = 25
+    cursoredge = 5
+    colorbar = None
+    colors = np.array([np.array(mpl.colors.colorConverter.to_rgb(color))*255
+                      for color in trialcolors.color.values],dtype=np.uint8)
+    colors = colors.reshape((1,len(trialcolors),3))
+    colors = np.tile(colors,(height,1,1))
+    
+    for i,frame in enumerate(frames):
+        if colorbar is None:
+            width = frame.shape[1] - margin * 2
+            cursortop = margin - cursoredge
+            cursorbottom = margin + height + cursoredge
+            colorbar = sp.misc.imresize(colors,(height,width,3))[:,:,::-1]
+        frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
+        frame[margin:margin+height,margin:margin+width,:] = colorbar
+        cursorpos = margin + width * i / len(trialcolors)
+        cursorpt1 = (cursorpos,cursortop)
+        cursorpt2 = (cursorpos,cursorbottom)
+        cv2.line(frame,cursorpt1,cursorpt2,(0,0,0),3)
+        cv2.line(frame,cursorpt1,cursorpt2,(255,255,255),1)
+        yield frame
+    
+def figure2c(cr,info,path,suffix='.avi'):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    crinfo = cr.join(info)
+    leftcross = crinfo[(cr.side == 'leftwards') & ~cr.crosstime.isnull()]
+    for subject,group in leftcross.groupby(level=['subject']):
+        print str.format("Processing {0}...",subject)
+        fname = str.format("{0}"+suffix,subject)
+        vidpath = os.path.join(path,fname)
+        colors = getprotocolcolors(group)
+        sinfo = info.xs(subject,level='subject',drop_level=False)
+        frames = __getframes__(group.crosstime,sinfo)
+        frames = __colortrials__(frames,colors)
+        activitymovies.savemovie(frames,vidpath,30)
         
 def figure2e(act,cr,rr,info,path):
     if not os.path.exists(path):

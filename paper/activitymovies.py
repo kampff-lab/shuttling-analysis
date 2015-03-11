@@ -7,6 +7,7 @@ Created on Sun Sep 28 11:31:29 2014
 
 import os
 import cv2
+import video
 import bisect
 import pandas as pd
 
@@ -83,6 +84,14 @@ def showcrossingmovies(crossings,sessioninfo):
 #    entry = sessioninfo.loc[key[0:2]]
 #    subject = key[0]
 #    moviepath = os.path.join(datafolder,subject,entry.dirname,'front_video.avi')
+    
+def getmovieframes(sessioninfo,frames):
+    moviepath = getmoviepath(sessioninfo)
+    videos = []
+    for movie in moviepath:
+        for frame in frames:
+            videos.append(framesiterable(movie,frame,frame+1))
+    return (f for video in videos for f in video)
 
 def getmoviepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.avi')
@@ -92,6 +101,13 @@ def gettimepath(sessioninfo):
                                             
 def getbackgroundpath(sessioninfo):
     return getrelativepath(sessioninfo,r'Analysis\Background')
+    
+def getmovies(sessioninfo):
+    vidpaths = getmoviepath(sessioninfo)
+    timepaths = gettimepath(sessioninfo)
+    return pd.DataFrame([video.video(path,timepath)
+                        for path,timepath in zip(vidpaths,timepaths)],
+                        index=vidpaths.index)
     
 def getbackground(path,time):
     files = [f for f in os.listdir(path) if f.startswith('background_')]
@@ -139,12 +155,15 @@ def showmovie(movie,fps=0):
     
 def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),isColor=True):
     writer = None
-    for frame in frames:
-        if writer is None:
-            frameSize = (frame.shape[1],frame.shape[0])
-            writer = cv2.VideoWriter(filename,fourcc,fps,frameSize,isColor)
-
-        if isColor and frame.ndim < 3:
-            frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
-        writer.write(frame)
-    writer.release()
+    try:
+        for frame in frames:
+            if writer is None:
+                frameSize = (frame.shape[1],frame.shape[0])
+                writer = cv2.VideoWriter(filename,fourcc,fps,frameSize,isColor)
+    
+            if isColor and frame.ndim < 3:
+                frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
+            writer.write(frame)
+    finally:
+        if writer is not None:
+            writer.release()

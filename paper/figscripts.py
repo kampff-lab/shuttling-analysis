@@ -36,6 +36,14 @@ cr = activitytables.read_subjects(subjects[1:],days=[3,4,9,10,-1],
                                   selector=activitytables.crossings)
 info = activitytables.read_subjects(subjects[1:],days=[3,4,9,10,-1],
                                     key=activitytables.info_key)
+
+# Figure 1B (Across Conditions)
+rr = activitytables.read_subjects(subjects,days=range(1,5),
+                                  key=activitytables.rewards_key)
+info = activitytables.read_subjects(subjects,days=range(1,5),
+                                    key=activitytables.info_key)
+fbase = r'C:\figs\figure1b'
+figure1.figure1b(rr,info,fbase)
                                     
 # Figure 1C (Across Conditions)
 alpha=1
@@ -141,6 +149,12 @@ figure1.figure1k1(info,fbase)
 # Figure 1K2 (First Step Postures)
 figure1.figure1k2(info,fbase)
 
+# Figure 1K3 (Slip analysis - CRUDE)
+fbase = r'C:\figs\figure1k4'
+info = activitytables.read_subjects(subjects,days=range(1,5),
+                                    key=activitytables.info_key)
+ss = figure1.figure1k4(info,fbase)
+
 # Figure 1L (Stable vs Partial)
 fbase = r'C:\figs\figure1l'
 figure1.figure1l(info,fbase)
@@ -231,6 +245,12 @@ figure1.figure2a3(act,info,fbase)
 # Figure 2B (Manipulation Clips)
 fbase = r'C:\figs\figure2b'
 figure1.figure2b(act,cr,info,fbase)
+
+# Figure 2C (Lifetime Clips)
+fbase = r'C:\figs\figure2c'
+cr = activitytables.read_subjects(subjects,selector=activitytables.crossings)
+info = activitytables.read_subjects(subjects,key=activitytables.info_key)
+figure1.figure2c(cr,info,fbase)
                                     
 # Figure 2E (Time to reward)
 fbase = r'C:\figs\figure2e'

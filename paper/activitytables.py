@@ -43,6 +43,17 @@ def groupbylesionvolumes(data,info):
     result.set_index(['session','lesion','subject'],inplace=True)
     result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
     return result
+    
+def firstordefault(condition,default=None):
+    indices = np.where(condition)[0]
+    if len(indices) > 0:
+        return condition.index[indices[0]]
+    return default
+    
+def getkeyloc(index,key):
+    if np.iterable(key):
+        return [index.get_loc(k) for k in key]
+    return index.get_loc(key)
 
 def geomediancost(median,xs):
     return np.linalg.norm(xs-median,axis=1).sum()
@@ -119,12 +130,22 @@ def read_sessions(folders, key=frontactivity_key, selector=None,
         sessions.append(session)
     return pd.concat(sessions)
     
+def read_canonical(folders,days=None):
+    act = read_subjects(folders,days)
+    cr = read_subjects(folders,days,selector=fullcrossings)
+    fcr = read_subjects(folders,days,selector=crossings)
+    info = read_subjects(folders,days,key=info_key)
+    return act,cr,fcr,info
+    
 def slowdown(crossings):
     return pd.DataFrame(
     [stats.linregress(crossings.entryspeed,crossings.exitspeed)],
      columns=['slope','intercept','r-value','p-value','stderr'])
      
 def findpeaks(ts,thresh,axis=-1):
+    if isinstance(ts,pd.Series):
+        ts = ts.to_frame()    
+    
     valid = ts > thresh if thresh > 0 else ts < thresh
     masked = np.ma.masked_where(valid,ts)
 
@@ -200,25 +221,27 @@ def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
 #            side.append(trial.side)
 #    return indices,side
 
-def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters):
+def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
+                usediff=True,thresh=1500,headinfront=True):
     leftwards = trial.side == 'leftwards'
     roiindex = leftroi if leftwards else rightroi
     roiactivity = activity.xs(trial.timeslice,level='time',
                               drop_level=False).ix[:,roislice]
-    roidiff = roiactivity.diff()
-    roipeaks = findpeaks(roidiff,1500)[roiindex]
-    if len(roipeaks) > 0:
-        print len(roipeaks)
-    roipeaks = [peak for peak in roipeaks
-                 if (activity.xhead[peak] > roicenters[rightroi] if leftwards else
-                     activity.xhead[peak] < roicenters[leftroi]).any()]
+    if usediff:
+        roiactivity = roiactivity.diff()
+    roipeaks = findpeaks(roiactivity,thresh)[roiindex]
+    if headinfront:
+        roipeaks = [peak for peak in roipeaks
+                     if (activity.xhead[peak] > roicenters[rightroi] if leftwards else
+                         activity.xhead[peak] < roicenters[leftroi]).any()]
     return roipeaks
     
 def getsteppeaks(activity,trial,leftstep,rightstep):
     return getroipeaks(activity,slice(17,25),trial,leftstep,rightstep,stepcenter_cm)
     
 def getslippeaks(activity,trial,leftgap,rightgap):
-    return getroipeaks(activity,slice(25,32),trial,leftgap,rightgap,slipcenter_cm)
+    return getroipeaks(activity,slice(25,32),trial,leftgap,rightgap,slipcenter_cm,
+                       usediff=False,thresh=5000,headinfront=False)
 
 def roicrossings(activity,crossings,leftroi,rightroi,getpeaks):
     indices = []
@@ -240,12 +263,11 @@ def roiframeindices(activity,crossings,leftroi,rightroi,getpeaks):
     side = []
     
     for index,trial in crossings.iterrows():
-        roipeaks = getpeaks(activity,trial,leftroi,rightroi)
+        roipeaks = getpeaks(activity,trial,leftroi,rightroi)            
         if len(roipeaks) > 0:
             frameindex = min([activity.index.get_loc(peak) for peak in roipeaks])
             indices.append(frameindex)
             side.append(trial.side)
-    print "done!"
     return indices,side
     
 def stepframeindices(activity,crossings,leftstep,rightstep):
@@ -283,7 +305,7 @@ def cropslip(frame,gapindex,cropsize=(300,300),background=None,flip=False):
     return croproi(frame,gapindex,slipcenter_pixels,cropsize,background,flip,
                    cropoffset=(-100,0))
 
-def roiframes(activity,crossings,info,leftroi,rightroi,roiframeindices,croproi,
+def roiframes(indices,side,info,leftroi,rightroi,croproi,
                cropsize=(300,300),subtractBackground=False):
     # Tile step frames    
     vidpaths = activitymovies.getmoviepath(info)
@@ -292,7 +314,6 @@ def roiframes(activity,crossings,info,leftroi,rightroi,roiframeindices,croproi,
     videos = [video.video(path,timepath) for path,timepath in zip(vidpaths,timepaths)]
     
     frames = []
-    indices,side = roiframeindices(activity,crossings,leftroi,rightroi)
     for frameindex,side in zip(indices,side):
         leftwards = side == 'leftwards'
         roiindex = leftroi if leftwards else rightroi
@@ -308,13 +329,98 @@ def roiframes(activity,crossings,info,leftroi,rightroi,roiframeindices,croproi,
     
 def stepframes(activity,crossings,info,leftstep,rightstep,
                cropsize=(300,300),subtractBackground=False):
-    return roiframes(activity,crossings,info,leftstep,rightstep,
-                     stepframeindices,cropstep,cropsize,subtractBackground)
+    indices,side = stepframeindices(activity,crossings,leftstep,rightstep)
+    return roiframes(indices,side,info,leftstep,rightstep,
+                     cropstep,cropsize,subtractBackground)
                      
-def slipframes(activity,crossings,info,leftgap,rightgap,
-               cropsize=(300,300),subtractBackground=False):
-    return roiframes(activity,crossings,info,leftgap,rightgap,
-                     slipframeindices,cropslip,cropsize,subtractBackground)
+#def slipframes(activity,crossings,info,leftgap,rightgap,
+#               cropsize=(300,300),subtractBackground=False):
+#    indices,side = slipframeindices(activity,crossings,leftgap,rightgap)
+#    return roiframes(indices,side,info,leftgap,rightgap,
+#                     cropslip,cropsize,subtractBackground)
+                     
+def slipactivity(activity):
+    rowindex = []
+    rows = []    
+    
+    roiactivity = activity.ix[:,25:32]
+    roipeaks = findpeaks(roiactivity,5000)
+    for gapindex,gap in enumerate(roipeaks):
+        for slip in gap:
+            gapcenter = slipcenter_cm[gapindex]
+            slipactivity = roiactivity.ix[slip,gapindex]
+            rowindex.append(slip)
+            rows.append((gapindex,gapcenter[0],gapcenter[1],slipactivity))
+    rowindex = pd.MultiIndex.from_tuples(rowindex,names=activity.index.names)
+    data = pd.DataFrame(rows,rowindex,
+                        columns=['gapindex','xgap','ygap','peakactivity'])
+    return data
+
+#def slipactivity(activity,crossings):
+#    rowindex = []
+#    rows = []
+#    
+#    for index,trial in crossings.iterrows():
+#        roiactivity = activity.xs(trial.timeslice,level='time',
+#                                  drop_level=False).ix[:,25:32]
+#        roipeaks = findpeaks(roiactivity,5000)
+#        for gapindex,gap in enumerate(roipeaks):
+#            for slip in gap:
+#                gapcenter = slipcenter_cm[gapindex]
+#                slipactivity = roiactivity.ix[slip,gapindex]
+#                rowindex.append(slip)
+#                rows.append((gapindex,gapcenter[0],gapcenter[1],
+#                             slipactivity,trial.side))
+#    indexnames = crossings.index.names + ['time']
+#    rowindex = pd.MultiIndex.from_tuples(rowindex,names=indexnames)
+#    data = pd.DataFrame(rows,rowindex,
+#                        columns=['gapindex','xgap','ygap',
+#                                 'peakactivity','side'])
+#    return data.join(activity)
+    
+def countslipevents(slipactivity):
+    slipactivity = slipactivity.reset_index()
+    return slipactivity.groupby(['subject','session',
+                                 'trial','gapindex'])['gapindex'].count()
+    
+def coldist(xs,xcol1,xcol2,ycol1,ycol2):
+    return np.sqrt((xs[xcol1]-xs[xcol2])**2 + (xs[ycol1]-xs[ycol2])**2)
+    
+def setlist(l,mask,val):
+    for i,v in enumerate(mask):
+        if v:
+            l[i] = val
+    
+def slipfilter(slipactivity):
+    criteria = True
+    gapcriteria = (slipactivity.gapindex > 0) & (slipactivity.side == 'rightwards')
+    gapcriteria |= (slipactivity.gapindex < 6) & (slipactivity.side == 'leftwards')
+#    criteria &= gapcriteria
+    criteria &= slipactivity.yhead < 15
+    criteria &= slipactivity.peakactivity > 8000
+    criteria &= abs(slipactivity.xtail-slipactivity.xgap) > 5
+    criteria &= (slipactivity.gapindex > 0) & (slipactivity.gapindex < 6)
+    return criteria
+    
+def slipframes(slipactivity,info,cropsize=(300,200),
+               subtractBackground=False):
+    vidpaths = activitymovies.getmoviepath(info)
+    timepaths = activitymovies.gettimepath(info)
+    backpaths = activitymovies.getbackgroundpath(info)
+    videos = [video.video(path,timepath) for path,timepath in zip(vidpaths,timepaths)]
+
+    frames = []    
+    for index,trial in slipactivity.iterrows():
+        rightwards = trial.side == 'rightwards'
+        frame = videos[0].frame(trial.frame)
+        background = None
+        if subtractBackground:
+            timestamp = videos[0].timestamps[trial.frame]
+            background = activitymovies.getbackground(backpaths[0],timestamp)
+        if cropsize is not None:
+            frame = cropslip(frame,trial.gapindex,cropsize,background,rightwards)
+        frames.append(frame)
+    return frames
 
 def cropcrossings(x,slices,crop):
     def test_slice(s):
@@ -326,6 +432,9 @@ def cropcrossings(x,slices,crop):
         max_index = np.max(valid_indices)
         return slice(s.start+min_index,s.start+max_index+1)
     return [crop_slice(s) for s in slices if np.any(test_slice(s))]
+
+def fullcrossings(activity,midcross=True):
+    return crossings(activity,midcross,False)
 
 def crossings(activity,midcross=True,crop=True):
     # Generate trajectories and crossings
@@ -341,9 +450,19 @@ def crossings(activity,midcross=True,crop=True):
     if crop:
         crossings = cropcrossings(xhead,crossings,[cropleft,cropright])
         
+    if len(crossings) == 0:
+        return pd.DataFrame()
+        
     # Trial info
     trialinfo = pd.DataFrame([activity.iloc[s.start,1:8] for s in crossings])
     trialinfo.reset_index(inplace=True,drop=True)
+    trialinfo['stepstate'] = np.bitwise_or(1 << 7, np.bitwise_or(
+        np.left_shift(trialinfo['stepstate1'], 6), np.bitwise_or(
+        np.left_shift(trialinfo['stepstate2'], 5), np.bitwise_or(
+        np.left_shift(trialinfo['stepstate3'], 4), np.bitwise_or(
+        np.left_shift(trialinfo['stepstate4'], 3), np.bitwise_or(
+        np.left_shift(trialinfo['stepstate5'], 2), np.bitwise_or(
+        np.left_shift(trialinfo['stepstate6'], 1), 1)))))))
     
     # Generate crossing features
     time = activity.index
@@ -365,6 +484,10 @@ def crossings(activity,midcross=True,crop=True):
                             columns=['duration'])
     side = pd.DataFrame(['rightwards' if activity.xhead[s.start] < center else 'leftwards'
                         for s in crossings], columns=['side'])
+    crosstime = pd.DataFrame([firstordefault(activity.xhead[s] >= center)
+                             if activity.xhead[s.start] < center
+                             else firstordefault(activity.xhead[s] <= center)
+                             for s in crossings], columns=['crosstime'])
     
     # Slowdown
     xspeed = activity.xhead_speed
@@ -386,6 +509,11 @@ def crossings(activity,midcross=True,crop=True):
     exitspeed = pd.DataFrame([np.abs(xspeed[s][v].mean())
     for s,v in zip(crossings,exitpoints)],columns=['exitspeed'])
     
+    # Slips
+    gapactivity = pd.DataFrame([activity.ix[s,25:32].max() for s in crossings])
+    gapactivity.columns = [str.format('maxgap{0}',i)
+                          for i in xrange(len(gapactivity.columns))]
+    
     crossings = pd.DataFrame(crossings,columns=['slices'])
     return pd.concat([crossings,
                       timeslice,
@@ -396,8 +524,10 @@ def crossings(activity,midcross=True,crop=True):
                       height,
                       speed,
                       side,
+                      crosstime,
                       entryspeed,
                       crossingspeed,
-                      exitspeed],
+                      exitspeed,
+                      gapactivity],
                       axis=1)
     

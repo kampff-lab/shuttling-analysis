@@ -178,6 +178,23 @@ def readstep(path,name):
                        true_values=['True'],
                        false_values=['False'],
                        names=[name])[name]
+                       
+def updateinfoprotocol(path):        
+    if isinstance(path,list):
+        for p in path:
+            updateinfoprotocol(p)
+        return
+
+    h5path = storepath(path)
+    if not os.path.exists(h5path):
+        raise Exception("h5 store does not exist")
+    
+    session_labels_file = os.path.join(path,'session_labels.csv')
+    info = pd.read_hdf(h5path, info_key)
+    label = sessionlabel(path)
+    info.protocol = label
+    np.savetxt(session_labels_file,[['protocol',label]],delimiter=':',fmt='%s')
+    info.to_hdf(h5path, info_key)
         
 def createdataset(session,path,overwrite=False):
     h5path = storepath(path)

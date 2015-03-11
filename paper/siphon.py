@@ -11,8 +11,10 @@ from bisect import bisect_left
 
 def loadts(path,dtype=np.uint16,nchannels=1):
     data = np.memmap(path,dtype,mode='c')
-    nsamples = len(data) / nchannels
-    return np.reshape(data,(nsamples,nchannels))
+    if nchannels > 1:
+        nsamples = len(data) / nchannels
+        data = np.reshape(data,(nsamples,nchannels))
+    return data
     
 def bandpass(lowcut, highcut, fs, order=6):
     nyq = 0.5 * fs

@@ -59,29 +59,56 @@ def distancematrix(frames,normType=cv2.cv.CV_L2):
                 result[j,i] = distance
     return result
     
-def cluster(frames,vid=None,indices=None,labels=None):
+def drawframes(frames,ax=None,labels=None):
+    if ax is None:
+        plt.figure()
+        ax = plt.gca()
+    
+    ntiles = int(np.ceil(np.sqrt(len(frames))))
+    if ntiles == 0:
+        return
+    fn,fm = frames[0].shape
+    tiles = tile(frames,ntiles,ntiles)
+    ax.clear()
+    ax.imshow(tiles[0])
+    if (labels is not None):
+        xlabels = fm * (np.arange(len(frames)) % ntiles) + 0.1 * fm
+        ylabels = fn * (np.arange(len(frames)) / ntiles) + 0.85 * fn
+        [ax.text(x,y,l,color='r') for x,y,l in zip(xlabels,ylabels,labels)]
+    ax.set_xticks([])
+    ax.set_yticks([])
+    
+def cluster(frames,vid=None,indices=None,labels=None,drawlinkage=True):
     drawlabels = [False]
     if labels is None:
         labels = np.zeros(len(frames),dtype=int)
     fig = plt.figure()
     distance = distancematrix(frames,cv2.cv.CV_L1)
     Z = sch.linkage(distance,'complete')
-    ax1 = fig.add_axes([0.05,0.1,0.4,0.6])
-    ax2 = fig.add_axes([0.05,0.71,0.4,0.2])
-    R = sch.dendrogram(Z)
-    ax2.set_title('frame clusters')
+    
+    if drawlinkage:
+        ax1 = fig.add_axes([0.05,0.1,0.4,0.6])
+        ax2 = fig.add_axes([0.05,0.71,0.4,0.2])        
+    R = sch.dendrogram(Z,no_plot=not drawlinkage)
+    if drawlinkage:
+        ax2.set_title('frame clusters')    
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
     leaves = R['leaves']
-    ax2.set_xticks([])
-    ax2.set_yticks([])
     sframes = frames[leaves]
     distance = distance[leaves,:]
-    distance = distance[:,leaves]
-    axcolor = fig.add_axes([0.46,0.1,0.02,0.6])
-    im = ax1.imshow(distance,aspect='auto')
-    plt.colorbar(im, cax=axcolor)
+    distance = distance[:,leaves]    
+    if drawlinkage:
+        axcolor = fig.add_axes([0.46,0.1,0.02,0.6])
+        im = ax1.imshow(distance,aspect='auto')
+        plt.colorbar(im, cax=axcolor)
+        xmin,xmax = ax2.get_xlim()
+        ax3 = plt.subplot2grid((3,2),(0,1), rowspan=3)
+    else:
+        ax3 = plt.gca()
+        
     fn,fm = sframes[0].shape
-    xmin,xmax = ax2.get_xlim()
-    ax3 = plt.subplot2grid((3,2),(0,1), rowspan=3)
     def drawframes(ax,frameslice=slice(None)):
         pframes = sframes[frameslice]
         ntiles = int(np.ceil(np.sqrt(len(pframes))))
@@ -109,6 +136,13 @@ def cluster(frames,vid=None,indices=None,labels=None):
         
     def getframeslice(lmin,lmax):
         return slice(int(np.ceil(lmin)),int(np.floor(lmax))+1)
+        
+    def getactiveframeslice():
+        if drawlinkage:
+            lmin,lmax = getframelim(ax2)
+            return getframeslice(lmin,lmax)
+        else:
+            return slice(0,len(leaves))
     
     def onlimitchanged(ax):
         lmin,lmax = getframelim(ax)
@@ -117,8 +151,7 @@ def cluster(frames,vid=None,indices=None,labels=None):
         ax1.set_xlim(lmin,lmax)
         
     def onkeypress(evt):
-        lmin,lmax = getframelim(ax2)
-        frameslice = getframeslice(lmin,lmax)
+        frameslice = getactiveframeslice()
         if evt.key == 'l':
             drawlabels[0] = not drawlabels[0]
         else:
@@ -133,8 +166,7 @@ def cluster(frames,vid=None,indices=None,labels=None):
     
     def onmouseclick(evt):
         if evt.inaxes == ax3:
-            lmin,lmax = getframelim(ax2)
-            frameslice = getframeslice(lmin,lmax)
+            frameslice = getactiveframeslice()
             ntiles = int(np.ceil(np.sqrt(frameslice.stop-frameslice.start)))
             x = int(evt.xdata / fm)
             y = int(evt.ydata / fn)
@@ -144,7 +176,10 @@ def cluster(frames,vid=None,indices=None,labels=None):
                 video.showmovie(vid,idx)
     h1 = fig.canvas.mpl_connect('button_press_event',onmouseclick)
     h2 = fig.canvas.mpl_connect('key_press_event',onkeypress)
-    h3 = ax2.callbacks.connect('xlim_changed', onlimitchanged) 
+    if drawlinkage:
+        h3 = ax2.callbacks.connect('xlim_changed', onlimitchanged) 
+    else:
+        h3 = None
     return Z, R, labels, (h1, h2, h3)
 
 def tile(frames,width,height,labels=None):

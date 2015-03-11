@@ -6,25 +6,30 @@ Created on Sat Nov 23 14:50:34 2013
 """
 
 import cv2
-import bisect
 import numpy as np
+import pandas as pd
 
 class video:        
     def __init__(self, videopath, timepath=None):
         self.path = videopath
         self.capture = cv2.VideoCapture(videopath)
         if timepath is not None:
-            self.timestamps = np.genfromtxt(timepath,dtype=str)
+            self.timestamps = pd.read_csv(timepath,
+                                          sep=' ',
+                                          header=None,
+                                          names=['time'],
+                                          parse_dates=[0],
+                                          usecols=[0]).values.flatten()
         else:
             self.timestamps = None
         
     def __del__(self):
         del self.capture
         
-    def frameindex(self, timestr):
+    def frameindex(self, time):
         if self.timestamps is None:
             raise ValueError("video does not have timestamps")
-        return bisect.bisect_left(self.timestamps,timestr)
+        return self.timestamps.searchsorted(np.datetime64(time))
         
     def frame(self, frameindex):
         self.capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,frameindex)
