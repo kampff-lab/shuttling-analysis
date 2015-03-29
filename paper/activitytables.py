@@ -10,6 +10,7 @@ import cv2
 import video
 import imgproc
 import sessions
+import datetime
 import numpy as np
 import pandas as pd
 import activitymovies
@@ -49,6 +50,10 @@ def firstordefault(condition,default=None):
     if len(indices) > 0:
         return condition.index[indices[0]]
     return default
+    
+def utcfromdatetime64(dt64):
+    ts = (dt64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
+    return datetime.datetime.utcfromtimestamp(ts)
     
 def getkeyloc(index,key):
     if np.iterable(key):
