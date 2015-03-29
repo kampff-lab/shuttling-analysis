@@ -38,9 +38,12 @@ rail_stop_pixels = 1080
 rail_start_cm = rail_start_pixels * width_pixel_to_cm
 rail_stop_cm = rail_stop_pixels * width_pixel_to_cm
 frames_per_second = 120.0
+gapslice = slice(25,32)
+stepslice = slice(17,25)
 slipcenter_pixels = [(124, 629), (289, 629), (469, 628), (642, 627),
                      (824, 625), (995, 625), (1161, 624)]
 slipcenter_pixels = [(y,x) for x,y in slipcenter_pixels] # crop offset
+steparea_pixels = [1372.5, 1294.5, 675.0, 686.5, 625.5, 579.0, 1357.5, 1374.5]
 stepcenter_pixels = [(58, 102), (214, 103), (378, 106), (537, 102),
                      (707, 105), (863, 103), (1026, 97), (1177, 94)]
 stepcenter_pixels = [(y+467,x+21) for x,y in stepcenter_pixels] # crop offset
