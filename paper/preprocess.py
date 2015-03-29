@@ -191,6 +191,18 @@ def updateinfoprotocol(path):
     info.protocol = label
     np.savetxt(session_labels_file,[['protocol',label]],delimiter=':',fmt='%s')
     info.to_hdf(h5path, info_key)
+    
+def appendtrialinfo(time,rewards,info=None):
+    trialindex = pd.concat([time[0:1],rewards.time])
+    trialseries = pd.Series(range(len(trialindex)),
+                            dtype=np.int32,
+                            name='trial')
+    if info is not None:
+        trialseries = pd.concat([trialseries] + info,axis=1)
+        trialseries.fillna(method='ffill',inplace=True)
+        trialseries = trialseries[0:len(trialindex)]
+    trialseries.index = trialindex
+    return trialseries.reindex(time,method='ffill')
         
 def createdataset(session,path,overwrite=False):
     h5path = storepath(path)
@@ -261,21 +273,13 @@ def createdataset(session,path,overwrite=False):
     rewards.reset_index(drop=True,inplace=True)
     
     # Compute trial indices and environment state
-    trialindex = pd.concat([fronttime[0:1],rewards.time])
-    trialseries = pd.Series(range(len(trialindex)),
-                            dtype=np.int32,
-                            name='trial')
-    if len(trialindex) > 200:
+    if len(rewards.time) >= 200:
         print "WARNING: Trial count exceeded 200!"
     steppath = os.path.join(path, 'step{0}_trials.csv')
     axisname = 'stepstate{0}'
     stepstates = [readstep(str.format(steppath,i),str.format(axisname,i))
-    for i in xrange(1,7)]
-    trialseries = pd.concat([trialseries] + stepstates,axis=1)
-    trialseries.fillna(method='ffill',inplace=True)
-    trialseries = trialseries[0:len(trialindex)]
-    trialseries.index = trialindex
-    trialseries = trialseries.reindex(fronttime,method='ffill')
+                  for i in xrange(1,7)]
+    trialseries = appendtrialinfo(fronttime,rewards,stepstates)
     
     # Generate session info
     starttime = fronttime[0].replace(second=0, microsecond=0)
