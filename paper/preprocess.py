@@ -96,13 +96,6 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
         # Check for front activity file and regenerate if necessary
         for path in datafolders:
             make_analysisfolder(path)
-            front_activity_path = os.path.join(path,'front_activity.csv')
-            if not os.path.exists(front_activity_path):
-                analysispath = os.path.join(path,analysisfolder)
-                os.chdir(analysispath)
-                print 'Generating front activity data...'
-                activitydetector = os.path.join(dname,'bonsai/video_activity_detector.bonsai')
-                subprocess.call([playerpath,activitydetector])
         
         # Check for background files and regenerate if necessary
         for path in datafolders:
