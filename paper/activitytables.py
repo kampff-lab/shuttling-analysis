@@ -212,7 +212,7 @@ def roiactivations(roiactivity,thresh,roicenters):
     return data
      
 def steptimes(activity,thresh=1500):
-    stepactivity = activity.iloc[:,17:25]
+    stepactivity = activity.iloc[:,stepslice]
     data = roiactivations(stepactivity,thresh,stepcenter_cm)
     index = pd.Series(data[:,0],name='time')
     return pd.DataFrame(data[:,1:],
@@ -222,7 +222,7 @@ def steptimes(activity,thresh=1500):
                                  'stepcentery'])
                                  
 def sliptimes(activity,thresh=1500):
-    gapactivity = activity.iloc[:,25:32]
+    gapactivity = activity.iloc[:,gapslice]
     data = roiactivations(gapactivity,thresh,slipcenter_cm)
     index = pd.Series(data[:,0],name='time')
     return pd.DataFrame(data[:,1:],
@@ -252,7 +252,7 @@ def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
 #        leftwards = trial.side == 'leftwards'
 #        stepindex = leftstep if leftwards else rightstep
 #        stepactivity = activity.xs(trial.timeslice,level='time',
-#                                   drop_level=False).iloc[:,17:25]
+#                                   drop_level=False).iloc[:,stepslice]
 #        stepdiff = stepactivity.diff()
 #        steppeaks = findpeaks(stepdiff,1500)[stepindex]
 #        steppeaks = [peak for peak in steppeaks
@@ -535,12 +535,14 @@ def cropcrossings(x,slices,crop):
         return slice(s.start+min_index,s.start+max_index+1)
     return [crop_slice(s) for s in slices if np.any(test_slice(s))]
 
+def visiblecrossings(activity):
+    return fullcrossings(activity,midcross=False)
+
 def fullcrossings(activity,midcross=True):
     return crossings(activity,midcross,False)
 
-def crossings(activity,midcross=True,crop=True):
+def crossings(activity,midcross=True,crop=True,center=max_width_cm / 2.0):
     # Generate trajectories and crossings
-    center = max_width_cm / 2.0
     cropleft = rail_start_pixels * width_pixel_to_cm
     cropright = rail_stop_pixels * width_pixel_to_cm
     xhead = activity.xhead
@@ -610,9 +612,16 @@ def crossings(activity,midcross=True,crop=True):
     columns=['crossingspeed'])    
     exitspeed = pd.DataFrame([np.abs(xspeed[s][v].mean())
     for s,v in zip(crossings,exitpoints)],columns=['exitspeed'])
+        
+    # Steps
+    steptimes = pd.DataFrame([[step[0] if len(step) > 0 else None
+                 for step in findpeaks(activity.ix[s,stepslice].diff(),1500)]
+                 for s in crossings])
+    steptimes.columns = [str.format('steptime{0}',i)
+                         for i in xrange(len(steptimes.columns))]
     
     # Slips
-    gapactivity = pd.DataFrame([activity.ix[s,25:32].max() for s in crossings])
+    gapactivity = pd.DataFrame([activity.ix[s,gapslice].max() for s in crossings])
     gapactivity.columns = [str.format('maxgap{0}',i)
                           for i in xrange(len(gapactivity.columns))]
     
@@ -627,6 +636,7 @@ def crossings(activity,midcross=True,crop=True):
                       speed,
                       side,
                       crosstime,
+                      steptimes,
                       entryspeed,
                       crossingspeed,
                       exitspeed,
