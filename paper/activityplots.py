@@ -47,6 +47,18 @@ def scatterhist(x,y,bins=10,color=None,alpha=1,histalpha=1,axes=None,
     axHisty.set_yticks([])
     axHistx.set_xlim(axScatter.get_xlim())
     axHisty.set_ylim(axScatter.get_ylim())
+    
+def xplot(sts,col='xhead',style='k',alpha=0.2):
+    gsts = sts.set_index('crossindex',append=True)
+    grouplevel = ['subject','session','crossindex']
+    if col == 'xhead':
+        for i,g in gsts.query("side == 'leftwards'").groupby(level=grouplevel):
+            plt.plot(activitytables.max_width_cm - g[col],style,alpha=alpha)
+        for i,g in gsts.query("side == 'rightwards'").groupby(level=grouplevel):
+            plt.plot(g[col],style,alpha=alpha)
+    else:
+        for i,g in gsts.groupby(level=grouplevel):
+            plt.plot(g[col],style,alpha=alpha)
 
 def clusterroiframes(act,roiactivity,info,leftroi,rightroi,
                      roicenter_cm,cropframes):
