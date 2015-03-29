@@ -16,8 +16,11 @@ import pandas as pd
 import activitymovies
 import scipy.stats as stats
 from scipy.interpolate import interp1d
+from preprocess import appendtrialinfo
+from preprocess import gapslice, stepslice
 from preprocess import storepath, labelpath
 from preprocess import frontactivity_key, rewards_key, info_key
+from preprocess import leftpoke_key, rightpoke_key
 from preprocess import max_width_cm, width_pixel_to_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
 from preprocess import stepcenter_cm, slipcenter_cm
@@ -44,6 +47,22 @@ def groupbylesionvolumes(data,info):
     result.set_index(['session','lesion','subject'],inplace=True)
     result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
     return result
+    
+def trialactivity(rr,lpoke,rpoke,cr,vcr):
+    lpoketime = lpoke.groupby('trial').duration.sum().to_frame('poketime')
+    rpoketime = rpoke.groupby('trial').duration.sum().to_frame('poketime')
+    ptime = pd.concat([lpoketime,rpoketime]).sort()
+    crtime = cr.groupby('trial').duration.sum().to_frame('crossingtime')
+    vcrtime = vcr.groupby('trial').duration.sum()
+    vtime = (vcrtime - crtime.crossingtime).to_frame('visibletime')
+    ttime = rr.time.diff()[1:] / np.timedelta64(1,'s')
+    ttime.columns = ['totaltime']
+    trialact = pd.concat([ptime,vtime,crtime,ttime],
+                         join='inner',axis=1)
+    atime = trialact[['poketime','visibletime','crossingtime']].sum(axis=1)
+    idletime = trialact.time - atime
+    trialact.insert(3,'idletime',idletime)
+    return trialact
     
 def firstordefault(condition,default=None):
     indices = np.where(condition)[0]
@@ -434,6 +453,65 @@ def slipframes(slipactivity,info,cropsize=(300,200),
             frame = cropslip(frame,trial.gapindex,cropsize,background,rightwards)
         frames.append(frame)
     return frames
+    
+def __lickbouts__(licks,time):
+    bouts = []
+    lickcounts = []
+    for i,s in enumerate(licks):
+        if len(bouts) == 0:
+            bouts.append(s)
+            lickcounts.append(1)
+        else:
+            currbout = bouts[-1]
+            ili = time[s.start] - time[currbout.stop]
+            if ili > datetime.timedelta(seconds=1.5):
+                bouts.append(s)
+                lickcounts.append(1)
+            else:
+                bouts[-1] = slice(currbout.stop,s.stop)
+                lickcounts[-1] += 1
+    return bouts,lickcounts
+    
+__mem__ = None    
+    
+def pokebouts(poke,rr):
+#    baseline = poke.median()
+#    thresh = baseline + poke.std()
+    thresh = 400 # from actual threshold values
+    masked = np.ma.masked_array(poke, poke > thresh)
+    flat = np.ma.clump_unmasked(masked)
+    licks = [slice(flat[i-1].stop-1,flat[i].start)
+            for i in range(1,len(flat))]
+    
+    # Generate poke features
+    time = poke.index
+    bouts,lickcounts = __lickbouts__(licks,time)
+    if len(bouts) == 0:
+        return pd.DataFrame()
+    trialinfo = appendtrialinfo(poke.reset_index('time').time,rr,[rr])
+    if len(rr) == 0:
+        rewardoffset = [1] * len(bouts)
+    else:
+        rewardoffset = [abs((time[s.stop-1]-trialinfo.time[s.stop-1]).total_seconds())
+                       for s in bouts]
+    trialinfo = pd.DataFrame([trialinfo.trial[s].max() + (1 if o < 1 else 0)
+                             for o,s in zip(rewardoffset,bouts)],
+                             columns=['trial'])
+    timeslice = pd.DataFrame([slice(time[s.start],time[s.stop-1])
+                             for s in bouts],columns=['timeslice'])
+    duration = pd.DataFrame([(time[s.stop-1]-time[s.start]).total_seconds()
+                            for s in bouts],
+                            columns=['duration'])
+    peak = pd.DataFrame([poke[s].max()[0] for s in bouts],columns=['peak'])
+    bouts = pd.DataFrame(bouts,columns=['slices'])
+    licks = pd.DataFrame(lickcounts,columns=['licks'])
+    return pd.concat([bouts,
+                      timeslice,
+                      trialinfo,
+                      duration,
+                      licks,
+                      peak],
+                      axis=1)
 
 def cropcrossings(x,slices,crop):
     def test_slice(s):
