@@ -27,6 +27,14 @@ from preprocess import stepcenter_cm, slipcenter_cm
 from preprocess import stepcenter_pixels, slipcenter_pixels
 from preprocess import rail_start_cm, rail_stop_cm
 
+def groupbyname(data,info):
+    result = data.copy(True)
+    result['l2'] = ['individual']*len(data)
+    result.reset_index(inplace=True)
+    result.sort(['session','subject'],inplace=True)
+    result.set_index(['session','l2','subject'],inplace=True)
+    return result
+
 def groupbylesionvolumes(data,info):
     lesionvolume = info['lesionleft'] + info['lesionright']
     lesionvolume.name = 'lesionvolume'
@@ -43,6 +51,9 @@ def groupbylesionvolumes(data,info):
     result['lesion'] = ['lesion' if v > 0 else 'control'
                         for v in result['lesionvolume']]
     result.reset_index(inplace=True)
+    result = result[~result.session.isnull()]
+    columns = ['subject' if c == 'level_0' else c for c in result.columns]
+    result.columns = columns
     result.sort(['session','lesion'],inplace=True)
     result.set_index(['session','lesion','subject'],inplace=True)
     result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
