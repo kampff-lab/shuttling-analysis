@@ -20,7 +20,7 @@ import matplotlib.patches as mpatches
 import activitytables
 import activityplots
 import activitymovies
-from preprocess import frames_per_second
+from preprocess import frames_per_second, steparea_pixels
 from preprocess import labelpath, rail_start_cm, rail_stop_cm
 from preprocess import max_width_cm, max_height_cm
 from preprocess import stepcenter_cm, stepcenter_pixels
@@ -71,6 +71,26 @@ positionfilter = str.format('xhead_min >= {0} and xhead_max <= {1}',
 speedfilter = 'xhead_speed_25 > 0'
 ballisticquery = str.format('{0} and {1} and {2}',
                    heightfilter,positionfilter,speedfilter)
+
+def buildtimetable(subjects,info,path):
+    first = True
+    #info = activitytables.read_subjects(subjects,key=activitytables.info_key)
+    for spath,(subject,group) in zip(subjects,info.groupby(level=['subject'])):
+        for session,sinfo in group.groupby(level=['session']):
+            print str.format("Processing {0} {1}...",subject,session)
+            hdf = pd.HDFStore(path)
+            act = activitytables.read_subjects(spath,days=[session])
+            act.reset_index(inplace=True)
+            vidpath = os.path.join(spath,sinfo.dirname[0],'front_video.avi')
+            act['path'] = vidpath
+            act = act[['time','path','frame']]
+            act.set_index('time',inplace=True)
+            if first:
+                hdf.put('timetable',act,format='table',data_columns=True)
+                first = False
+            else:
+                hdf.append('timetable',act,format='table',data_columns=True)
+            hdf.close()
                    
 def getprotocolcolors(info):
     rows = []
@@ -237,7 +257,61 @@ def figure1b(rr,info,path):
     fname = 'performance_curve.png'
     fpath = os.path.join(path,fname)
     plt.savefig(fpath)
-    plt.close(fig)
+#    plt.close(fig)
+    
+def figure1b2(info,path,pooledtitle=None):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        
+    pooled = None
+    sessions = info.groupby(level=['subject','session'])
+    for (subject,session),sinfo in sessions:
+        fig = plt.figure()
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        rr = activitytables.read_subjects(subjectpath,days=[session],
+                                          key=activitytables.rewards_key,
+                                          includeinfokey=False)
+        lpoke = activitytables.read_subjects(subjectpath,days=[session],
+                                          key=[activitytables.leftpoke_key,
+                                               activitytables.rewards_key],
+                                          selector=activitytables.pokebouts,
+                                          includeinfokey=False)
+        rpoke = activitytables.read_subjects(subjectpath,days=[session],
+                                          key=[activitytables.rightpoke_key,
+                                               activitytables.rewards_key],
+                                          selector=activitytables.pokebouts,
+                                          includeinfokey=False)
+        vcr = activitytables.read_subjects(subjectpath,days=[session],
+                                           selector=activitytables.visiblecrossings,
+                                           includeinfokey=False)
+        cr = activitytables.read_subjects(subjectpath,days=[session],
+                                          selector=activitytables.crossings,
+                                          includeinfokey=False)
+        if len(rr) > 1:
+            trialact = activitytables.trialactivity(rr,lpoke,rpoke,cr,vcr).sum()
+            if pooled is None:
+                pooled = trialact
+            else:
+                pooled += trialact
+            trialact.ix[:-1].plot(kind='pie')
+        plt.title(str.format('{0} (session {1})',subject,session))
+        fname = str.format("{0}_session_{1}_trial_activity.png",
+                           subject, session)
+        fpath = os.path.join(path,subject)
+        if not os.path.exists(fpath):
+            os.makedirs(fpath)
+        fpath = os.path.join(fpath,fname)
+        plt.savefig(fpath)
+        plt.close(fig)
+
+    if pooled is not None and pooledtitle is not None:
+        fig = plt.figure()
+        pooled.ix[:-1].plot(kind='pie')
+        plt.title(pooledtitle)
+        fname = str.format("{0}.png",pooledtitle)
+        fpath = os.path.join(path,fname)
+        plt.savefig(fpath)
+        plt.close(fig)
 
 def figure1c(cr,path):
     if not os.path.exists(path):
@@ -410,7 +484,7 @@ def __poolfeatureconditions__(feature,conditions,ylabel,title,fname,cr,info,path
     d = activitytables.groupbylesionvolumes(pd.concat([m,e],axis=1),info)
     fig = plt.figure()
     ax = plt.gca()
-    activityplots.sessionmetric(d,ax=ax,colorcycle=colorcycle,connect=False)
+    activityplots.sessionmetric(d,ax=ax,colorcycle=colorcycle,connect=True)
     plt.xlabel('')
     plt.xticks(labels,conditions)
     plt.ylabel(ylabel)
@@ -440,6 +514,65 @@ def figure1e2(cr,info,path):
                               'nose height (cm)','average nose height',
                               'height_curve.png',
                               cr,info,path)
+
+def __spatialaveragesbysession__(subjects,cr,path,selector=lambda x:x.yhead,
+                                 ylabel='y (cm)',xlim=None,ylim=None):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    cut = getballistictrials(cr)
+    sessions = cut[cut.trial > 0].groupby(level=['session'])
+    for session,group in sessions:
+        fig = plt.figure()
+        sact = activitytables.read_subjects(subjects,days=[session])
+        
+        x,y,yerr = activitytables.spatialaverage(sact,group,selector)
+        activityplots.trajectoryplot(sact,group,alpha=0.2,flip=True,
+                                     selector=selector)
+        plt.fill_between(x,y-yerr,y+yerr)
+        
+        if xlim is not None:
+            plt.xlim(xlim)
+        if ylim is not None:
+            plt.ylim(ylim)
+        plt.xlabel('x (cm)')
+        plt.ylabel(ylabel)
+        plt.title(str.format('session {0}',session))
+        fname = str.format("session_{0}_trajectories.png",
+                           session)
+        fpath = os.path.join(path,fname)
+        plt.savefig(fpath)
+        plt.close(fig)
+        
+def __spatialaveragesoverlay__(cr,path,selector=lambda x:x.yhead,
+                               ylabel='y (cm)',xlim=None,ylim=None):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    fig = plt.figure()
+    cut = getballistictrials(cr)
+    sessions = cut[cut.trial > 0].groupby(level=['subject'])
+    days = cut.index.levels[1][cut.index.labels[1]].unique()
+    for subject,group in sessions:
+        print str.format("Processing {0}...",subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        sact = activitytables.read_subjects(subjectpath,days=days)
+        
+        x,y,yerr = activitytables.spatialaverage(sact,group,selector)
+        plt.fill_between(x,y-yerr,y+yerr)
+        
+        if xlim is not None:
+            plt.xlim(xlim)
+        if ylim is not None:
+            plt.ylim(ylim)
+        plt.xlabel('x (cm)')
+        plt.ylabel(ylabel)
+        
+    plt.title(str.format('average trajectories'))
+    fname = str.format("average_trajectories.png")
+    fpath = os.path.join(path,fname)
+    plt.savefig(fpath)
+    plt.close(fig)
     
 def __spatialaverages__(cr,path,selector=lambda x:x.yhead,
                         ylabel='y (cm)',xlim=None,ylim=None):
@@ -487,7 +620,7 @@ def __spatialaveragecomparison__(cr,path,selector=lambda x:x.yhead,
     for subject,group in conditions:
         fig = plt.figure()
         
-        days = group.index.levels[1][group.index.labels[1]]
+        days = group.index.levels[1][group.index.labels[1]].unique()
         subjectpath = os.path.join(activitymovies.datafolder,subject)
         act = activitytables.read_subjects(subjectpath,days=days)
     
@@ -519,6 +652,9 @@ def __spatialaveragecomparison__(cr,path,selector=lambda x:x.yhead,
         
 def figure1f2(cr,path):
     __spatialaveragecomparison__(cr,path,xlim=(5,45),ylim=(0,7))
+    
+def figure1f3(cr,path):
+    return __spatialaveragesoverlay__(cr,path,xlim=(5,45),ylim=(0,7))
         
 def figure1h(cr,path):
     if not os.path.exists(path):
@@ -810,7 +946,7 @@ def figure1l(info,path):
     for subject,sinfo in sessions:
         fig = plt.figure()
         subjectpath = os.path.join(activitymovies.datafolder,subject)
-        days = sinfo.index.levels[1][sinfo.index.labels[1]]
+        days = sinfo.index.levels[1][sinfo.index.labels[1]].unique()
         act = activitytables.read_subjects(subjectpath,days=days)
         cr = activitytables.read_subjects(subjectpath,days=days,
                                           selector=activitytables.crossings)
@@ -831,9 +967,6 @@ def figure1l(info,path):
         leftwards = stfeatures.side == 'leftwards'
         stfeatures.xhead[leftwards] = max_width_cm - stfeatures.xhead[leftwards]
         stfeatures.xhead -= stepoffset
-        activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
-                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
-                                  histalpha=alpha)
         
         uact = act[~act.stepstate3]
         ucr = cr[~cr.stepstate3]
@@ -841,6 +974,10 @@ def figure1l(info,path):
         leftwards = ufeatures.side == 'leftwards'
         ufeatures.xhead[leftwards] = max_width_cm - ufeatures.xhead[leftwards]
         ufeatures.xhead -= stepoffset
+        
+        activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
+                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                                  histalpha=alpha)
         activityplots.scatterhist(ufeatures.xhead,ufeatures.yhead,color='r',
                                   bins=bins,axes=axes,xlim=xlim,ylim=ylim,
                                   histalpha=alpha)
@@ -853,6 +990,209 @@ def figure1l(info,path):
         fpath = os.path.join(path,fname)
         plt.savefig(fpath)
         plt.close(fig)
+        
+def __concatstepslices__(slices):
+    subjects = []
+    for sub in slices:
+#        for i,crossing in enumerate(sub):
+#            crossing['crossindex'] = i
+        subjects.append(pd.concat(sub))
+    return pd.concat(subjects)
+    
+def __extractallstepslices__(data,before=200,after=400):
+    sessions = data.groupby(level=['subject'])
+    subjects = []
+    for subject,group in sessions:
+        print str.format("Processing {0}...", subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        days = group.index.levels[1][group.index.labels[1]].unique()
+        act = activitytables.read_subjects(subjectpath,days=days)
+        subslices = __extractstepslice__(act,group,before,after)
+        subjects.append(subslices)
+    return pd.concat(subjects)
+
+def __extractstepslice__(act,data,before=200,after=400):
+    slices = []
+    for i,(index, row) in enumerate(data.iterrows()):
+        ix = act.index.get_loc(index)
+        ixslice = slice(ix-before,ix+after+1)
+        actslice = act.ix[ixslice]
+        actslice['side'] = row.side
+        actslice['crossindex'] = i
+        actslice['frameindex'] = range(ixslice.stop - ixslice.start)
+        slices.append(actslice)
+    return pd.concat(slices)
+        
+def __extractstepfeatures__(info):
+    pooledst = []
+    pooledu = []
+    sessions = info.groupby(level=['subject'])
+    for subject,sinfo in sessions:
+        print str.format("Processing {0}...", subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        days = sinfo.index.levels[1][sinfo.index.labels[1]].unique()
+        act = activitytables.read_subjects(subjectpath,days=days)
+        cr = activitytables.read_subjects(subjectpath,days=days,
+                                          selector=activitytables.crossings)        
+                                          
+        stact = act[act.stepstate3]
+        stcr = cr[cr.stepstate3]
+        stfeatures = activitytables.stepfeature(stact,stcr,4,3)
+        pooledst.append(stfeatures)
+        
+        uact = act[~act.stepstate3]
+        ucr = cr[~cr.stepstate3]
+        ufeatures = activitytables.stepfeature(uact,ucr,4,3)
+        pooledu.append(ufeatures)
+        
+    return pooledst,pooledu
+    
+        
+def figure1l2(info,path,stf=None,uf=None,name=None):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig = plt.figure()        
+    axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
+    axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
+    axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
+    axes = (axScatter,axHistx,axHisty)
+    stepoffset = stepcenter_cm[3][1]
+#    bins = 50
+    binsize = 0.2
+    xlim = (20-stepoffset,48-stepoffset)
+    bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
+    ylim = (-1,9)
+    histalpha = 0.75
+    scatteralpha = 0.4
+    histxmax = 250
+    histymax = 250
+#    histymax = 350
+    
+    pooledst = []
+    pooledu = []
+    sessions = info.groupby(level=['subject'])
+    for subject,sinfo in sessions:
+        print str.format("Processing {0}...", subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        days = sinfo.index.levels[1][sinfo.index.labels[1]].unique()
+        
+        if stf is None and uf is None:
+            act = activitytables.read_subjects(subjectpath,days=days)
+            cr = activitytables.read_subjects(subjectpath,days=days,
+                                              selector=activitytables.crossings)                                                  
+            stact = act[act.stepstate3]
+            stcr = cr[cr.stepstate3]
+            stfeatures = activitytables.stepfeature(stact,stcr,4,3)
+            uact = act[~act.stepstate3]
+            ucr = cr[~cr.stepstate3]
+            ufeatures = activitytables.stepfeature(uact,ucr,4,3)
+        else:
+            stfeatures = stf.query(str.format("subject == '{0}'",subject))
+            ufeatures = uf.query(str.format("subject == '{0}'",subject))
+        
+        leftwards = stfeatures.side == 'leftwards'
+        stfeatures.xhead[leftwards] = max_width_cm - stfeatures.xhead[leftwards]
+        stfeatures.xhead -= stepoffset
+        pooledst.append(stfeatures)
+        
+        if len(ufeatures) > 0:
+            leftwards = ufeatures.side == 'leftwards'
+            ufeatures.xhead[leftwards] = max_width_cm - ufeatures.xhead[leftwards]
+            ufeatures.xhead -= stepoffset
+            pooledu.append(ufeatures)
+    
+    stfeatures = pd.concat(pooledst)
+    activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
+                              bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                              histalpha=histalpha,alpha=scatteralpha)
+                              
+    if len(pooledu) > 0:
+        ufeatures = pd.concat(pooledu)
+        activityplots.scatterhist(ufeatures.xhead,ufeatures.yhead,color='r',
+                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                                  histalpha=histalpha,
+                                  alpha=scatteralpha)
+    axScatter.set_xlabel('x (cm)')
+    axScatter.set_ylabel('y (cm)')
+    axScatter.legend(['stable', 'unstable'],loc=2)
+    
+    suffix = '' if name is None else name
+    title = str.format('nose position on contact ({0})',suffix)
+    axHistx.set_title(title)
+    axHistx.set_ylim(0,histxmax)
+    axHisty.set_xlim(0,histymax)
+    fname = str.format("nose_stable_unstable_{0}.png",suffix)
+    fpath = os.path.join(path,fname)
+    plt.savefig(fpath)
+    plt.close(fig)
+        
+def figure1o(info,path,tile=False):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    trials = []
+    preoffset = 60
+    postoffset = 180
+    time = np.arange(-preoffset,+postoffset) / frames_per_second
+    for subject,subinfo in info.groupby(level=['subject']):
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        for protocol,sinfo in subinfo.groupby('protocol',sort=False):
+            fbase = os.path.join(path,protocol)
+            if not os.path.exists(fbase):
+                os.makedirs(fbase)
+            
+            fig = plt.figure()
+            days = sinfo.index.levels[1][sinfo.index.labels[1]].unique()
+            print str.format("Processing {0} {1}...", subject, protocol)
+            act = activitytables.read_subjects(subjectpath,days=days,includeinfokey=False)
+            cr = activitytables.read_subjects(subjectpath,days=days,
+                                          selector=activitytables.fullcrossings,
+                                          includeinfokey=False)
+            trialr = cr.steptime3[cr.side == 'rightwards']
+            triall = cr.steptime4[cr.side == 'leftwards']
+            trialr = trialr[~trialr.isnull()]
+            triall = triall[~triall.isnull()]
+            idxr = [act.index.get_loc(act.index.asof(t)) for t in trialr]
+            idxl = [act.index.get_loc(act.index.asof(t)) for t in triall]
+            ssr = [slice(i-preoffset,i+postoffset) for i in idxr[1:]]
+            ssl = [slice(i-preoffset,i+postoffset) for i in idxl[1:]]
+            stepactr = np.array([act.stepactivity3[s] for s in ssr],np.float).T
+            stepactl = np.array([act.stepactivity4[s] for s in ssl],np.float).T
+            stepactr /= steparea_pixels[3] * 255
+            stepactl /= steparea_pixels[4] * 255
+            if len(stepactr) == 0:
+                stepact = stepactl
+            elif len(stepactl) == 0:
+                stepact = stepactr
+            else:
+                stepact = np.concatenate((stepactr,stepactl),axis=1)
+            trials.append(stepact)
+            if len(stepact) > 0:
+                plt.plot(time,stepact,'k',alpha=0.2)
+            plt.ylim(0,0.25)
+            plt.xlabel('time (s)')
+            plt.ylabel('step activity (A.U.)')
+            fname = str.format("{0}_{1}_centerstepping.png",subject,protocol)
+            fpath = os.path.join(fbase,fname)
+            plt.savefig(fpath)
+            plt.close(fig)
+            
+    return trials
+#    bigaverage = np.average(alltrials,axis=1)
+#    bigsem = sp.stats.sem(alltrials,axis=1)
+#    fig = plt.figure()
+#    plt.fill_between(time,
+#                     bigaverage-bigsem,
+#                     bigaverage+bigsem,
+#                     alpha=0.5)
+#    plt.plot(time,bigaverage,'k')
+#    plt.xlabel('time (s)')
+#    plt.ylabel('step activity (A.U.)')
+#    fname = str.format("bigaverage.png",subject,protocol)
+#    fpath = os.path.join(path,fname)
+#    plt.savefig(fpath)
+#    plt.close(fig)
         
 def __getclips__(act,cr,info,rowidx=slice(None)):
     features = []
@@ -957,6 +1297,20 @@ def figure2b(act,cr,info,path):
     cr = cr[cr.stepstate3 == False]
     __savetiledclips__(act,cr,info,path,nclips=3)
     
+def figure2b2(cr,info,path):
+    cr = cr[cr.stepstate3 == False]
+    moviepath = activitymovies.getwhiskermoviepath(info)
+    timepath = activitymovies.getwhiskertimepath(info)
+    for (subject,session),group in cr.groupby(level=['subject','session']):
+        print str.format("Processing {0}...", subject)
+        fname = str.format("{0}_manipulation.avi",subject)
+        fpath = os.path.join(path,fname)
+        crosstime = group.ix[0].crosstime
+        movie = video.video(moviepath[subject,session],timepath[subject,session])
+        alignframe = movie.frameindex(crosstime)
+        frames = movie.movie(alignframe-240,alignframe+480)
+        activitymovies.savemovie(frames,fpath,60,isColor=True)
+    
 def __colortrials__(frames,trialcolors):
     height = 25
     margin = 25
@@ -997,6 +1351,23 @@ def figure2c(cr,info,path,suffix='.avi'):
         frames = __getframes__(group.crosstime,sinfo)
         frames = __colortrials__(frames,colors)
         activitymovies.savemovie(frames,vidpath,30)
+        
+def figure2c2(cr,info,path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    
+    crinfo = cr.join(info)
+    leftcross = crinfo[(cr.side == 'leftwards') & ~cr.crosstime.isnull()]
+    fname = str.format("lifetimeleft.csv")
+    csvpath = os.path.join(path,fname)
+    leftcross[['trial',
+               'protocol',
+               'stepstate1',
+               'stepstate2',
+               'stepstate3',
+               'stepstate4',
+               'stepstate5',
+               'stepstate6']].to_csv(csvpath)
         
 def figure2e(act,cr,rr,info,path):
     if not os.path.exists(path):
@@ -1078,5 +1449,21 @@ def figure2a3(act,info,path):
     frames = __transposeclips__(frames)
     frames = __resizeclips__(frames,dsize=(1280,896))
     fname = str.format("manipulations_big_lesion.avi")
+    vidpath = os.path.join(path,fname)
+    activitymovies.savemovie(frames,vidpath,frames_per_second)
+    
+def figure2a4(act,info,path):
+    if not os.path.exists(path):
+        os.makedirs(path)    
+    
+    mframes = __getmanipulationframes__(act,info)
+    mframes = mframes.join(info)
+    mframes = mframes[mframes.frame != 0]
+    mframes = mframes.join(activitymovies.getmoviepath(mframes))
+    mframes.reset_index(inplace=True)
+    
+    vidclips = __processclips__(mframes.iterrows())
+    frames = next(vidclips)
+    fname = str.format("manipulation.avi")
     vidpath = os.path.join(path,fname)
     activitymovies.savemovie(frames,vidpath,frames_per_second)
