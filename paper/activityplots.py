@@ -21,7 +21,7 @@ from preprocess import stepcenter_pixels, stepcenter_cm
 from preprocess import slipcenter_pixels, slipcenter_cm
 from collectionselector import CollectionSelector
 
-def scatterhist(x,y,bins=10,color=None,histalpha=1,axes=None,
+def scatterhist(x,y,bins=10,color=None,alpha=1,histalpha=1,axes=None,
                 xlim=None,ylim=None):
     if axes is None:
         axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
@@ -30,7 +30,7 @@ def scatterhist(x,y,bins=10,color=None,histalpha=1,axes=None,
     else:
         axScatter,axHistx,axHisty = axes
     
-    axScatter.scatter(x, y, c=color, edgecolors='none')
+    axScatter.scatter(x, y, c=color, edgecolors='none', alpha=alpha)
     if xlim is not None:
         axScatter.set_xlim(xlim)
     if ylim is not None:
