@@ -112,11 +112,19 @@ def read_sessions(folders, key=frontactivity_key, selector=None,
     if isinstance(folders, str):
         folders = [folders]
     
+    multikey = not isinstance(key,str) & np.iterable(key)
+    if multikey and selector is None:
+        raise ValueError("A table selector has to be specified for multi-keys.")
+    
     sessions = []
     for path in folders:
-        session = pd.read_hdf(storepath(path), key)
-        if selector is not None:
-            session = selector(session)
+        if multikey:
+            tables = [pd.read_hdf(storepath(path), k) for k in key]
+            session = selector(*tables)
+        else:
+            session = pd.read_hdf(storepath(path), key)
+            if selector is not None:
+                session = selector(session)
 
         if key != info_key and includeinfokey:
             info = pd.read_hdf(storepath(path), info_key)
