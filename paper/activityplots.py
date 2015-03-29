@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 import activitytables
 import activitymovies
+from preprocess import stepslice
 from preprocess import labelpath, frames_per_second, max_width_cm
 from preprocess import stepcenter_pixels, stepcenter_cm
 from preprocess import slipcenter_pixels, slipcenter_cm
@@ -89,7 +90,7 @@ def clusterroiframes(act,roiactivity,info,leftroi,rightroi,
     return frames,roidiff,roipeaks,pksloc,Z,R,labels
 
 def clusterstepframes(act,info,leftstep,rightstep):
-    stepactivity = act.iloc[:,17:25]
+    stepactivity = act.iloc[:,stepslice]
     return clusterroiframes(act,stepactivity,info,leftstep,rightstep,
                             stepcenter_cm,
                             lambda f,i:imgproc.croprect(stepcenter_pixels[i],
