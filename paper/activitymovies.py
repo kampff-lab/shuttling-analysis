@@ -95,9 +95,15 @@ def getmovieframes(sessioninfo,frames):
 
 def getmoviepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.avi')
+    
+def getwhiskermoviepath(sessioninfo):
+    return getrelativepath(sessioninfo,'whisker_video.avi')
 
 def gettimepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.csv')
+    
+def getwhiskertimepath(sessioninfo):
+    return getrelativepath(sessioninfo,'whisker_video.csv')
                                             
 def getbackgroundpath(sessioninfo):
     return getrelativepath(sessioninfo,r'Analysis\Background')
