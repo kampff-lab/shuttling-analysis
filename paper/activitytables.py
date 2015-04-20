@@ -81,6 +81,15 @@ def firstordefault(condition,default=None):
         return condition.index[indices[0]]
     return default
     
+def cumsumreset(data,reset):
+    a = ~reset
+    c = np.cumsum(a)
+    d = np.diff(np.concatenate(([0.],c[reset])))
+    v = data.copy()
+    v.ix[reset] = -d
+    return v
+    #return np.cumsum(v)
+    
 def utcfromdatetime64(dt64):
     ts = (dt64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
     return datetime.datetime.utcfromtimestamp(ts)
@@ -268,8 +277,12 @@ def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
                 usediff=True,thresh=1500,headinfront=True):
     leftwards = trial.side == 'leftwards'
     roiindex = leftroi if leftwards else rightroi
-    roiactivity = activity.xs(trial.timeslice,level='time',
-                              drop_level=False).ix[:,roislice]
+    if isinstance(activity.index, pd.core.index.MultiIndex):
+        roiactivity = activity.xs(trial.timeslice,level='time',
+                                  drop_level=False).ix[:,roislice]
+    else:
+        roiactivity = activity.ix[trial.timeslice,roislice]
+        
     if usediff:
         roiactivity = roiactivity.diff()
     roipeaks = findpeaks(roiactivity,thresh)[roiindex]
@@ -534,6 +547,45 @@ def cropcrossings(x,slices,crop):
         max_index = np.max(valid_indices)
         return slice(s.start+min_index,s.start+max_index+1)
     return [crop_slice(s) for s in slices if np.any(test_slice(s))]
+    
+def getstepslice(activity,stepfeature,before=200,after=400):
+    slices = []
+    for i,(index, row) in enumerate(stepfeature.iterrows()):
+        ix = activity.index.get_loc(index)
+        ixslice = slice(ix-before,ix+after+1)
+        actslice = activity.ix[ixslice]
+        frameindices = range(ixslice.stop - ixslice.start)
+        if len(actslice) == len(frameindices):
+            actslice['side'] = row.side
+            actslice['crossindex'] = i
+            actslice['frameindex'] = frameindices
+            slices.append(actslice)
+        else:
+            print "Dropped slice!"
+    if len(slices) > 0:
+        return pd.concat(slices)
+    else:
+        return pd.DataFrame()
+
+def stepfeatures(activity):
+    cr = crossings(activity)
+    return stepfeature(activity,cr,4,3)
+    
+def stepslices(activity,before=200,after=400):
+    sf = stepfeatures(activity)
+    return getstepslice(activity,sf,before,after)
+    
+def biasedsteps(activity,before=200,after=400):
+    sf = stepfeatures(activity)
+    stableacc = pd.DataFrame(cumsumreset(sf.stepstate3,~sf.stepstate3))
+    unstableacc = pd.DataFrame(cumsumreset(sf.stepstate3,sf.stepstate3))
+    stableacc = sf[stableacc.stepstate3 <= -3]
+    unstableacc = sf[unstableacc.stepstate3 <= -3]
+    stf = getstepslice(activity,stableacc,before,after)    
+    uf = getstepslice(activity,unstableacc,before,after)
+    stf['bias'] = True
+    uf['bias'] = False
+    return pd.concat((stf,uf))
 
 def visiblecrossings(activity):
     return fullcrossings(activity,midcross=False)
