@@ -865,6 +865,21 @@ def figure1n2(info,path):
         plt.savefig(fpath)
         plt.close(fig)
         
+def _averageposture_(info,subjectpath,cropsize=(300,300)):
+    if len(info) == 0:
+        return np.zeros(cropsize,dtype=np.float32)
+    stepframes = []
+    for key,group in info.groupby(level=['session']):
+        act = activitytables.read_subjects(subjectpath,days=[key])
+        cr = activitytables.read_subjects(subjectpath,days=[key],
+                                            selector = activitytables.crossings)
+        stepframes += activitytables.stepframes(act,cr,group,4,3,
+                                                cropsize=cropsize,
+                                                subtractBackground=True)
+    stepframes = [cv2.threshold(f, 5, 255, cv2.cv.CV_THRESH_BINARY)[1]
+                  for f in stepframes]
+    return imgproc.average(stepframes,1)
+        
 def figure1k3(info,path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -874,31 +889,16 @@ def figure1k3(info,path):
         fig = plt.figure()
         subjectpath = os.path.join(activitymovies.datafolder,subject)
         
-        stepframes = []
         stinfo = sinfo[sinfo.protocol == 'stable']
-        for key,group in stinfo.groupby(level=['session']):
-            stact = activitytables.read_subjects(subjectpath,days=[key])
-            stcr = activitytables.read_subjects(subjectpath,days=[key],
-                                                selector = activitytables.crossings)
-            stepframes += activitytables.stepframes(stact,stcr,group,4,3,
-                                                    subtractBackground=True)
-        stepframes = [cv2.threshold(f, 5, 255, cv2.cv.CV_THRESH_BINARY)[1]
-                      for f in stepframes]
-        stavg = imgproc.average(stepframes,1)
+        stavg = _averageposture_(stinfo,subjectpath)
         
-        stepframes = []
-        uinfo = sinfo[sinfo.protocol != 'stable']
-        for key,group in uinfo.groupby(level=['session']):
-            uact = activitytables.read_subjects(subjectpath,days=[key])
-            ucr = activitytables.read_subjects(subjectpath,days=[key],
-                                                selector = activitytables.crossings)
-            stepframes += activitytables.stepframes(uact,ucr,group,4,3,
-                                                    subtractBackground=True)
-        stepframes = [cv2.threshold(f, 5, 255, cv2.cv.CV_THRESH_BINARY)[1]
-                      for f in stepframes]
-        uavg = imgproc.average(stepframes,1)
+        uinfo = sinfo[sinfo.protocol == 'centerfree']
+        uavg = _averageposture_(uinfo,subjectpath)
         
-        avg = cv2.merge((uavg,stavg,np.zeros(stavg.shape,dtype=stavg.dtype)))
+        rinfo = sinfo[sinfo.protocol.str.contains('randomizedcenterfree')]
+        ravg = _averageposture_(rinfo,subjectpath)
+        
+        avg = cv2.merge((uavg,stavg,ravg))
         avg = avg.astype(np.uint8)
         avg = cv2.convertScaleAbs(avg,alpha=1.4,beta=0.0)
         plt.imshow(avg)
@@ -999,21 +999,35 @@ def __concatstepslices__(slices):
         subjects.append(pd.concat(sub))
     return pd.concat(subjects)
     
-def __extractallstepslices__(data,before=200,after=400):
-    sessions = data.groupby(level=['subject'])
+def _extractallstepfeatures_(info):
+    sessions = info.groupby(level=['subject'])
     subjects = []
     for subject,group in sessions:
         print str.format("Processing {0}...", subject)
         subjectpath = os.path.join(activitymovies.datafolder,subject)
         days = group.index.levels[1][group.index.labels[1]].unique()
         act = activitytables.read_subjects(subjectpath,days=days)
-        subslices = __extractstepslice__(act,group,before,after)
+        cr = activitytables.read_subjects(subjectpath,days=days,
+                                          selector=activitytables.crossings)
+        features = activitytables.stepfeature(act,cr,4,3)
+        subjects.append(features)
+    return pd.concat(subjects)
+    
+def _extractallstepslices_(stepfeatures,before=200,after=400):
+    sessions = stepfeatures.groupby(level=['subject'])
+    subjects = []
+    for subject,group in sessions:
+        print str.format("Processing {0}...", subject)
+        subjectpath = os.path.join(activitymovies.datafolder,subject)
+        days = group.index.levels[1][group.index.labels[1]].unique()
+        act = activitytables.read_subjects(subjectpath,days=days)
+        subslices = _extractstepslice_(act,group,before,after)
         subjects.append(subslices)
     return pd.concat(subjects)
 
-def __extractstepslice__(act,data,before=200,after=400):
+def _extractstepslice_(act,stepfeatures,before=200,after=400):
     slices = []
-    for i,(index, row) in enumerate(data.iterrows()):
+    for i,(index, row) in enumerate(stepfeatures.iterrows()):
         ix = act.index.get_loc(index)
         ixslice = slice(ix-before,ix+after+1)
         actslice = act.ix[ixslice]
@@ -1023,52 +1037,7 @@ def __extractstepslice__(act,data,before=200,after=400):
         slices.append(actslice)
     return pd.concat(slices)
         
-def __extractstepfeatures__(info):
-    pooledst = []
-    pooledu = []
-    sessions = info.groupby(level=['subject'])
-    for subject,sinfo in sessions:
-        print str.format("Processing {0}...", subject)
-        subjectpath = os.path.join(activitymovies.datafolder,subject)
-        days = sinfo.index.levels[1][sinfo.index.labels[1]].unique()
-        act = activitytables.read_subjects(subjectpath,days=days)
-        cr = activitytables.read_subjects(subjectpath,days=days,
-                                          selector=activitytables.crossings)        
-                                          
-        stact = act[act.stepstate3]
-        stcr = cr[cr.stepstate3]
-        stfeatures = activitytables.stepfeature(stact,stcr,4,3)
-        pooledst.append(stfeatures)
-        
-        uact = act[~act.stepstate3]
-        ucr = cr[~cr.stepstate3]
-        ufeatures = activitytables.stepfeature(uact,ucr,4,3)
-        pooledu.append(ufeatures)
-        
-    return pooledst,pooledu
-    
-        
-def figure1l2(info,path,stf=None,uf=None,name=None):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    fig = plt.figure()        
-    axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
-    axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
-    axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
-    axes = (axScatter,axHistx,axHisty)
-    stepoffset = stepcenter_cm[3][1]
-#    bins = 50
-    binsize = 0.2
-    xlim = (20-stepoffset,48-stepoffset)
-    bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
-    ylim = (-1,9)
-    histalpha = 0.75
-    scatteralpha = 0.4
-    histxmax = 250
-    histymax = 250
-#    histymax = 350
-    
+def _extractstepfeatures_(info,stf=None,uf=None,stepoffset=0):
     pooledst = []
     pooledu = []
     sessions = info.groupby(level=['subject'])
@@ -1080,7 +1049,7 @@ def figure1l2(info,path,stf=None,uf=None,name=None):
         if stf is None and uf is None:
             act = activitytables.read_subjects(subjectpath,days=days)
             cr = activitytables.read_subjects(subjectpath,days=days,
-                                              selector=activitytables.crossings)                                                  
+                                              selector=activitytables.crossings)
             stact = act[act.stepstate3]
             stcr = cr[cr.stepstate3]
             stfeatures = activitytables.stepfeature(stact,stcr,4,3)
@@ -1089,7 +1058,10 @@ def figure1l2(info,path,stf=None,uf=None,name=None):
             ufeatures = activitytables.stepfeature(uact,ucr,4,3)
         else:
             stfeatures = stf.query(str.format("subject == '{0}'",subject))
-            ufeatures = uf.query(str.format("subject == '{0}'",subject))
+            if len(uf) > 0:
+                ufeatures = uf.query(str.format("subject == '{0}'",subject))
+            else:
+                ufeatures = pd.DataFrame()
         
         leftwards = stfeatures.side == 'leftwards'
         stfeatures.xhead[leftwards] = max_width_cm - stfeatures.xhead[leftwards]
@@ -1101,6 +1073,35 @@ def figure1l2(info,path,stf=None,uf=None,name=None):
             ufeatures.xhead[leftwards] = max_width_cm - ufeatures.xhead[leftwards]
             ufeatures.xhead -= stepoffset
             pooledu.append(ufeatures)
+    return pooledst,pooledu
+
+def figure1l2(info,path,stf=None,uf=None,name=None,title=None,
+              xlim=(20,30),ylim=(-1,9),histxmax=200,histymax=200):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    fig = plt.figure()
+    axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
+    axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
+    axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
+    axes = (axScatter,axHistx,axHisty)
+    stepoffset = stepcenter_cm[3][1]
+#    bins = 50
+    binsize = 0.2
+    xlim = (xlim[0]-stepoffset,xlim[1]-stepoffset)
+    #xlim = (20-stepoffset,48-stepoffset) # For MULTI-TIMES
+    #xlim = (20-stepoffset,30-stepoffset) # For CONTACT
+    bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
+    #ylim = (-1,9)
+    histalpha = 0.75
+    scatteralpha = 0.4
+#    histxmax = 250
+#    histymax = 250
+#    histymax = 350
+    pooledst,pooledu = _extractstepfeatures_(info,stf,uf,stepoffset)
+    
+#    xlim=(-1,200)
+#    ylim=(-150,150)
     
     stfeatures = pd.concat(pooledst)
     activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
@@ -1118,14 +1119,40 @@ def figure1l2(info,path,stf=None,uf=None,name=None):
     axScatter.legend(['stable', 'unstable'],loc=2)
     
     suffix = '' if name is None else name
-    title = str.format('nose position on contact ({0})',suffix)
+    titlesuffix = suffix if title is None else title
+    title = str.format('nose position on contact ({0})',titlesuffix)
     axHistx.set_title(title)
     axHistx.set_ylim(0,histxmax)
     axHisty.set_xlim(0,histymax)
     fname = str.format("nose_stable_unstable_{0}.png",suffix)
     fpath = os.path.join(path,fname)
     plt.savefig(fpath)
+    plt.clf()
     plt.close(fig)
+    
+def figure1l3(info,path,ixsts,uxsts,numtimepoints=15,offset=200,delta=5,
+              xlim=(20,30),ylim=(-1,9),histxmax=200,histymax=200):
+    squery = info.index.levels[0][info.index.labels[0]].unique()
+    squery = repr(squery).replace('array(','').replace(', dtype=object)','').replace('\n','')
+    ixsts = ixsts.query(str.format("subject in {0}",squery))
+    if len(uxsts) > 0:
+        uxsts = uxsts.query(str.format("subject in {0}",squery))
+        
+    for i in range(numtimepoints):
+        frameindex = offset + i * delta
+        frametime = (frameindex - 200) * 1000.0 / frames_per_second
+        suxsts = uxsts
+        if len(uxsts) > 0:
+            suxsts = uxsts[uxsts.frameindex == frameindex]
+        sixsts = ixsts[ixsts.frameindex == frameindex]
+        figure1l2(info,
+                  path,
+                  sixsts,
+                  suxsts,
+                  str.format("{0}ms",int(frametime)),
+                  str.format("{0:.2f} ms",frametime),
+                  xlim=xlim,ylim=ylim,
+                  histxmax=histxmax,histymax=histymax)
         
 def figure1o(info,path,tile=False):
     if not os.path.exists(path):

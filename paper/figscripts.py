@@ -11,13 +11,32 @@ def compress(data, selectors):
     return (d for d, s in itertools.izip(data, selectors) if s)
 
 import os
+def flattenpaths(rootf,folder=None,prefix=None):
+    if prefix is None:
+        prefix = []
+    if folder is None:
+        folder = rootf
+    
+    if os.path.isdir(folder):        
+        for subf in os.listdir(folder):
+            npref = prefix + [subf]
+            subf = os.path.join(folder,subf)
+            flattenpaths(rootf,subf,npref)
+        try:
+            os.rmdir(folder)
+        except Exception:
+            return #best effort
+    else:
+        if os.path.exists(folder):
+            fname = os.path.join(rootf,'_'.join(prefix))
+            os.rename(folder,fname)
+
+import gc
+import os
 import figure1
 import activitytables
 import pandas as pd
 import numpy as np
-
-gioias = [r'D:/Protocols/Shuttling/Decorticate/Data/GIOIA_01',
-          r'D:/Protocols/Shuttling/Decorticate/Data/GIOIA_03']
 
 subjects = [r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_20',
             r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_21',
@@ -41,6 +60,9 @@ subjects = [r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_20',
             r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_53',
             r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_54',
             r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_55']
+            
+gioias = [r'D:/Protocols/Shuttling/Decorticate/Data/GIOIA_01',
+          r'D:/Protocols/Shuttling/Decorticate/Data/GIOIA_03']
             
 decorticates = [r'D:/Protocols/Shuttling/Decorticate/Data/JPAK_79',
                 r'D:/Protocols/Shuttling/Decorticate/Data/JPAK_81',
@@ -232,7 +254,21 @@ figure1.figure1k1(info,fbase)
 # Figure 1K2 (First Step Postures)
 figure1.figure1k2(info,fbase)
 
-# Figure 1K3 (Slip analysis - CRUDE)
+# Figure 1K3 (Stable vs Partial Postures COLORED)
+info = activitytables.read_subjects(subjects[1:],days=[3,4,9,10,15,16],
+                                    key=activitytables.info_key)
+fbase = r'C:\figs\figure1k3\partial'
+figure1.figure1k3(info,fbase)
+
+info = activitytables.read_subjects(subjects[1:],days=[3,4,9,10,12],
+                                    key=activitytables.info_key)
+nprotocol = ['stable','stable','centerfree','centerfree',
+             'randomizedcenterfree']*len(subjects[1:])
+info.protocol = nprotocol
+fbase = r'C:\figs\figure1k3\restable'
+figure1.figure1k3(info,fbase)
+
+# Figure 1K4 (Slip analysis - CRUDE)
 fbase = r'C:\figs\figure1k4'
 info = activitytables.read_subjects(subjects,days=range(1,5),
                                     key=activitytables.info_key)
@@ -261,37 +297,46 @@ figure1.figure1l2(info.query('session == 5'),fbase)
 # Figure 1L4 (Stable vs Unstable Trials Across RANDOM POOLED - LESION/SHAM)
 info = activitytables.read_subjects(subjects[1:],days=range(13,17),
                                     key=activitytables.info_key)
-lesionmask = (info.lesionleft + info.lesionright) > 0
-lesions = info[lesionmask]
-controls = info[~lesionmask]
 ixsts = pd.read_hdf(r'C:/figs/steptraces.hdf5','stable')
 uxsts = pd.read_hdf(r'C:/figs/steptraces.hdf5','unstable')
-lquery = lesions.index.levels[0][lesions.index.labels[0]].unique()
-cquery = controls.index.levels[0][controls.index.labels[0]].unique()
-lquery = repr(lquery).replace('array(','').replace(', dtype=object)','').replace('\n','')
-cquery = repr(cquery).replace('array(','').replace(', dtype=object)','').replace('\n','')
-lixsts = ixsts.query(str.format("subject in {0}",lquery))
-luxsts = uxsts.query(str.format("subject in {0}",lquery))
-cixsts = ixsts.query(str.format("subject in {0}",cquery))
-cuxsts = uxsts.query(str.format("subject in {0}",cquery))
+lesionmask = (info.lesionleft + info.lesionright) > 0
+biglesionmask = (info.lesionleft + info.lesionright) > 15
 fbase = r'C:\figs\figure1l4\all'
-p = [figure1.figure1l2(info,
-                       fbase,
-                       ixsts[ixsts.frameindex == (200 + i * 5)],
-                       uxsts[uxsts.frameindex == (200 + i * 5)],str(i))
-                       for i in range(15)]
+figure1.figure1l3(info,fbase,ixsts,uxsts)
 fbase = r'C:\figs\figure1l4\lesions'
-p = [figure1.figure1l2(lesions,
-                       fbase,
-                       lixsts[lixsts.frameindex == (200 + i * 5)],
-                       luxsts[luxsts.frameindex == (200 + i * 5)],str(i))
-                       for i in range(15)]
+figure1.figure1l3(info[lesionmask],fbase,ixsts,uxsts)
+fbase = r'C:\figs\figure1l4\smalllesions'
+figure1.figure1l3(info[lesionmask & ~biglesionmask],fbase,ixsts,uxsts)
+fbase = r'C:\figs\figure1l4\biglesions'
+figure1.figure1l3(info[biglesionmask],fbase,ixsts,uxsts)
 fbase = r'C:\figs\figure1l4\controls'
-p = [figure1.figure1l2(controls,
-                       fbase,
-                       cixsts[cixsts.frameindex == (200 + i * 5)],
-                       cuxsts[cuxsts.frameindex == (200 + i * 5)],str(i))
-                       for i in range(15)]
+figure1.figure1l3(info[~lesionmask],fbase,ixsts,uxsts)
+#lquery = lesions.index.levels[0][lesions.index.labels[0]].unique()
+#cquery = controls.index.levels[0][controls.index.labels[0]].unique()
+#lquery = repr(lquery).replace('array(','').replace(', dtype=object)','').replace('\n','')
+#cquery = repr(cquery).replace('array(','').replace(', dtype=object)','').replace('\n','')
+#lixsts = ixsts.query(str.format("subject in {0}",lquery))
+#luxsts = uxsts.query(str.format("subject in {0}",lquery))
+#cixsts = ixsts.query(str.format("subject in {0}",cquery))
+#cuxsts = uxsts.query(str.format("subject in {0}",cquery))
+#fbase = r'C:\figs\figure1l4\all'
+#p = [figure1.figure1l2(info,
+#                       fbase,
+#                       ixsts[ixsts.frameindex == (200 + i * 5)],
+#                       uxsts[uxsts.frameindex == (200 + i * 5)],str(i))
+#                       for i in range(15)]
+#fbase = r'C:\figs\figure1l4\smalllesions'
+#p = [figure1.figure1l2(lesions,
+#                       fbase,
+#                       lixsts[lixsts.frameindex == (200 + i * 5)],
+#                       luxsts[luxsts.frameindex == (200 + i * 5)],str(i))
+#                       for i in range(15)]
+#fbase = r'C:\figs\figure1l4\controls'
+#p = [figure1.figure1l2(controls,
+#                       fbase,
+#                       cixsts[cixsts.frameindex == (200 + i * 5)],
+#                       cuxsts[cuxsts.frameindex == (200 + i * 5)],str(i))
+#                       for i in range(15)]
 #figure1.figure1l2(info,fbase)
                        
 # Figure 1L5 (Stable vs Unstable Trials Temporal Averages RANDOM POOLED)
@@ -309,11 +354,99 @@ p = [plot(g.xhead,'k',alpha=0.2)
      for i,g in ixsts.query("subject == 'JPAK_21' and session == 13 and side == 'rightwards'") \
                      .groupby('crossindex')]
 
-# Figure 1L4 (Stable vs Unstable Trials Across RANDOM POOLED)
-info = activitytables.read_subjects(subjects[1:],days=range(13,17),
+# Figure 1L6 (Individual Random Trials)
+ixsts = pd.read_hdf(r'C:/figs/steptraces.hdf5','stable')
+uxsts = pd.read_hdf(r'C:/figs/steptraces.hdf5','unstable')
+fbase = r'C:\figs\figure1l6\speed'
+for i in range(1,len(subjects)):
+    info = activitytables.read_subjects(subjects[i],days=range(13,17),
+                                        key=activitytables.info_key)
+    fname = os.path.split(subjects[i])[1]
+    fname = os.path.join(fbase,fname)
+    figure1.figure1l3(info,fname,ixsts,uxsts)
+    
+# Figure 1L6 (Individual Contact Trials over Sessions)
+# NOTE: Subject JPAK_52 (rat #18) session 14 blows up!
+fbase = r'C:\figs\figure1l6\contacts'
+emptyux = pd.DataFrame()
+for i in range(19,len(subjects)):
+    for s in range(1,17):
+        print str.format("Processing {0}...", s)
+        stf = activitytables.read_subjects(subjects[i],days=[s],
+                                           selector=activitytables.stepslices)
+        info = activitytables.read_subjects(subjects[i],days=[s],
+                                            key=activitytables.info_key)
+        fname = os.path.split(subjects[i])[1]
+        fname = os.path.join(fbase,fname,str.format("session{0}",s))
+        figure1.figure1l3(info,fname,stf,emptyux,1)
+        
+# Figure 1L6 (Pooled Contact Trials over Sessions)
+fbase = r'C:\figs\figure1l6\pooledcontacts'
+emptyux = pd.DataFrame()
+for s in range(0,17):
+    selsubjects = subjects
+    if s > 5:
+        selsubjects = subjects[1:]
+    
+    fname = os.path.join(fbase,str.format("session{0}",s))
+    print str.format("Processing {0}...", fname)
+    stf = activitytables.read_subjects(selsubjects,days=[s],
+                                       selector=activitytables.stepslices)
+    info = activitytables.read_subjects(selsubjects,days=[s],
+                                        key=activitytables.info_key)
+    figure1.figure1l3(info,fname,stf,emptyux,1)
+    
+# Figure 1L6 (Pooled Decorticate Contact Trials over Sessions)
+fbase = r'C:\figs\figure1l6\pooleddecorticates'
+emptyux = pd.DataFrame()
+for s in range(7):
+    selsubjects = gioias+decorticates
+    fname = os.path.join(fbase,str.format("session{0}",s))
+    print str.format("Processing {0}...", fname)
+    stf = activitytables.read_subjects(selsubjects,days=[s],
+                                       selector=activitytables.stepslices)
+    info = activitytables.read_subjects(selsubjects,days=[s],
+                                        key=activitytables.info_key)
+    figure1.figure1l3(info,fname,stf,emptyux,1,histxmax=100,histymax=100)
+        
+# Figure 1L6 (Individual Biased Trials on Random)
+# NOTE: Subject JPAK_52 (rat #18) session 14 blows up!
+fbase = r'C:\figs\figure1l6\biased'
+for i in range(1,len(subjects)):
+    info = activitytables.read_subjects(subjects[i],days=range(13,17),
+                                        key=activitytables.info_key)
+    sf = activitytables.read_subjects(subjects[i],days=range(13,17),
+                                       selector=activitytables.biasedsteps)
+    stf = sf[sf.bias].ix[:,:-1]
+    uf = sf[~sf.bias].ix[:,:-1]
+    fname = os.path.split(subjects[i])[1]
+    fname = os.path.join(fbase,fname)
+    figure1.figure1l3(info,fname,stf,uf,1)
+    
+# Figure 1L6 (Pooled Biased Trials on Random)
+fbase = r'C:\figs\figure1l6\biased'
+info = activitytables.read_subjects(subjects[1:14],days=range(13,17),
                                     key=activitytables.info_key)
-fbase = r'C:\figs\figure1l4'
-figure1.figure1l2(info,fbase)
+sf = activitytables.read_subjects(subjects[1:14],days=range(13,17),
+                                   selector=activitytables.biasedsteps)
+stf = sf[sf.bias].ix[:,:-1]
+uf = sf[~sf.bias].ix[:,:-1]
+figure1.figure1l3(info,fbase,stf,uf,15)
+
+lesionmask = (info.lesionleft + info.lesionright) > 0
+biglesionmask = (info.lesionleft + info.lesionright) > 15
+linfo = info[lesionmask]
+cinfo = info[~lesionmask]
+lq = "subject in ['JPAK_22','JPAK_24','JPAK_36','JPAK_38']"
+cq = "subject in ['JPAK_21','JPAK_23','JPAK_25','JPAK_27','JPAK_29','JPAK_37','JPAK_39']"
+linfo = info.query(lq)
+cinfo = info.query(cq)
+lstf = stf.query(lq)
+luf = uf.query(lq)
+cstf = stf.query(cq)
+cuf = uf.query(cq)
+figure1.figure1l3(linfo,fbase,lstf,luf,15)
+figure1.figure1l3(cinfo,fbase,cstf,cuf,15)
 
 # Figure 1M (DEBUG Manipulation Clips)
 l = 'leftwards'
