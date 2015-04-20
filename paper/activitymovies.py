@@ -10,6 +10,7 @@ import cv2
 import video
 import bisect
 import pandas as pd
+import numpy as np
 
 #datafolder = r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data'
 datafolder = r'D:/Protocols/Shuttling/LightDarkServoStable/Data'
@@ -116,6 +117,8 @@ def getmovies(sessioninfo):
                         index=vidpaths.index)
     
 def getbackground(path,time):
+    if type(time) == np.datetime64:
+        time = str(time)
     files = [f for f in os.listdir(path) if f.startswith('background_')]
     backgroundtimes = [os.path.splitext(f)[0].split('_',1)[1].replace('_',':')
                        for f in files]
