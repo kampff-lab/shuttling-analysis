@@ -26,6 +26,9 @@ from preprocess import max_width_cm, max_height_cm
 from preprocess import stepcenter_cm, stepcenter_pixels
 from collectionselector import CollectionSelector
 from pandas.tools.plotting import scatter_matrix
+from activitytables import getballistictrials
+from activitytables import heightcutoff,cropstart,cropstop
+from activitytables import heightfilter,positionfilter,speedfilter
 
 # SCRIPTS
 #figure1.featurecomparison(cr,['duration','xhead_speed_min','xhead_speed_max','xhead_speed_mean','xhead_speed_std'],'speed_features',r'C:\figs\featurecomparisons\speedfeatures',['duration','spd_min','spd_max','spd_mean','spd_std'])
@@ -61,16 +64,6 @@ protocolcolors = {
   'permutationtofullyreleased': {None:'y',0b10000001:'w'},
   'fullyreleased': 'w'
 }
-
-heightcutoff = 20.42
-cropstart = str(rail_start_cm)
-cropstop = str(rail_stop_cm)
-heightfilter = str.format('yhead_max > 0 and yhead_max < {0}',heightcutoff)
-positionfilter = str.format('xhead_min >= {0} and xhead_max <= {1}',
-                            cropstart, cropstop)
-speedfilter = 'xhead_speed_25 > 0'
-ballisticquery = str.format('{0} and {1} and {2}',
-                   heightfilter,positionfilter,speedfilter)
 
 def buildtimetable(subjects,info,path):
     first = True
@@ -250,7 +243,7 @@ def figure1b(rr,info,path):
     rryerr = rrsec.groupby(level=[0,1]).std()
     rrgdata = activitytables.groupbylesionvolumes(pd.concat([rrdata,rryerr],axis=1),info)
     
-    fig = plt.figure()
+    plt.figure()
     activityplots.sessionmetric(rrgdata,colorcycle=['b','r'])
     plt.ylabel('time between rewards (s)')
     plt.title('performance curve')
@@ -441,9 +434,6 @@ def figure1c6(cr,info,path,alpha=1,
                               ['female','male'],
                               'crossing duration vs height',
                               fname,alpha=alpha)
-        
-def getballistictrials(cr):
-    return cr.query(ballisticquery)
     
 def resetsessionindex(cr,labels,fillvalue=None):
     reset = cr.reset_index('session')

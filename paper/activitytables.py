@@ -27,6 +27,16 @@ from preprocess import stepcenter_cm, slipcenter_cm
 from preprocess import stepcenter_pixels, slipcenter_pixels
 from preprocess import rail_start_cm, rail_stop_cm
 
+heightcutoff = 20.42
+cropstart = str(rail_start_cm)
+cropstop = str(rail_stop_cm)
+heightfilter = str.format('yhead_max > 0 and yhead_max < {0}',heightcutoff)
+positionfilter = str.format('xhead_min >= {0} and xhead_max <= {1}',
+                            cropstart, cropstop)
+speedfilter = 'xhead_speed_25 > 0'
+ballisticquery = str.format('{0} and {1} and {2}',
+                   heightfilter,positionfilter,speedfilter)
+
 def groupbyname(data,info):
     result = data.copy(True)
     result['l2'] = ['individual']*len(data)
@@ -547,6 +557,9 @@ def cropcrossings(x,slices,crop):
         max_index = np.max(valid_indices)
         return slice(s.start+min_index,s.start+max_index+1)
     return [crop_slice(s) for s in slices if np.any(test_slice(s))]
+    
+def getballistictrials(crossings):
+    return crossings.query(ballisticquery)
     
 def getstepslice(activity,stepfeature,before=200,after=400):
     slices = []
