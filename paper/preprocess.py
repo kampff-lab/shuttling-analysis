@@ -305,7 +305,7 @@ def createdataset(session,path,overwrite=False):
     if len(watertimes) > 0:
         deprivation = starttime - watertimes.index[-1]
     else:
-        deprivation = 0
+        deprivation = np.timedelta64(0)
     info = pd.DataFrame([[subject,session,dirname,starttime,protocol,gender,age,
                           weight,deprivation,lesionleft,lesionright,cagemate]],
                         columns=['subject',
