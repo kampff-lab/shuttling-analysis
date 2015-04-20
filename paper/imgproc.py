@@ -182,7 +182,7 @@ def cluster(frames,vid=None,indices=None,labels=None,drawlinkage=True):
         h3 = None
     return Z, R, labels, (h1, h2, h3)
 
-def tile(frames,width,height,labels=None):
+def tile(frames,width,height,labels=None,back=0):
     frameshape = np.shape(frames[0])
     frametype = frames[0].dtype
 
@@ -191,7 +191,11 @@ def tile(frames,width,height,labels=None):
     npages = len(frames) / pagecount
     npages = npages + 1 if len(frames) % pagecount != 0 else npages
     for i in range(npages):
-        page = np.zeros((frameshape[0] * height,frameshape[1] * width),frametype)
+        pageshape = list(frameshape)
+        pageshape[0] *= height
+        pageshape[1] *= width
+        pageshape = tuple(pageshape)
+        page = np.ones(pageshape,frametype) * back
         for k in range(pagecount):
             fi = i * pagecount + k
             if fi >= len(frames):
