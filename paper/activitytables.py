@@ -112,6 +112,9 @@ def getkeyloc(index,key):
 def geomediancost(median,xs):
     return np.linalg.norm(xs-median,axis=1).sum()
     
+def zscore(xs):
+    return (xs - xs.mean()) / xs.std()    
+    
 def mad(xs):
     median = xs.median()
     return (xs - median).abs().median()
@@ -599,6 +602,29 @@ def biasedsteps(activity,before=200,after=400):
     stf['bias'] = True
     uf['bias'] = False
     return pd.concat((stf,uf))
+    
+def spatialactivity(activity,offset=20.0,ballistic=True):
+    cr = crossings(activity)
+    if ballistic:
+        cr = getballistictrials(cr)
+    
+    data = []
+    for s,side in cr[['timeslice','side']].values:
+        trial = activity.ix[s]
+        xhead = trial.xhead
+        if side == 'leftwards':
+            point = max_width_cm - stepcenter_cm[4][1]
+            xhead = max_width_cm - xhead
+        else:
+            point = stepcenter_cm[3][1]
+        point += offset
+        dist = np.abs(xhead - point)
+        minact = activity.ix[np.argmin(dist)]
+        minact.is_copy = False
+        minact['side'] = side
+        data.append(minact)
+        
+    return pd.DataFrame(data)
 
 def visiblecrossings(activity):
     return fullcrossings(activity,midcross=False)

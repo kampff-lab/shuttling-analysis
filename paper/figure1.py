@@ -981,6 +981,14 @@ def figure1l(info,path):
         plt.savefig(fpath)
         plt.close(fig)
         
+def _zscoresubjects_(data):
+    result = []
+    sessions = data.groupby(level=['subject'],sort=False)
+    for subject,sdata in sessions:
+        zdata = activitytables.zscore(sdata)
+        result.append(zdata)
+    return pd.concat(result)
+        
 def __concatstepslices__(slices):
     subjects = []
     for sub in slices:

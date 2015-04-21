@@ -448,6 +448,75 @@ cuf = uf.query(cq)
 figure1.figure1l3(linfo,fbase,lstf,luf,15)
 figure1.figure1l3(cinfo,fbase,cstf,cuf,15)
 
+# Figure 1L7 (Pooled Hindlimb Trial Postures on Random)
+aq = "subject != 'JPAK_38'"
+lq = "subject in ['JPAK_22','JPAK_24','JPAK_36']"
+mq = "subject in ['JPAK_23','JPAK_25','JPAK_37']"
+cq = "subject in ['JPAK_21','JPAK_23','JPAK_25','JPAK_27','JPAK_29','JPAK_37','JPAK_39']"
+def plotht(sht,uht,q,title=None):
+    sht = sht.query(q)
+    uht = uht.query(q)
+    _,p = st.ttest_ind(sht.xhead,uht.xhead)
+    t = str.format("p = {0:.2e}",p)
+    plot(sht.xhead,sht.yhead,'b.',alpha=0.1)
+    plot(uht.xhead,uht.yhead,'r.',alpha=0.1)
+    plt.xlabel('x (zscore)')
+    plt.ylabel('y (zscore)')
+    plt.legend(['stable','unstable'])
+    if title is not None:
+        t = str.format("{0} ({1})",title,t)
+    plt.title(t)
+
+ht = activitytables.read_subjects(subjects[1:14],days=range(13,17),
+                                  selector=activitytables.spatialactivity)
+hkeys = ['xhead','yhead','stepstate3']
+zleft = figure1._zscoresubjects_(ht[ht.side == 'leftwards'][hkeys])
+zright = figure1._zscoresubjects_(ht[ht.side == 'rightwards'][hkeys])
+z = pd.concat((zleft,zright))
+
+plt.figure()
+plt.subplot(1,2,1)
+sht = ht[ht.stepstate3]
+uht = ht[~ht.stepstate3]
+plotht(sht,uht,"subject == 'JPAK_23'",'JPAK_23 RAW')
+plt.xlabel('x (cm)')
+plt.ylabel('y (cm)')
+plt.subplot(1,2,2)
+sht = z[z.stepstate3 > 0]
+uht = z[z.stepstate3 <= 0]
+plotht(sht,uht,"subject == 'JPAK_23'",'JPAK_23 Z-SCORED')
+
+plt.figure()
+plt.subplot(2,2,1)
+plotht(sht,uht,aq,'NONJUMPERS')
+plt.subplot(2,2,2)
+plotht(sht,uht,lq,'LESIONS')
+plt.subplot(2,2,3)
+plotht(sht,uht,cq,'CONTROLS')
+plt.subplot(2,2,4)
+plotht(sht,uht,mq,'MATCHED')
+plt.ylim([-4,10])
+plt.tight_layout()
+
+mst = sht.yhead.groupby(level='subject').mean().to_frame()
+mut = uht.yhead.groupby(level='subject').mean().to_frame()
+
+lmst = mst.query(lq)
+lmut = mut.query(lq)
+cmst = mst.query(cq)
+cmut = mut.query(cq)
+mmst = mst.query(mq)
+mmut = mut.query(mq)
+plt.bar(0,lmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(1,lmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.bar(3,mmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(4,mmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.bar(6,cmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(7,cmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.ylabel('y (zscore)')
+plt.xticks([1,4,7],['Lesions', 'Matched', 'Controls'])
+plt.legend(['stable','unstable'],loc=0)
+
 # Figure 1M (DEBUG Manipulation Clips)
 l = 'leftwards'
 r = 'rightwards'
