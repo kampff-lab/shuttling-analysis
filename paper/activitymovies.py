@@ -11,6 +11,8 @@ import video
 import bisect
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 #datafolder = r'D:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data'
 datafolder = r'D:/Protocols/Shuttling/LightDarkServoStable/Data'
@@ -176,3 +178,86 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),isCol
     finally:
         if writer is not None:
             writer.release()
+            
+
+class MoviePlotter:
+    def __init__(self,activity,info,key='frame'):
+        self.fig = plt.figure()
+        self.movies = getmovies(info)
+        self.activity = activity
+        self.nframes = len(activity)
+        self.image = None
+        self.key = key
+        self.index = 0
+        
+        gs0 = gridspec.GridSpec(3,1)
+        self.movax = plt.Subplot(self.fig, gs0[:-1])
+        self.movax.set_axis_off()
+        self.fig.add_subplot(self.movax)
+        
+        ncols = len(activity.columns.drop(key))
+        gs01 = gridspec.GridSpecFromSubplotSpec(1,ncols, subplot_spec=gs0[-1])
+        self.axes = [plt.Subplot(self.fig, gs01[:,i]) for i in range(ncols)]
+        for ax,name in zip(self.axes,activity.columns.drop(key)):
+            ax.set_title(name)
+            self.fig.add_subplot(ax)
+        plt.tight_layout()
+        self.updateframe()
+        self.fig.canvas.mpl_connect('key_press_event',self.onkeypress)
+        self.fig.canvas.mpl_connect('close_event',self.onclose)
+        
+    def release(self):
+        for m in self.movies.values:
+            m[0].release()
+        plt.close(self.fig)
+        
+    def updateframe(self):
+        frame = self.activity.ix[self.index,:]
+        moviekey = frame.name[:2]
+        movie = self.movies.loc[moviekey][0]
+        frameindex = frame[self.key]
+        movieframe = movie.frame(frameindex)
+        if self.image is None:
+            self.image = self.movax.imshow(movieframe,cmap='gray')
+        else:
+            self.image.set_data(movieframe)
+        title = str.format("{0} frame: {1}",moviekey,frameindex)
+        self.movax.set_title(title)
+        
+        offset = 100
+        fmin = self.index-offset
+        fmax = self.index+offset
+        minindex = max(fmin,0)
+        maxindex = min(fmax,self.nframes)
+        data = self.activity.ix[minindex:maxindex,:].drop(self.key,axis=1)
+        x = range(minindex-self.index,maxindex-self.index)
+        for i,ax in enumerate(self.axes):
+            if len(ax.lines) > 0:
+                ax.lines.pop(0)
+            ax.plot(x,data.ix[:,i],'b')
+            ax.relim()
+            ax.set_xlim(-offset,offset)
+        self.fig.canvas.draw_idle()
+        
+    def onclose(self, evt):
+        self.release()
+        
+    def onkeypress(self, evt):
+        if evt.key == 'left':
+            self.index = max(self.index-1,0)
+            self.updateframe()
+        if evt.key == 'right':
+            self.index = min(self.index+1,self.nframes-1)
+            self.updateframe()
+        if evt.key == 'pageup':
+            self.index = max(self.index-10,0)
+            self.updateframe()
+        if evt.key == 'pagedown':
+            self.index = min(self.index+10,self.nframes-1)
+            self.updateframe()
+        if evt.key == 'home':
+            self.index = max(self.index-100,0)
+            self.updateframe()
+        if evt.key == 'end':
+            self.index = min(self.index+100,self.nframes-1)
+            self.updateframe()

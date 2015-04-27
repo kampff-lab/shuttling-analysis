@@ -23,8 +23,14 @@ class video:
         else:
             self.timestamps = None
         
-    def __del__(self):
-        del self.capture
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, type, value, tb):
+        self.release()
+        
+    def release(self):
+        self.capture.release()
         
     def frameindex(self, time):
         if self.timestamps is None:
@@ -45,6 +51,10 @@ class video:
             else:
                 break
             
+def readsingleframe(videopath,frameindex):
+    with video(videopath) as vid:
+        return vid.frame(frameindex)
+
 def readframe(movie):
     index = movie.capture.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
     result, frame = movie.capture.read()
