@@ -517,6 +517,93 @@ plt.ylabel('y (zscore)')
 plt.xticks([1,4,7],['Lesions', 'Matched', 'Controls'])
 plt.legend(['stable','unstable'],loc=0)
 
+# EXTRACT INDIVIDUAL ACTIVITY TRACES
+act = activitytables.read_subjects(subjects[1],days=range(13,14),includeinfokey=False)
+cr = activitytables.crossings(act)
+
+info = activitytables.read_subjects(subjects[1],days=range(13,14),key=activitytables.info_key)
+
+ts = [act.ix[t.timeslice,:] for i,t in cr.iterrows()]
+d = [t.ix[:,slice(17,25)].diff() for t in ts]
+ps = [activitytables.findpeaks(t,1000)[1] for t in d]
+p = [t.trial[0] for t,p in zip(ts,ps) if len(p) == 0]
+fs = [act.ix[t.timeslice,:].frame for i,t in cr.iterrows()]
+
+
+# Figure 1L8 (Pooled Hindlimb Step Postures on Random)
+ct = activitytables.read_subjects(subjects[1],days=range(13,14),
+                                  selector=activitytables.compensation)
+ct['side'] = ct['side_fore']
+ct = ct.query(aq)
+hkeys = ['xhead_fore','yhead_fore','xhead_hind','yhead_hind','stepstate3_fore']
+zcleft = figure1._zscoresubjects_(ct[ct.side == 'leftwards'][hkeys])
+zcright = figure1._zscoresubjects_(ct[ct.side == 'rightwards'][hkeys])
+zc = pd.concat((zcleft,zcright))
+
+#sct = ct[ct.stepstate3_fore]
+#uct = ct[~ct.stepstate3_fore]
+sct = zc[zc.stepstate3_fore > 0]
+uct = zc[zc.stepstate3_fore <= 0]
+
+lsct = sct.query(lq)
+luct = uct.query(lq)
+csct = sct.query(cq)
+cuct = uct.query(cq)
+msct = sct.query(mq)
+muct = uct.query(mq)
+def plotforehind(sct,uct,c1='xhead_fore',c2='yhead_fore'):
+    plt.plot(sct[c1],sct[c2],'b.',alpha=0.2)
+    plt.plot(uct[c1],uct[c2],'r.',alpha=0.2)
+    plt.xlabel('x (zscore)')
+    plt.ylabel('y (zscore)')
+    plt.xlim([-3,3])
+    plt.ylim([-3,3])
+plt.figure()
+plt.subplot(2,2,1)
+plotforehind(sct,uct,'xhead_fore','yhead_fore')
+plt.title('NONJUMPERS @ Contact')
+plt.subplot(2,2,2)
+plotforehind(lsct,luct,'xhead_hind','yhead_hind')
+plt.title('LESIONS')
+plt.subplot(2,2,3)
+plotforehind(csct,cuct,'xhead_hind','yhead_hind')
+plt.title('CONTROLS')
+plt.subplot(2,2,4)
+plotforehind(msct,muct,'xhead_hind','yhead_hind')
+plt.title('MATCHED')
+plt.tight_layout()
+
+sdiff = sct.xhead_hind - sct.xhead_fore
+udiff = uct.xhead_hind - uct.xhead_fore
+#sdiff = sct.yhead_hind - sct.yhead_fore
+#udiff = uct.yhead_hind - uct.yhead_fore
+mst = sdiff.groupby(level='subject').mean().to_frame()
+mut = udiff.groupby(level='subject').mean().to_frame()
+
+lmst = mst.query(lq)
+lmut = mut.query(lq)
+cmst = mst.query(cq)
+cmut = mut.query(cq)
+mmst = mst.query(mq)
+mmut = mut.query(mq)
+plt.bar(0,lmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(1,lmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.bar(3,mmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(4,mmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.bar(6,cmst.mean(),color='b',yerr=lmst.sem(),label='stable')
+plt.bar(7,cmut.mean(),color='r',yerr=lmst.sem(),label='unstable')
+plt.ylabel('x (zscore)')
+plt.xticks([1,4,7],['Lesions', 'Matched', 'Controls'])
+plt.legend(['stable','unstable'],loc='lower right')
+
+# Figure 1L9 (Validation of Fore/Hindlimb match)
+info = activitytables.read_subjects(subjects[1:14],days=range(13,17),
+                                    key=activitytables.info_key)
+ct = activitytables.read_subjects(subjects[1:14],days=range(13,17),
+                                  selector=activitytables.compensation)
+ct['side'] = ct['side_fore']
+
+
 # Figure 1M (DEBUG Manipulation Clips)
 l = 'leftwards'
 r = 'rightwards'
