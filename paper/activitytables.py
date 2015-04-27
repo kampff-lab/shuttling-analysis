@@ -299,10 +299,12 @@ def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
     if usediff:
         roiactivity = roiactivity.diff()
     roipeaks = findpeaks(roiactivity,thresh)[roiindex]
+    
+#   This constraint checks if the head is BEFORE the next rail (????)
     if headinfront:
         roipeaks = [peak for peak in roipeaks
-                     if (activity.xhead[peak] > roicenters[rightroi] if leftwards else
-                         activity.xhead[peak] < roicenters[leftroi]).any()]
+                     if (activity.xhead[peak] > roicenters[leftroi-1] if leftwards else
+                         activity.xhead[peak] < roicenters[rightroi+1]).any()]
     return roipeaks
     
 def getsteppeaks(activity,trial,leftstep,rightstep):
@@ -583,9 +585,9 @@ def getstepslice(activity,stepfeature,before=200,after=400):
     else:
         return pd.DataFrame()
 
-def stepfeatures(activity):
+def stepfeatures(activity,leftstep=4,rightstep=3):
     cr = crossings(activity)
-    return stepfeature(activity,cr,4,3)
+    return stepfeature(activity,cr,leftstep,rightstep)
     
 def stepslices(activity,before=200,after=400):
     sf = stepfeatures(activity)
@@ -602,6 +604,19 @@ def biasedsteps(activity,before=200,after=400):
     stf['bias'] = True
     uf['bias'] = False
     return pd.concat((stf,uf))
+    
+def compensation(activity):
+    cr = crossings(activity)
+    sffore = stepfeature(activity,cr,4,3)
+    sfhind = stepfeature(activity,cr,1,6)
+    sffore.reset_index(inplace=True)
+    sfhind.reset_index(inplace=True)
+    sffore.set_index('trial',inplace=True)
+    sfhind.set_index('trial',inplace=True)
+    return sffore.join(sfhind,
+                       how='inner',
+                       lsuffix='_fore',
+                       rsuffix='_hind')
     
 def spatialactivity(activity,offset=20.0,ballistic=True):
     cr = crossings(activity)
