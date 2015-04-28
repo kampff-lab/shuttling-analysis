@@ -30,6 +30,8 @@ proj3d.inv_transform = ortho_invproj
 left_color = 'purple'
 right_color = 'orange'
 pixels_per_mm = 1 / (0.09376746366685201554698035976287 * 1000)
+front_anchor = 2.28
+slice_spacing = 0.1
 storage_base = r'C:/Analysis/'
 #storage_base = r'C:/Users/gonca_000/Documents/Insync/kampff.lab@gmail.com/'
 
@@ -54,7 +56,7 @@ def scale_rois(rois,scale):
     for roi in rois:
         roiplot.scale_roi(roi,scale)
 
-def render_rois(volumes,colors,triangulate=False,zstep=-1,xscale=1,yscale=1,zscale=-0.1,zoffset=0,swapz=False):
+def render_rois(volumes,colors,triangulate=False,zstep=-1,xscale=1,yscale=1,zscale=-slice_spacing,zoffset=0,swapz=False):
     if triangulate:
         verts = [roiplot.triangulate_roi(volume,zstep,xscale,yscale,zscale,zoffset,swapz) for volume in volumes]
     else:
@@ -125,11 +127,11 @@ def read_slice(sid,name,references):
     scale_rois(rois,pixels_per_mm)
     return rois
     
-def get_bregma_offset(bregma_228_pos):
-    return 2.28 + ((bregma_228_pos-1)*0.1)
+def get_bregma_offset(anchor_slice):
+    return front_anchor + (anchor_slice-1)*slice_spacing
     
 def get_volume_rois(rois):
     volume = 0
     for z,poly in rois:
-        volume += abs(polygon.area_for_polygon(poly)) * 0.1
+        volume += abs(polygon.area_for_polygon(poly)) * slice_spacing
     return volume
