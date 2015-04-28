@@ -7,10 +7,10 @@ Created on Wed Oct 02 17:50:21 2013
 
 import os
 import pandas as pd
-from process_rois import *
+from roiproc import *
 
-output_path = r'C:/figs'
-generate_figs = False
+output_path = r'C:/figs/histology'
+generate_figs = True
 
 # Volume statistics #
 barlabels = []
@@ -30,8 +30,8 @@ def load_slices(name,trim_end=None):
     global whole_volumes
     whole,references = read_whole_slices(name)
     if trim_end is not None:
-        whole = whole[0:trim_slices]
-        references = references[0:trim_slices]
+        whole = whole[0:trim_end]
+        references = references[0:trim_end]
     left = read_slice(name,'LeftRoiSet',references)
     right = read_slice(name,'RightRoiSet',references)
     left_volumes.append(get_volume_rois(left))
@@ -182,10 +182,10 @@ ax.legend((r1[0],r2[0]),('left','right'))
 ax.set_xticks(barticks+barwidth)
 ax.set_xticklabels(barlabels)
 plt.ylabel('lesion volume (mm$^3$)')
-#plt.savefig(os.path.join(output_path,'lesion_summary.pdf'))
+plt.savefig(os.path.join(output_path,'lesion_summary.pdf'))
 dataset = pd.DataFrame(np.vstack((right_volumes,left_volumes)).T,
                        index=pd.Index(subjects,name='subject'),
                        columns=['lesion_left','lesion_right'])
 dataset.to_csv(os.path.join(output_path, 'lesion_volumes.csv'))
-#plt.close(fig)
+plt.close(fig)
 ###############################################################################

@@ -7,8 +7,8 @@ Created on Wed Oct 09 00:38:31 2013
 
 import os
 import polygon
-import read_roi
-import plot_rois
+import roiread
+import roiplot
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -48,17 +48,17 @@ def get_centroids(rois):
 
 def center_rois(rois,references):
     for roi in rois:
-        plot_rois.offset_roi(roi,-references[roi[0]-1])
+        roiplot.offset_roi(roi,-references[roi[0]-1])
         
 def scale_rois(rois,scale):
     for roi in rois:
-        plot_rois.scale_roi(roi,scale)
+        roiplot.scale_roi(roi,scale)
 
 def render_rois(volumes,colors,triangulate=False,zstep=-1,xscale=1,yscale=1,zscale=-0.1,zoffset=0,swapz=False):
     if triangulate:
-        verts = [plot_rois.triangulate_roi(volume,zstep,xscale,yscale,zscale,zoffset,swapz) for volume in volumes]
+        verts = [roiplot.triangulate_roi(volume,zstep,xscale,yscale,zscale,zoffset,swapz) for volume in volumes]
     else:
-        verts = [plot_rois.roi_surface(volume,zstep,xscale,yscale,zscale,zoffset,swapz) for volume in volumes]
+        verts = [roiplot.roi_surface(volume,zstep,xscale,yscale,zscale,zoffset,swapz) for volume in volumes]
     
     ax = plt.gca(projection='3d')
     for v,c in zip(verts,colors):
@@ -111,7 +111,7 @@ def render_saggital(left,right,whole,zoffset,smooth=True):
     plt.draw()
     
 def read_whole_slices(sid):
-    whole = read_roi.read_roi_zip(os.path.join(storage_base,str.format('protocols/shuttling/slices/{0}/{0}_WholeBrainRoiSet.zip',sid)))
+    whole = roiread.read_roi_zip(os.path.join(storage_base,str.format('protocols/shuttling/slices/{0}/{0}_WholeBrainRoiSet.zip',sid)))
     references = get_centroids(whole)
     maxheightpoints = get_minheightpoints(whole)
     mixref = mix_reference_xy(references,maxheightpoints)
@@ -120,7 +120,7 @@ def read_whole_slices(sid):
     return whole,mixref
     
 def read_slice(sid,name,references):
-    rois = read_roi.read_roi_zip(os.path.join(storage_base,str.format('protocols/shuttling/slices/{0}/{0}_{1}.zip',sid,name)))
+    rois = roiread.read_roi_zip(os.path.join(storage_base,str.format('protocols/shuttling/slices/{0}/{0}_{1}.zip',sid,name)))
     center_rois(rois,references)
     scale_rois(rois,pixels_per_mm)
     return rois

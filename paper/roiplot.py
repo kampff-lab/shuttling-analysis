@@ -5,8 +5,8 @@ Created on Wed Oct 02 16:46:52 2013
 @author: gonca_000
 """
 
+import utils
 import numpy as np
-import analysis_utilities as utils
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
