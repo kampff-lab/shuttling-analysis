@@ -37,6 +37,13 @@ speedfilter = 'xhead_speed_25 > 0'
 ballisticquery = str.format('{0} and {1} and {2}',
                    heightfilter,positionfilter,speedfilter)
 
+def lesioncategory(info):
+    lesionvolume = info['lesionleft'] + info['lesionright']
+    category = lesionvolume.map(lambda x:
+        'control' if x == 0 else 'lesion' if x > 15 else 'halflesion')
+    category.name = 'category'
+    return category
+
 def groupbyname(data,info):
     result = data.copy(True)
     result['l2'] = ['individual']*len(data)
