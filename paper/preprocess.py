@@ -361,7 +361,7 @@ def sessionlabel(path):
         
         if match:
             return folder
-    return 'stable'
+    return 'undefined'
 
 def make_sessionlabels(datafolders):
     for path in datafolders:
