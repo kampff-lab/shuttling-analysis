@@ -37,10 +37,19 @@ speedfilter = 'xhead_speed_25 > 0'
 ballisticquery = str.format('{0} and {1} and {2}',
                    heightfilter,positionfilter,speedfilter)
 
+def _lesioncategorymap_(volume):
+    if volume == 0:
+        return 'control'
+    elif volume < 15:
+        return 'halflesion'
+    elif volume > 50:
+        return 'lesiondecorticate'
+    else:
+        return 'lesion'
+
 def lesioncategory(info):
     lesionvolume = info['lesionleft'] + info['lesionright']
-    category = lesionvolume.map(lambda x:
-        'control' if x == 0 else 'lesion' if x > 15 else 'halflesion')
+    category = lesionvolume.map(_lesioncategorymap_)
     category.name = 'category'
     return category
 
