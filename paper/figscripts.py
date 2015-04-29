@@ -31,8 +31,6 @@ def flattenpaths(rootf,folder=None,prefix=None):
             fname = os.path.join(rootf,'_'.join(prefix))
             os.rename(folder,fname)
 
-import gc
-import os
 import figure1
 import activitytables
 import pandas as pd
