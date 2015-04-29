@@ -13,6 +13,8 @@ import matplotlib.pyplot as plt
 _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
                     'randomizedcenterfree_day1']
+                    
+_groupcolors_ = ['b','mistyrose','r','k']
 
 def _sessionboxplot_(data,column=None,by=['session'],ax=None):
     box = data.boxplot(column,
@@ -20,15 +22,20 @@ def _sessionboxplot_(data,column=None,by=['session'],ax=None):
                        ax=ax,grid=False,
                        patch_artist=True,
                        return_type='dict')
+    numcategories = len(data.category.unique())
+    mintick = (numcategories - 1) / 2.0
     boxes = box[column]['boxes']
     numboxes = len(boxes)
-    numsessions = numboxes / 3
-    colors = ['b','mistyrose','r'] * numsessions
+    numsessions = numboxes / numcategories
+    colors = [_groupcolors_[i % numcategories] for i in range(numboxes)]
     for patch,color in zip(boxes,colors):
         patch.set_facecolor(color)
     plt.xlabel('session')
-    plt.xticks(range(2,numboxes+1,3),range(0,numsessions,1))
-    plt.legend(boxes[0:3],['control','small','lesion'],loc='upper left')
+    plt.xticks(np.arange(mintick+1,numboxes+1,numcategories),
+               range(0,numsessions,1))
+    plt.legend(boxes[0:numcategories],
+               ['control','small','lesion','decorticate'],
+               loc='upper left')
     
 def _mergelesioncategory_(data,info):
     data = data.reset_index('sessionlabel')
@@ -86,7 +93,7 @@ def timetoreward(rr,info,ax=None):
     
 def timetocross(cr,info,ax=None):
     # Compute group means
-    cr = _reindexsessionlabels_(cr,info,'trial')    
+    cr = _reindexsessionlabels_(cr,info,'trial')
     grouplevel = ['subject','session','sessionlabel']
     crdata = cr.groupby(by=grouplevel,sort=False)['duration'].mean().to_frame()
     
