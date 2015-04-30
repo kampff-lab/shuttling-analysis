@@ -47,3 +47,17 @@ lesionsham = [os.path.join(lesionshamdata,'JPAK_20'),
 decorticate = [os.path.join(decorticatedata,'JPAK_79'),
                os.path.join(decorticatedata,'JPAK_81'),
                os.path.join(decorticatedata,'JPAK_82')]
+               
+def _findsubjectpath_(name,subjects):
+    result = filter(lambda x: os.path.split(x)[1] == name,subjects)
+    if len(result) > 0:
+        return result[0]
+    else:
+        return None
+               
+def subjectpath(name):
+    result = _findsubjectpath_(name,lesionsham)
+    if result != None:
+        return result
+    else:
+        return _findsubjectpath_(name,decorticate)
