@@ -16,7 +16,7 @@ _splitprotocols_ = ['stabletocenterfree',
                     
 _groupcolors_ = ['b','mistyrose','r','k']
 
-def _sessionboxplot_(data,column=None,by=['session'],ax=None):
+def _groupboxplot_(data,column=None,by=['session'],ax=None):
     box = data.boxplot(column,
                        by=by,
                        ax=ax,grid=False,
@@ -30,7 +30,6 @@ def _sessionboxplot_(data,column=None,by=['session'],ax=None):
     colors = [_groupcolors_[i % numcategories] for i in range(numboxes)]
     for patch,color in zip(boxes,colors):
         patch.set_facecolor(color)
-    plt.xlabel('session')
     plt.xticks(np.arange(mintick+1,numboxes+1,numcategories),
                range(0,numsessions,1))
     plt.legend(boxes[0:numcategories],
@@ -38,7 +37,6 @@ def _sessionboxplot_(data,column=None,by=['session'],ax=None):
                loc='upper left')
     
 def _mergelesioncategory_(data,info):
-    data = data.reset_index('sessionlabel')
     category = activitytables.lesioncategory(info)
     data = data.join(category)
     data.reset_index(inplace=True)
@@ -50,7 +48,7 @@ def _getsessionlabel_(session):
 def _getsessionticklabels_(data):
     sessionlabels = data.sessionlabel.unique()
     sessionlabels.sort()
-    return [label.lstrip('0').replace('a','pre').replace('b','')
+    return [label.lstrip('0').replace('a','*').replace('b','')
             for label in sessionlabels]
     
 def _reindexsessionlabels_(data,info,trialcolumn):
@@ -83,25 +81,43 @@ def timetoreward(rr,info,ax=None):
     rrdata.columns = ['rewards']
     
     # Merge lesion category column
+    rrdata.reset_index('sessionlabel',inplace=True)
     rrgdata = _mergelesioncategory_(rrdata,info)
     
-    _sessionboxplot_(rrgdata,'rewards',by=['sessionlabel','category'],ax=ax)
+    _groupboxplot_(rrgdata,'rewards',by=['sessionlabel','category'],ax=ax)
     locs = plt.xticks()[0]
     labels = _getsessionticklabels_(rrgdata)
     plt.xticks(locs,labels)
+    plt.xlabel('session')
     plt.ylabel('time between rewards (s)')
     
-def timetocross(cr,info,ax=None):
+def timetocross_sessions(cr,info,ax=None):
     # Compute group means
     cr = _reindexsessionlabels_(cr,info,'trial')
     grouplevel = ['subject','session','sessionlabel']
     crdata = cr.groupby(by=grouplevel,sort=False)['duration'].mean().to_frame()
     
     # Merge lesion category column
+    crdata.reset_index('sessionlabel',inplace=True)
     crgdata = _mergelesioncategory_(crdata,info)
     
-    _sessionboxplot_(crgdata,'duration',by=['sessionlabel','category'],ax=ax)
+    _groupboxplot_(crgdata,'duration',by=['sessionlabel','category'],ax=ax)
     locs = plt.xticks()[0]
     labels = _getsessionticklabels_(crgdata)
     plt.xticks(locs,labels)
+    plt.xlabel('session')
+    plt.ylabel('time to cross (s)')
+    
+def timetocross_trials(cr,info,ax=None):
+    # Compute group means
+    cr = cr.reset_index()
+    grouplevel = ['subject','session','index']
+    crdata = cr.groupby(by=grouplevel,sort=False)['duration'].mean().to_frame()
+    
+    # Merge lesion category column
+    crdata.reset_index('index',inplace=True)
+    crgdata = _mergelesioncategory_(crdata,info)
+    
+    _groupboxplot_(crgdata,'duration',by=['index','category'],ax=ax)
+    plt.xlabel('trial')
     plt.ylabel('time to cross (s)')
