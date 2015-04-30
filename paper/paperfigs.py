@@ -87,3 +87,8 @@ ymin,ymax = plt.ylim()
 ymax=45
 plt.vlines(6*4+0.5,ymin,ymax,linestyles='solid')
 plt.ylim(ymin,ymax)
+
+# Time to cross on first habituation trials
+selection = 'session == 0'
+validcross = str.format('index < 10 and {0}',selection)
+shuttlingplots.timetocross_trials(cr.query(validcross),info.query(selection))
