@@ -5,35 +5,45 @@ Created on Thu Apr 30 11:20:49 2015
 @author: Gonçalo
 """
 
-lesionsham = [r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_20',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_21',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_22',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_23',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_24',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_25',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_26',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_27',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_28',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_29',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_36',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_37',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_38',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_39',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_48',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_49',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_50',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_51',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_52',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_53',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_54',
-              r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_55']
-            
-decorticates = [r'D:/Protocols/Shuttling/Decorticate/Data/JPAK_79',
-                r'D:/Protocols/Shuttling/Decorticate/Data/JPAK_81',
-                r'D:/Protocols/Shuttling/Decorticate/Data/JPAK_82']
-                
-decorticatecache = r'D:/Protocols/Shuttling/Decorticate/Analysis/cache.hdf5'
-lesionshamcache = r'D:/Protocols/Shuttling/LightDarkServoStable/Analysis/cache.hdf5'
+import os
+
+_lesionshampath_ = r'D:/Protocols/Shuttling/LightDarkServoStable'
+_decorticatepath_ = r'D:/Protocols/Shuttling/Decorticate'
+
+lesionshamdata = os.path.join(_lesionshampath_,'Data')
+lesionshamanalysis = os.path.join(_lesionshampath_,'Analysis')
+decorticatedata = os.path.join(_decorticatepath_,'Data')
+decorticateanalysis = os.path.join(_decorticatepath_,'Analysis')
+
+lesionshamcache = os.path.join(lesionshamanalysis,'cache.hdf5')
+decorticatecache = os.path.join(decorticateanalysis,'cache.hdf5')
 visiblecrossings_key = 'visiblecrossings'
 fullcrossings_key = 'fullcrossings'
 crossings_key = 'crossings'
+
+lesionsham = [os.path.join(lesionshamdata,'JPAK_20'),
+              os.path.join(lesionshamdata,'JPAK_21'),
+              os.path.join(lesionshamdata,'JPAK_22'),
+              os.path.join(lesionshamdata,'JPAK_23'),
+              os.path.join(lesionshamdata,'JPAK_24'),
+              os.path.join(lesionshamdata,'JPAK_25'),
+              os.path.join(lesionshamdata,'JPAK_26'),
+              os.path.join(lesionshamdata,'JPAK_27'),
+              os.path.join(lesionshamdata,'JPAK_28'),
+              os.path.join(lesionshamdata,'JPAK_29'),
+              os.path.join(lesionshamdata,'JPAK_36'),
+              os.path.join(lesionshamdata,'JPAK_37'),
+              os.path.join(lesionshamdata,'JPAK_38'),
+              os.path.join(lesionshamdata,'JPAK_39'),
+              os.path.join(lesionshamdata,'JPAK_48'),
+              os.path.join(lesionshamdata,'JPAK_49'),
+              os.path.join(lesionshamdata,'JPAK_50'),
+              os.path.join(lesionshamdata,'JPAK_51'),
+              os.path.join(lesionshamdata,'JPAK_52'),
+              os.path.join(lesionshamdata,'JPAK_53'),
+              os.path.join(lesionshamdata,'JPAK_54'),
+              os.path.join(lesionshamdata,'JPAK_55')]
+            
+decorticate = [os.path.join(decorticatedata,'JPAK_79'),
+               os.path.join(decorticatedata,'JPAK_81'),
+               os.path.join(decorticatedata,'JPAK_82')]
