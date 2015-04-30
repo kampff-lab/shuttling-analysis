@@ -527,8 +527,6 @@ def __lickbouts__(licks,time):
                 lickcounts[-1] += 1
     return bouts,lickcounts
     
-__mem__ = None    
-    
 def pokebouts(poke,rr):
 #    baseline = poke.median()
 #    thresh = baseline + poke.std()
