@@ -1,0 +1,4 @@
+FIJI
+----
+
+1. Adjust -> Type -> 16-bit
