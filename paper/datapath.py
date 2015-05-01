@@ -17,6 +17,11 @@ decorticateanalysis = os.path.join(_decorticatepath_,'Analysis')
 
 lesionshamcache = os.path.join(lesionshamanalysis,'cache.hdf5')
 decorticatecache = os.path.join(decorticateanalysis,'cache.hdf5')
+crossingactivity_stable_key = 'crossingactivity_stable'
+crossingactivity_unstable_key = 'crossingactivity_unstable'
+crossingactivity_restable_key = 'crossingactivity_restable'
+crossingactivity_random_key = 'crossingactivity_random'
+crossingactivity_challenge_key = 'crossingactivity_challenge'
 visiblecrossings_key = 'visiblecrossings'
 fullcrossings_key = 'fullcrossings'
 crossings_key = 'crossings'
