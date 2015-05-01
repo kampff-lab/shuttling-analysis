@@ -201,7 +201,7 @@ def read_sessions(folders, key=frontactivity_key, selector=None,
             if selector is not None:
                 session = selector(session)
 
-        if key != info_key and includeinfokey:
+        if len(session) > 0 and key != info_key and includeinfokey:
             info = pd.read_hdf(storepath(path), info_key)
             info.reset_index(inplace=True)
             keys = [n for n in session.index.names if n is not None]
