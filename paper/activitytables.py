@@ -30,6 +30,8 @@ from preprocess import rail_start_cm, rail_stop_cm
 heightcutoff = 20.42
 cropstart = str(rail_start_cm)
 cropstop = str(rail_stop_cm)
+cropleft = rail_start_pixels * width_pixel_to_cm
+cropright = rail_stop_pixels * width_pixel_to_cm
 heightfilter = str.format('yhead_max > 0 and yhead_max < {0}',heightcutoff)
 positionfilter = str.format('xhead_min >= {0} and xhead_max <= {1}',
                             cropstart, cropstop)
@@ -577,6 +579,18 @@ def cropcrossings(x,slices,crop):
         return slice(s.start+min_index,s.start+max_index+1)
     return [crop_slice(s) for s in slices if np.any(test_slice(s))]
     
+def _getcrossingslice_(xhead,midcross=True,crop=True,
+                     center=max_width_cm / 2.0):
+    # Generate trajectories and crossings
+    crossings = np.ma.clump_unmasked(np.ma.masked_invalid(xhead))
+    if midcross:
+        crossings = [s for s in crossings
+        if xhead[s.start] > center and xhead[s.stop-1] < center
+        or xhead[s.start] < center and xhead[s.stop-1] > center]
+    if crop:
+        crossings = cropcrossings(xhead,crossings,[cropleft,cropright])
+    return crossings
+    
 def getballistictrials(crossings):
     return crossings.query(ballisticquery)
     
@@ -654,6 +668,20 @@ def spatialactivity(activity,offset=20.0,ballistic=True):
         data.append(minact)
         
     return pd.DataFrame(data)
+    
+def crossingactivity(activity,midcross=True,crop=True,
+                     center=max_width_cm / 2.0):
+    crossings = _getcrossingslice_(activity.xhead,midcross,crop,center)
+    if len(crossings) == 0:
+        return pd.DataFrame()
+
+    crossingactivity = pd.concat([activity.ix[s,:] for s in crossings])
+    crossingindex = [i for i,s in enumerate(crossings)
+                     for x in range(s.stop-s.start)]
+    crossingactivity['crossing'] = crossingindex
+    crossingactivity.reset_index(inplace=True)
+    crossingactivity.set_index(['crossing','time'],inplace=True)
+    return crossingactivity
 
 def visiblecrossings(activity):
     return fullcrossings(activity,midcross=False)
@@ -662,18 +690,8 @@ def fullcrossings(activity,midcross=True):
     return crossings(activity,midcross,False)
 
 def crossings(activity,midcross=True,crop=True,center=max_width_cm / 2.0):
-    # Generate trajectories and crossings
-    cropleft = rail_start_pixels * width_pixel_to_cm
-    cropright = rail_stop_pixels * width_pixel_to_cm
     xhead = activity.xhead
-    crossings = np.ma.clump_unmasked(np.ma.masked_invalid(activity.xhead))
-    if midcross:
-        crossings = [s for s in crossings
-        if xhead[s.start] > center and xhead[s.stop-1] < center
-        or xhead[s.start] < center and xhead[s.stop-1] > center]
-    if crop:
-        crossings = cropcrossings(xhead,crossings,[cropleft,cropright])
-        
+    crossings = _getcrossingslice_(xhead,midcross,crop,center)
     if len(crossings) == 0:
         return pd.DataFrame()
         
