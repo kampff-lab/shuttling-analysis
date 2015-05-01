@@ -50,6 +50,11 @@ def findsessions(folder, days=None):
     
     groups = groupsessions(folders)
     if days is not None:
-        groups = [groups[day] for day in days]
+        if type(days) is slice:
+            groups = groups[days]
+        elif np.iterable(days):
+            groups = [groups[day] for day in days]
+        else:
+            groups = [groups[days]]
     
     return [item for group in groups for item in group]
