@@ -24,14 +24,14 @@ print "Rebuilding lesionsham crossings..."
 cr = read_subjects(lesionsham,selector=crossings)
 cr.to_hdf(lesionshamcache,crossings_key)
 
-print "Rebuilding decorticates visible crossings..."
+print "Rebuilding decorticate visible crossings..."
 cr = read_subjects(decorticate,selector=visiblecrossings)
 cr.to_hdf(decorticatecache,visiblecrossings_key)
 
-print "Rebuilding decorticates full crossings..."
+print "Rebuilding decorticate full crossings..."
 cr = read_subjects(decorticate,selector=fullcrossings)
 cr.to_hdf(decorticatecache,fullcrossings_key)
 
-print "Rebuilding decorticates crossings..."
+print "Rebuilding decorticate crossings..."
 cr = read_subjects(decorticate,selector=crossings)
 cr.to_hdf(decorticatecache,crossings_key)
