@@ -9,7 +9,9 @@ import datapath
 import activitytables
 import pandas as pd
 import numpy as np
+import scipy.stats as stats
 import matplotlib.pyplot as plt
+from activitytables import rail_start_cm, rail_stop_cm
 
 _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
@@ -164,3 +166,20 @@ def activitysummary(info,vcr_cache=None,cr_cache=None,ax=None):
                 pooled += trialact
 
     pooled.ix[:-1].plot(kind='pie',ax=ax)
+    
+def averagetrajectory(cract,cr,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    xpoints = np.linspace(rail_start_cm,rail_stop_cm,100)
+    for subject,subcr in cr.groupby(level=['subject']):
+        ypoints = activitytables.spatialinterp(xpoints,cract,subcr)
+        #baseline = np.nanmean(ypoints[xpoints < 10])
+        ymean = np.mean(ypoints,axis=0)
+        yerr = stats.sem(ypoints,axis=0)
+        ax.fill_between(xpoints,ymean-yerr,ymean+yerr,alpha=0.1)
+    ax.set_xlabel('x (cm)')
+    ax.set_ylabel('y (cm)')
+    ax.set_ylim(0,6)
+    ax.set_xlim(5,45)

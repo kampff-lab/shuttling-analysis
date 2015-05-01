@@ -271,6 +271,24 @@ def sliptimes(activity,thresh=1500):
                                  'gapcenterx',
                                  'gapcentery'])
 
+def _crossinterp_(cr,activity,xpoints,ypoints,selector=lambda x:x.yhead):
+    key = cr.name + (int(cr['index']),)
+    trial = activity.loc[key,:]
+    xhead = trial.xhead
+    yhead = selector(trial)
+    if cr.side == 'leftwards':
+        xhead = max_width_cm - xhead
+    curve = interp1d(xhead,yhead,bounds_error=False)
+    ypoints.append(curve(xpoints))
+    return cr
+                                 
+def spatialinterp(xpoints,activity,crossings,selector=lambda x:x.yhead):
+    ypoints = []
+    crossings[['index','side']].apply(
+        lambda cr:_crossinterp_(cr,activity,xpoints,ypoints,selector),
+        axis=1)
+    return np.array(ypoints)
+
 def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
     ypoints = []
     xpoints = np.linspace(rail_start_cm,rail_stop_cm,100)
