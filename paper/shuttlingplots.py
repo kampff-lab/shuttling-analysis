@@ -195,3 +195,11 @@ def skipprobability(cr,info,ax=None):
     ax = pskip.plot(kind='bar',ax=ax,grid=False,legend=False)
     ax.set_ylabel('p (skip middle steps)')
     ax.set_ylim(0,1)
+
+def trajectorycluster(cr,ax=None,**kwargs):
+    ax = cr.plot(x='duration',y='yhead_max',grid=False,ax=ax,
+                 kind='scatter',marker='D',s=10,edgecolors='none',**kwargs)
+    ax.set_xlabel('duration (s)')
+    ax.set_ylabel('max height (cm)')
+    ax.set_xlim(0,10)
+    ax.set_ylim(0,21)
