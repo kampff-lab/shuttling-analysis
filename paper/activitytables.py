@@ -762,11 +762,14 @@ def crossings(activity,midcross=True,crop=True,center=max_width_cm / 2.0):
     duration = pd.DataFrame([(time[s.stop-1]-time[s.start]).total_seconds()
                             for s in crossings],
                             columns=['duration'])
-    side = pd.DataFrame(['rightwards' if activity.xhead[s.start] < center else 'leftwards'
+    side = pd.DataFrame(['rightwards' if activity.xhead[s.start] < center
+                        else 'leftwards'
                         for s in crossings], columns=['side'])
-    crosstime = pd.DataFrame([firstordefault(activity.xhead[s] >= center)
+    crosstime = pd.DataFrame([firstordefault(activity.xhead[s] >= center,
+                                             pd.NaT)
                              if activity.xhead[s.start] < center
-                             else firstordefault(activity.xhead[s] <= center)
+                             else firstordefault(activity.xhead[s] <= center,
+                                                 pd.NaT)
                              for s in crossings], columns=['crosstime'])
     
     # Slowdown
@@ -790,7 +793,7 @@ def crossings(activity,midcross=True,crop=True,center=max_width_cm / 2.0):
     for s,v in zip(crossings,exitpoints)],columns=['exitspeed'])
         
     # Steps
-    steptimes = pd.DataFrame([[step[0] if len(step) > 0 else None
+    steptimes = pd.DataFrame([[step[0] if len(step) > 0 else pd.NaT
                  for step in findpeaks(activity.ix[s,stepslice].diff(),1500)]
                  for s in crossings])
     steptimes.columns = [str.format('steptime{0}',i)
