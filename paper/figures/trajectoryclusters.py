@@ -5,6 +5,9 @@ Created on Sat May 02 10:25:23 2015
 @author: Gonçalo
 """
 
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 5
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from activitytables import read_subjects, info_key
@@ -37,7 +40,7 @@ trajectorycluster(cr.query(restable+light),ax=rx,color='r',label=lightlabel)
 sx.set_title('stable')
 ux.set_title('unstable')
 rx.set_title('restable')
-plt.tight_layout()
+plt.tight_layout(w_pad=1)
 plt.show()
 
 # Save plot

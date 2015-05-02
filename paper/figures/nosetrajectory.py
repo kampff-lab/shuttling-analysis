@@ -5,6 +5,9 @@ Created on Thu Apr 30 21:01:15 2015
 @author: Gonçalo
 """
 
+from pylab import rcParams
+rcParams['figure.figsize'] = 15, 5
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from activitytables import getballistictrials
@@ -25,13 +28,14 @@ cr = getballistictrials(cr)
 f, (sx,ux,rx) = plt.subplots(1,3)
 cract = pd.read_hdf(lesionshamcache,crossingactivity_stable_key)
 averagetrajectory(cract,cr.query(stable),sx)
-sx.set_title('stable')
 cract = pd.read_hdf(lesionshamcache,crossingactivity_unstable_key)
 averagetrajectory(cract,cr.query(unstable),ux)
-ux.set_title('unstable')
 cract = pd.read_hdf(lesionshamcache,crossingactivity_restable_key)
 averagetrajectory(cract,cr.query(restable),rx)
-rx.set_title('restable')
+sx.set_title(str.format('stable (n = {0} trials)',len(cr.query(stable))))
+ux.set_title(str.format('unstable (n = {0} trials)',len(cr.query(unstable))))
+rx.set_title(str.format('restable (n = {0} trials)',len(cr.query(restable))))
+plt.tight_layout(w_pad=1)
 plt.show()
 
 # Save plot
