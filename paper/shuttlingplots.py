@@ -183,3 +183,15 @@ def averagetrajectory(cract,cr,ax=None):
     ax.set_ylabel('y (cm)')
     ax.set_ylim(0,6)
     ax.set_xlim(5,45)
+    
+def skipprobability(cr,info,ax=None):
+    skip = cr.steptime3.isnull() & cr.steptime4.isnull()
+    skipfreq = skip.groupby(level=['subject']).sum()
+    total = cr.groupby(level=['subject']).size()
+    pskip = skipfreq / total
+    pskip.name = 'skipfrequency'
+    pskip = activitytables.groupbylesionvolumes(pskip,info,rename=True)
+    pskip.reset_index('lesion',drop=True,inplace=True)
+    ax = pskip.plot(kind='bar',ax=ax,grid=False,legend=False)
+    ax.set_ylabel('p (skip middle steps)')
+    ax.set_ylim(0,1)
