@@ -63,27 +63,47 @@ def groupbyname(data,info):
     result.set_index(['session','l2','subject'],inplace=True)
     return result
 
-def groupbylesionvolumes(data,info):
+def _charrange_(stop):
+    s = ord('a')
+    return [chr(s+i) for i in range(stop)]
+
+def groupbylesionvolumes(data,info,rename=False):
+    levsession = 'session' in data.index.names
     lesionvolume = info['lesionleft'] + info['lesionright']
     lesionvolume.name = 'lesionvolume'
     g = pd.concat([data,lesionvolume,info['cagemate']],axis=1)
+    if g.index.names[0] is None:
+        g.index.names = ['subject']
     #joininfo = pd.concat((lesionvolume,info['cagemate']),axis=1)
     #g = data.join(joininfo)
     lesionorder = g[g['lesionvolume'] > 0].sort('lesionvolume',ascending=False)
     controls = lesionorder.groupby('cagemate',sort=False).median().index
     controls.name = 'subject' # OPTIONAL?
     controlorder = g.reset_index().set_index('subject').ix[controls]
-    controlorder.set_index('session',append=True,inplace=True)
+    if rename:
+        lnames = pd.Series(['L'+c for c in _charrange_(len(lesionorder))])
+        cnames = pd.Series(['C'+c for c in _charrange_(len(controlorder))])
+        lnames.name = 'subject'
+        cnames.name = 'subject'
+        lesionorder.index = lnames
+        controlorder.index = cnames
+    if levsession:
+        controlorder.set_index('session',append=True,inplace=True)
     
     result = pd.concat([controlorder,lesionorder])
     result['lesion'] = ['lesion' if v > 0 else 'control'
                         for v in result['lesionvolume']]
     result.reset_index(inplace=True)
-    result = result[~result.session.isnull()]
+    if levsession:
+        result = result[~result.session.isnull()]
     columns = ['subject' if c == 'level_0' else c for c in result.columns]
     result.columns = columns
-    result.sort(['session','lesion'],inplace=True)
-    result.set_index(['session','lesion','subject'],inplace=True)
+    if levsession:
+        result.sort(['session','lesion'],inplace=True)
+        result.set_index(['session','lesion','subject'],inplace=True)
+    else:
+        result.sort(['lesion'],inplace=True)
+        result.set_index(['lesion','subject'],inplace=True)
     result.drop(['lesionvolume','cagemate'],axis=1,inplace=True)
     return result
     
