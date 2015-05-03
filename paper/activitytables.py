@@ -341,16 +341,19 @@ def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
 #            indices.append(frameindex)
 #            side.append(trial.side)
 #    return indices,side
+    
+def _getactivityslice_(activity,key,columns):
+    if isinstance(activity.index, pd.core.index.MultiIndex):
+        return activity.xs(key,level='time',
+                           drop_level=False).ix[:,columns]
+    else:
+        return activity.ix[key,columns]
 
 def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
                 usediff=True,thresh=1500,headinfront=True):
     leftwards = trial.side == 'leftwards'
     roiindex = leftroi if leftwards else rightroi
-    if isinstance(activity.index, pd.core.index.MultiIndex):
-        roiactivity = activity.xs(trial.timeslice,level='time',
-                                  drop_level=False).ix[:,roislice]
-    else:
-        roiactivity = activity.ix[trial.timeslice,roislice]
+    roiactivity = _getactivityslice_(activity,trial.timeslice,roislice)
         
     if usediff:
         roiactivity = roiactivity.diff()
@@ -392,7 +395,9 @@ def roiframeindices(activity,crossings,leftroi,rightroi,getpeaks):
     for index,trial in crossings.iterrows():
         roipeaks = getpeaks(activity,trial,leftroi,rightroi)            
         if len(roipeaks) > 0:
-            frameindex = min([activity.index.get_loc(peak) for peak in roipeaks])
+            peakframes = [_getactivityslice_(activity,peak,'frame')
+                          for peak in roipeaks]
+            frameindex = min(peakframes)
             indices.append(frameindex)
             side.append(trial.side)
     return indices,side
