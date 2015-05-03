@@ -9,11 +9,13 @@ import cv2
 import imgproc
 import datapath
 import activitytables
+import activityplots
 import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 from activitytables import rail_start_cm, rail_stop_cm
+from activitytables import stepcenter_cm, max_width_cm
 
 _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
@@ -242,3 +244,31 @@ def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
     avg = cv2.convertScaleAbs(avg,alpha=1.4,beta=0.0)
     ax.imshow(avg)
     ax.set_axis_off()
+    
+def scatterhistaxes():
+    plt.figure()
+    axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
+    axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
+    axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
+    return (axScatter,axHistx,axHisty)
+
+def posturehistogram(steps,color='b',histalpha = 0.75,scatteralpha = 0.4,
+                     axes=None):
+    if axes is None:
+        axes = scatterhistaxes()
+        
+    binsize = 0.2
+    ylim = (-1,9)
+    stepoffset = stepcenter_cm[3][1]
+    xlim = (20-stepoffset,30-stepoffset)
+    bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
+    leftwards = steps.side == 'leftwards'
+    xhead = steps.xhead.copy(deep=True)
+    xhead[leftwards] = max_width_cm - xhead[leftwards]
+    xhead -= stepoffset
+    activityplots.scatterhist(xhead,steps.yhead,color=color,
+                              bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                              histalpha=histalpha,alpha=scatteralpha)
+    axScatter = axes[0]
+    axScatter.set_xlabel('x (cm)')
+    axScatter.set_ylabel('y (cm)')
