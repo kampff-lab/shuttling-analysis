@@ -8,7 +8,7 @@ Created on Sat May 02 15:06:05 2015
 import pandas as pd
 import matplotlib.pyplot as plt
 from activitytables import info_key
-from shuttlingplots import averageposturecomparison
+from shuttlingplots import averageposturecomparison, proxylegend
 from datapath import lesionshamcache, crossings_key
 from datapath import crossingactivity_stable_key
 from datapath import crossingactivity_unstable_key
@@ -28,11 +28,14 @@ f, (ex1,ex2) = plt.subplots(1,2)
 ex1cr1 = cr.query(str.format("subject == 'JPAK_21' and {0}",unstable))
 ex1cr2 = cr.query(str.format("subject == 'JPAK_21' and {0}",stable))
 averageposturecomparison(cract,info,ex1cr1,ex1cr2,ax=ex1)
+proxylegend(['g','r'],['stable','unstable'],ax=ex1,
+            loc='lower left',bbox_to_anchor=(0.8,1))
 ex1.set_title('Ca')
 ex2cr1 = cr.query(str.format("subject == 'JPAK_24' and {0}",unstable))
 ex2cr2 = cr.query(str.format("subject == 'JPAK_24' and {0}",stable))
 averageposturecomparison(cract,info,ex2cr1,ex2cr2,ax=ex2)
 ex2.set_title('Lb')
+plt.tight_layout()
 plt.show()
 
 # Save plot
