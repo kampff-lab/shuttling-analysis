@@ -205,6 +205,12 @@ def trajectorycluster(cr,ax=None,**kwargs):
     ax.set_ylabel('max height (cm)')
     ax.set_xlim(0,10)
     ax.set_ylim(0,21)
+    
+def proxylegend(colors,labels,ax=None,**kwargs):
+    if ax is None:
+        ax = plt.gca()
+    handles = [plt.Rectangle((0,0),1,1,color=color) for color in colors]
+    ax.legend(handles,labels,**kwargs)
 
 def averageposture(cract,info,cr,cropsize=(300,300)):
 
