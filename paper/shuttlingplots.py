@@ -212,7 +212,7 @@ def proxylegend(colors,labels,ax=None,**kwargs):
     handles = [plt.Rectangle((0,0),1,1,color=color) for color in colors]
     ax.legend(handles,labels,**kwargs)
 
-def averageposture(cract,info,cr,cropsize=(300,300)):
+def _averageposture_(cract,info,cr,cropsize=(300,300)):
 
     stepframes = []
     for key,scr in cr.groupby(level=['subject','session']):
@@ -228,12 +228,12 @@ def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
                              cropsize=(300,300),ax=None):
     if ax is None:
         fig = plt.figure()
-        ax = fig.gca()                                 
-                                 
-    avg1 = averageposture(cract,info,cr1,cropsize)
-    avg2 = averageposture(cract,info,cr2,cropsize)
+        ax = fig.gca()
+    
+    avg1 = _averageposture_(cract,info,cr1,cropsize)
+    avg2 = _averageposture_(cract,info,cr2,cropsize)
     if cr3 is not None:
-        avg3 = averageposture(cract,info,cr3,cropsize)
+        avg3 = _averageposture_(cract,info,cr3,cropsize)
     else:
         avg3 = np.zeros(cropsize,dtype=np.float32)
         
