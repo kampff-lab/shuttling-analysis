@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from activitytables import rail_start_cm, rail_stop_cm
 from activitytables import stepcenter_cm, max_width_cm
 
+_stepoffset_ = stepcenter_cm[3][1]
 _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
                     'randomizedcenterfree_day1']
@@ -245,6 +246,13 @@ def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
     ax.imshow(avg)
     ax.set_axis_off()
     
+def _getnormalizedxhead_(steps):
+    leftwards = steps.side == 'leftwards'
+    xhead = steps.xhead.copy(deep=True)
+    xhead[leftwards] = max_width_cm - xhead[leftwards]
+    xhead -= _stepoffset_
+    return xhead
+    
 def scatterhistaxes():
     plt.figure()
     axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
@@ -259,16 +267,29 @@ def posturehistogram(steps,color='b',histalpha = 0.75,scatteralpha = 0.4,
         
     binsize = 0.2
     ylim = (-1,9)
-    stepoffset = stepcenter_cm[3][1]
-    xlim = (20-stepoffset,30-stepoffset)
+    xlim = (20-_stepoffset_,30-_stepoffset_)
     bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
-    leftwards = steps.side == 'leftwards'
-    xhead = steps.xhead.copy(deep=True)
-    xhead[leftwards] = max_width_cm - xhead[leftwards]
-    xhead -= stepoffset
+    xhead = _getnormalizedxhead_(steps)
     activityplots.scatterhist(xhead,steps.yhead,color=color,
                               bins=bins,axes=axes,xlim=xlim,ylim=ylim,
                               histalpha=histalpha,alpha=scatteralpha)
     axScatter = axes[0]
     axScatter.set_xlabel('x (cm)')
     axScatter.set_ylabel('y (cm)')
+    
+def posturemean(steps,color='b',label=None,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+        
+    xhead = _getnormalizedxhead_(steps)
+    xmean = xhead.mean()
+    ymean = steps.yhead.mean()
+    xerr = xhead.sem()
+    yerr = steps.yhead.sem()
+    ax.scatter(xmean,ymean,color=color)
+    ax.errorbar(xmean,ymean,xerr=xerr,yerr=yerr,ecolor=color)
+    if label is not None:
+        ax.annotate(label,xy=(xmean,ymean),textcoords='offset points')
+    ax.set_xlabel('x (cm)')
+    ax.set_ylabel('y (cm)')
