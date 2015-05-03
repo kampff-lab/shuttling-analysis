@@ -25,6 +25,7 @@ crossingactivity_challenge_key = 'crossingactivity_challenge'
 visiblecrossings_key = 'visiblecrossings'
 fullcrossings_key = 'fullcrossings'
 crossings_key = 'crossings'
+stepfeatures_key = 'stepfeatures'
 
 lesionsham = [os.path.join(lesionshamdata,'JPAK_20'),
               os.path.join(lesionshamdata,'JPAK_21'),
@@ -52,6 +53,8 @@ lesionsham = [os.path.join(lesionshamdata,'JPAK_20'),
 decorticate = [os.path.join(decorticatedata,'JPAK_79'),
                os.path.join(decorticatedata,'JPAK_81'),
                os.path.join(decorticatedata,'JPAK_82')]
+               
+jumpers = ['JPAK_38'] + [str.format('JPAK_{0}',i) for i in range(48,56)]
                
 def _findsubjectpath_(name,subjects):
     result = filter(lambda x: os.path.split(x)[1] == name,subjects)
