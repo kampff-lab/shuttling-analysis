@@ -364,10 +364,10 @@ def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
     return roipeaks
     
 def getsteppeaks(activity,trial,leftstep,rightstep):
-    return getroipeaks(activity,slice(17,25),trial,leftstep,rightstep,stepcenter_cm)
+    return getroipeaks(activity,stepslice,trial,leftstep,rightstep,stepcenter_cm)
     
 def getslippeaks(activity,trial,leftgap,rightgap):
-    return getroipeaks(activity,slice(25,32),trial,leftgap,rightgap,slipcenter_cm,
+    return getroipeaks(activity,gapslice,trial,leftgap,rightgap,slipcenter_cm,
                        usediff=False,thresh=5000,headinfront=False)
 
 def roicrossings(activity,crossings,leftroi,rightroi,getpeaks):
