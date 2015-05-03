@@ -5,6 +5,8 @@ Created on Tue Apr 28 16:01:47 2015
 @author: Gonçalo
 """
 
+import cv2
+import imgproc
 import datapath
 import activitytables
 import pandas as pd
@@ -203,3 +205,34 @@ def trajectorycluster(cr,ax=None,**kwargs):
     ax.set_ylabel('max height (cm)')
     ax.set_xlim(0,10)
     ax.set_ylim(0,21)
+
+def averageposture(cract,info,cr,cropsize=(300,300)):
+
+    stepframes = []
+    for key,scr in cr.groupby(level=['subject','session']):
+        sinfo = info.loc[[key],:]
+        stepframes += activitytables.stepframes(cract,scr,sinfo,4,3,
+                                                cropsize=cropsize,
+                                                subtractBackground=True)
+    stepframes = [cv2.threshold(f, 5, 255, cv2.cv.CV_THRESH_BINARY)[1]
+                  for f in stepframes]
+    return imgproc.average(stepframes,1)
+
+def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
+                             cropsize=(300,300),ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()                                 
+                                 
+    avg1 = averageposture(cract,info,cr1,cropsize)
+    avg2 = averageposture(cract,info,cr2,cropsize)
+    if cr3 is not None:
+        avg3 = averageposture(cract,info,cr3,cropsize)
+    else:
+        avg3 = np.zeros(cropsize,dtype=np.float32)
+        
+    avg = cv2.merge((avg1,avg2,avg3))
+    avg = avg.astype(np.uint8)
+    avg = cv2.convertScaleAbs(avg,alpha=1.4,beta=0.0)
+    ax.imshow(avg)
+    ax.set_axis_off()
