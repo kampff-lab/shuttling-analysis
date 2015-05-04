@@ -46,9 +46,10 @@ slipcenter_pixels = [(y,x) for x,y in slipcenter_pixels] # crop offset
 steparea_pixels = [1372.5, 1294.5, 675.0, 686.5, 625.5, 579.0, 1357.5, 1374.5]
 stepcenter_pixels = [(58, 102), (214, 103), (378, 106), (537, 102),
                      (707, 105), (863, 103), (1026, 97), (1177, 94)]
-stepcenter_pixels = [(y+467,x+21) for x,y in stepcenter_pixels] # crop offset
-stepcenter_pixels = [(y-50,x) for y,x in stepcenter_pixels]
+# correction for preprocessing workflow crop
+stepcenter_pixels = [(y+467,x+21) for x,y in stepcenter_pixels]
 # small offset for step visualization
+stepcenter_pixels = [(y-50,x) for y,x in stepcenter_pixels]
 stepcenter_cm = [(y*height_pixel_to_cm,x*width_pixel_to_cm)
                  for y,x in stepcenter_pixels]
 slipcenter_cm = [(y*height_pixel_to_cm,x*width_pixel_to_cm)
