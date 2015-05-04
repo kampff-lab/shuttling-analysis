@@ -133,41 +133,23 @@ def timetocross_trials(cr,info,ax=None):
     plt.xlabel('trial')
     plt.ylabel('time to cross (s)')
     
-def activitysummary(info,vcr_cache=None,cr_cache=None,ax=None):
+def activitysummary(info,rr,lpoke,rpoke,vcr,cr,ax=None):
     pooled = None
     sessions = info.groupby(level=['subject','session'])
-    for (subject,session),sinfo in sessions:
-        subjectpath = datapath.subjectpath(subject)
-        rr = activitytables.read_subjects(subjectpath,days=[session],
-                                          key=activitytables.rewards_key,
-                                          includeinfokey=False)
-        lpoke = activitytables.read_subjects(subjectpath,days=[session],
-                                          key=[activitytables.leftpoke_key,
-                                               activitytables.rewards_key],
-                                          selector=activitytables.pokebouts,
-                                          includeinfokey=False)
-        rpoke = activitytables.read_subjects(subjectpath,days=[session],
-                                          key=[activitytables.rightpoke_key,
-                                               activitytables.rewards_key],
-                                          selector=activitytables.pokebouts,
-                                          includeinfokey=False)
+    for key,sinfo in sessions:
+        try:
+            srr = rr.ix[key,:].set_index('index')
+        except KeyError:
+            continue
+        slpoke = lpoke.ix[key,:].set_index('index')
+        srpoke = rpoke.ix[key,:].set_index('index')
+        svcr = vcr.ix[key,:].set_index('index')
+        scr = cr.ix[key,:].set_index('index')
         
-        if vcr_cache is None:
-            vcr = activitytables.read_subjects(subjectpath,days=[session],
-                                               selector=activitytables.visiblecrossings,
-                                               includeinfokey=False)
-        else:
-            vcr = vcr_cache.ix[(subject,session),:].set_index('index')
-            
-        if cr_cache is None:
-            cr = activitytables.read_subjects(subjectpath,days=[session],
-                                              selector=activitytables.crossings,
-                                              includeinfokey=False)
-        else:
-            cr = cr_cache.ix[(subject,session),:].set_index('index')
-            
-        if len(rr) > 1:
-            trialact = activitytables.trialactivity(rr,lpoke,rpoke,cr,vcr).sum()
+        if len(srr) > 1:
+            trialact = activitytables.trialactivity(srr,
+                                                    slpoke,srpoke,
+                                                    scr,svcr).sum()
             if pooled is None:
                 pooled = trialact
             else:
