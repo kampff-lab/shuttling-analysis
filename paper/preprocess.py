@@ -14,6 +14,7 @@ import datetime
 import subprocess
 import numpy as np
 import pandas as pd
+from roiset import RoiSet
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -40,20 +41,33 @@ rail_stop_cm = rail_stop_pixels * width_pixel_to_cm
 frames_per_second = 120.0
 gapslice = [str.format('gapactivity{0}',i) for i in range(7)]
 stepslice = [str.format('stepactivity{0}',i) for i in range(8)]
-slipcenter_pixels = [(124, 629), (289, 629), (469, 628), (642, 627),
-                     (824, 625), (995, 625), (1161, 624)]
-slipcenter_pixels = [(y,x) for x,y in slipcenter_pixels] # crop offset
-steparea_pixels = [1372.5, 1294.5, 675.0, 686.5, 625.5, 579.0, 1357.5, 1374.5]
-stepcenter_pixels = [(58, 102), (214, 103), (378, 106), (537, 102),
-                     (707, 105), (863, 103), (1026, 97), (1177, 94)]
-# correction for preprocessing workflow crop
-stepcenter_pixels = [(y+467,x+21) for x,y in stepcenter_pixels]
-# small offset for step visualization
-stepcenter_pixels = [(y-50,x) for y,x in stepcenter_pixels]
-stepcenter_cm = [(y*height_pixel_to_cm,x*width_pixel_to_cm)
-                 for y,x in stepcenter_pixels]
-slipcenter_cm = [(y*height_pixel_to_cm,x*width_pixel_to_cm)
-                 for y,x in slipcenter_pixels]
+        
+steprois_pixels = RoiSet([
+  [(3, 103), (38, 95), (127, 94), (127, 101), (53, 109), (2, 110)],
+  [(158, 103), (207, 97), (276, 96), (276, 105), (214, 110), (158, 111)],
+  [(373, 100), (422, 101), (388, 113), (332, 113)],
+  [(524, 96), (569, 96), (558, 109), (500, 110)],
+  [(676, 100), (719, 99), (746, 111), (688, 112)],
+  [(821, 98), (866, 97), (910, 108), (857, 109)],
+  [(971, 99), (971, 90), (1011, 91), (1086, 95), (1086, 105), (1031, 106)],
+  [(1119, 95), (1119, 87), (1157, 87), (1240, 93), (1240, 102), (1191, 103)]
+],offset=(21,467),dtype=np.int32,flipxy=True)
+
+gaprois_pixels = RoiSet([
+  [(73, 607), (176, 607), (176, 652), (73, 652)],
+  [(225, 607), (354, 607), (354, 651), (225, 651)],
+  [(415, 606), (524, 606), (524, 650), (415, 650)],
+  [(583, 602), (703, 602), (702, 652), (583, 652)],
+  [(767, 600), (882, 600), (882, 650), (767, 650)],
+  [(934, 598), (1057, 598), (1057, 652), (934, 652)],
+  [(1111, 597), (1212, 597), (1212, 652), (1111, 652)]
+],dtype=np.int32,flipxy=True)
+
+steprois_crop = RoiSet(steprois_pixels.rois,offset=(-50,0),dtype=np.int32)
+steprois_cm = RoiSet(steprois_pixels.rois,
+                     scale=(height_pixel_to_cm,width_pixel_to_cm))
+gaprois_cm = RoiSet(gaprois_pixels.rois,
+                    scale=(height_pixel_to_cm,width_pixel_to_cm))
 
 h5filename = 'session.hdf5'
 labelh5filename = 'labels.hdf5'

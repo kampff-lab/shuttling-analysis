@@ -749,10 +749,10 @@ figure1.figure2c2(cr,info,fbase)
 
 # Figure 2C2 (Lifetime Clips Off-center)
 fbase = r'C:\figs\figure2c2'
-center23 = (activitytables.stepcenter_cm[3][1] + \
-            activitytables.stepcenter_cm[2][1]) / 2
-center45 = (activitytables.stepcenter_cm[4][1] + \
-            activitytables.stepcenter_cm[5][1]) / 2
+center23 = (activitytables.steprois_cm.center[3][1] + \
+            activitytables.steprois_cm.center[2][1]) / 2
+center45 = (activitytables.steprois_cm.center[4][1] + \
+            activitytables.steprois_cm.center[5][1]) / 2
 cr = activitytables.read_subjects(subjects,
                                   selector=lambda x:activitytables.crossings(x,center=center23))
 info = activitytables.read_subjects(subjects,key=activitytables.info_key)

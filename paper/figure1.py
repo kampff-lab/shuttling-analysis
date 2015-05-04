@@ -20,10 +20,10 @@ import matplotlib.patches as mpatches
 import activitytables
 import activityplots
 import activitymovies
-from preprocess import frames_per_second, steparea_pixels
+from preprocess import frames_per_second
 from preprocess import labelpath, rail_start_cm, rail_stop_cm
 from preprocess import max_width_cm, max_height_cm
-from preprocess import stepcenter_cm, stepcenter_pixels
+from preprocess import steprois_cm, steprois_pixels
 from collectionselector import CollectionSelector
 from pandas.tools.plotting import scatter_matrix
 from activitytables import getballistictrials
@@ -945,7 +945,7 @@ def figure1l(info,path):
         axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
         axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
         axes = (axScatter,axHistx,axHisty)
-        stepoffset = stepcenter_cm[3][1]
+        stepoffset = steprois_cm.center[3][1]
         bins = 50
         xlim = (20-stepoffset,30-stepoffset)
         ylim = (-1,9)
@@ -1083,7 +1083,7 @@ def figure1l2(info,path,stf=None,uf=None,name=None,title=None,
     axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
     axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
     axes = (axScatter,axHistx,axHisty)
-    stepoffset = stepcenter_cm[3][1]
+    stepoffset = steprois_cm.center[3][1]
 #    bins = 50
     binsize = 0.2
     xlim = (xlim[0]-stepoffset,xlim[1]-stepoffset)
@@ -1184,8 +1184,8 @@ def figure1o(info,path,tile=False):
             ssl = [slice(i-preoffset,i+postoffset) for i in idxl[1:]]
             stepactr = np.array([act.stepactivity3[s] for s in ssr],np.float).T
             stepactl = np.array([act.stepactivity4[s] for s in ssl],np.float).T
-            stepactr /= steparea_pixels[3] * 255
-            stepactl /= steparea_pixels[4] * 255
+            stepactr /= steprois_pixels.area[3] * 255
+            stepactl /= steprois_pixels.area[4] * 255
             if len(stepactr) == 0:
                 stepact = stepactl
             elif len(stepactl) == 0:

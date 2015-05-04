@@ -15,9 +15,9 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 from activitytables import rail_start_cm, rail_stop_cm
-from activitytables import stepcenter_cm, max_width_cm
+from activitytables import steprois_cm, max_width_cm
 
-_stepoffset_ = stepcenter_cm[3][1]
+_stepoffset_ = steprois_cm.center[3][1]
 _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
                     'randomizedcenterfree_day1']

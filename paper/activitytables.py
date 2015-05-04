@@ -23,8 +23,8 @@ from preprocess import frontactivity_key, rewards_key, info_key
 from preprocess import leftpoke_key, rightpoke_key
 from preprocess import max_width_cm, width_pixel_to_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
-from preprocess import stepcenter_cm, slipcenter_cm
-from preprocess import stepcenter_pixels, slipcenter_pixels
+from preprocess import steprois_cm, gaprois_cm
+from preprocess import steprois_crop, gaprois_pixels
 from preprocess import rail_start_cm, rail_stop_cm
 
 heightcutoff = 20.42
@@ -273,7 +273,7 @@ def roiactivations(roiactivity,thresh,roicenters):
      
 def steptimes(activity,thresh=1500):
     stepactivity = activity.iloc[:,stepslice]
-    data = roiactivations(stepactivity,thresh,stepcenter_cm)
+    data = roiactivations(stepactivity,thresh,steprois_cm.center)
     index = pd.Series(data[:,0],name='time')
     return pd.DataFrame(data[:,1:],
                         index=index,
@@ -283,7 +283,7 @@ def steptimes(activity,thresh=1500):
                                  
 def sliptimes(activity,thresh=1500):
     gapactivity = activity.iloc[:,gapslice]
-    data = roiactivations(gapactivity,thresh,slipcenter_cm)
+    data = roiactivations(gapactivity,thresh,gaprois_cm.center)
     index = pd.Series(data[:,0],name='time')
     return pd.DataFrame(data[:,1:],
                         index=index,
@@ -323,25 +323,6 @@ def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
     ypoints = np.array(ypoints)
     return xpoints,np.mean(ypoints,axis=0),stats.sem(ypoints,axis=0)
     
-#def stepframeindices(activity,crossings,leftstep,rightstep):
-#    indices = []
-#    side = []
-#    for index,trial in crossings.iterrows():
-#        leftwards = trial.side == 'leftwards'
-#        stepindex = leftstep if leftwards else rightstep
-#        stepactivity = activity.xs(trial.timeslice,level='time',
-#                                   drop_level=False).iloc[:,stepslice]
-#        stepdiff = stepactivity.diff()
-#        steppeaks = findpeaks(stepdiff,1500)[stepindex]
-#        steppeaks = [peak for peak in steppeaks
-#                     if (activity.xhead[peak] > stepcenter_cm[rightstep] if leftwards else
-#                         activity.xhead[peak] < stepcenter_cm[leftstep]).any()]
-#        if len(steppeaks) > 0:
-#            frameindex = min([activity.index.get_loc(peak) for peak in steppeaks])
-#            indices.append(frameindex)
-#            side.append(trial.side)
-#    return indices,side
-    
 def _getactivityslice_(activity,key,columns):
     if isinstance(activity.index, pd.core.index.MultiIndex):
         return activity.xs(key,level='time',
@@ -349,7 +330,7 @@ def _getactivityslice_(activity,key,columns):
     else:
         return activity.ix[key,columns]
 
-def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
+def getroipeaks(activity,roislice,trial,leftroi,rightroi,roiinfo,
                 usediff=True,thresh=1500,headinfront=True):
     leftwards = trial.side == 'leftwards'
     roiindex = leftroi if leftwards else rightroi
@@ -362,15 +343,15 @@ def getroipeaks(activity,roislice,trial,leftroi,rightroi,roicenters,
 #   This constraint checks if the head is BEFORE the next rail (????)
     if headinfront:
         roipeaks = [peak for peak in roipeaks
-                     if (activity.xhead[peak] > roicenters[leftroi-1] if leftwards else
-                         activity.xhead[peak] < roicenters[rightroi+1]).any()]
+                     if (activity.xhead[peak] > roiinfo.min[leftroi-1][1] if leftwards else
+                         activity.xhead[peak] < roiinfo.max[rightroi+1][1]).any()]
     return roipeaks
     
 def getsteppeaks(activity,trial,leftstep,rightstep):
-    return getroipeaks(activity,stepslice,trial,leftstep,rightstep,stepcenter_cm)
+    return getroipeaks(activity,stepslice,trial,leftstep,rightstep,steprois_cm)
     
 def getslippeaks(activity,trial,leftgap,rightgap):
-    return getroipeaks(activity,gapslice,trial,leftgap,rightgap,slipcenter_cm,
+    return getroipeaks(activity,gapslice,trial,leftgap,rightgap,gaprois_cm,
                        usediff=False,thresh=5000,headinfront=False)
 
 def roicrossings(activity,crossings,leftroi,rightroi,getpeaks):
@@ -431,10 +412,10 @@ def croproi(frame,roiindex,roicenter_pixels,cropsize=(300,300),background=None,
     return frame
     
 def cropstep(frame,stepindex,cropsize=(300,300),background=None,flip=False):
-    return croproi(frame,stepindex,stepcenter_pixels,cropsize,background,flip)
+    return croproi(frame,stepindex,steprois_crop.center,cropsize,background,flip)
     
 def cropslip(frame,gapindex,cropsize=(300,300),background=None,flip=False):
-    return croproi(frame,gapindex,slipcenter_pixels,cropsize,background,flip,
+    return croproi(frame,gapindex,gaprois_pixels.center,cropsize,background,flip,
                    cropoffset=(-100,0))
 
 def roiframes(indices,side,info,leftroi,rightroi,croproi,
@@ -479,7 +460,7 @@ def slipactivity(activity):
     roipeaks = findpeaks(roiactivity,5000)
     for gapindex,gap in enumerate(roipeaks):
         for slip in gap:
-            gapcenter = slipcenter_cm[gapindex]
+            gapcenter = gaprois_cm.center[gapindex]
             slipactivity = roiactivity.ix[slip,gapindex]
             rowindex.append(slip)
             rows.append((gapindex,gapcenter[0],gapcenter[1],slipactivity))
@@ -487,28 +468,6 @@ def slipactivity(activity):
     data = pd.DataFrame(rows,rowindex,
                         columns=['gapindex','xgap','ygap','peakactivity'])
     return data
-
-#def slipactivity(activity,crossings):
-#    rowindex = []
-#    rows = []
-#    
-#    for index,trial in crossings.iterrows():
-#        roiactivity = activity.xs(trial.timeslice,level='time',
-#                                  drop_level=False).ix[:,25:32]
-#        roipeaks = findpeaks(roiactivity,5000)
-#        for gapindex,gap in enumerate(roipeaks):
-#            for slip in gap:
-#                gapcenter = slipcenter_cm[gapindex]
-#                slipactivity = roiactivity.ix[slip,gapindex]
-#                rowindex.append(slip)
-#                rows.append((gapindex,gapcenter[0],gapcenter[1],
-#                             slipactivity,trial.side))
-#    indexnames = crossings.index.names + ['time']
-#    rowindex = pd.MultiIndex.from_tuples(rowindex,names=indexnames)
-#    data = pd.DataFrame(rows,rowindex,
-#                        columns=['gapindex','xgap','ygap',
-#                                 'peakactivity','side'])
-#    return data.join(activity)
     
 def countslipevents(slipactivity):
     slipactivity = slipactivity.reset_index()
@@ -699,10 +658,10 @@ def spatialactivity(activity,offset=20.0,ballistic=True):
         trial = activity.ix[s]
         xhead = trial.xhead
         if side == 'leftwards':
-            point = max_width_cm - stepcenter_cm[4][1]
+            point = max_width_cm - steprois_cm.center[4][1]
             xhead = max_width_cm - xhead
         else:
-            point = stepcenter_cm[3][1]
+            point = steprois_cm.center[3][1]
         point += offset
         dist = np.abs(xhead - point)
         minact = activity.ix[np.argmin(dist)]

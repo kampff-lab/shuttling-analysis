@@ -18,8 +18,8 @@ import activitytables
 import activitymovies
 from preprocess import stepslice
 from preprocess import labelpath, frames_per_second, max_width_cm
-from preprocess import stepcenter_pixels, stepcenter_cm
-from preprocess import slipcenter_pixels, slipcenter_cm
+from preprocess import steprois_crop, steprois_cm
+from preprocess import gaprois_pixels, gaprois_cm
 from collectionselector import CollectionSelector
 
 def scatterhist(x,y,bins=10,color=None,alpha=1,histalpha=1,axes=None,
@@ -104,16 +104,19 @@ def clusterroiframes(act,roiactivity,info,leftroi,rightroi,
 def clusterstepframes(act,info,leftstep,rightstep):
     stepactivity = act.iloc[:,stepslice]
     return clusterroiframes(act,stepactivity,info,leftstep,rightstep,
-                            stepcenter_cm,
-                            lambda f,i:imgproc.croprect(stepcenter_pixels[i],
-                                                        (200,200),f))
+                            steprois_cm.center,
+                            lambda f,i:imgproc.croprect(
+                              steprois_crop.center[i],
+                              (200,200),f))
                             
 def clusterslipframes(act,info,leftgap,rightgap):
     slipactivity = act.iloc[:,25:32]
     return clusterroiframes(act,slipactivity,info,leftgap,rightgap,
-                            slipcenter_cm,
-                            lambda f,i:imgproc.croprect((slipcenter_pixels[i][0]-100,slipcenter_pixels[i][1]),
-                                                        (300,400),f))
+                            gaprois_cm.center,
+                            lambda f,i:imgproc.croprect(
+                              (gaprois_pixels.center[i][0]-100,
+                               gaprois_pixels.center[i][1]),
+                              (300,400),f))
 
 def sessionmetric(data,connect=True,ax=None,colorcycle=None):
     if data.ndim != 2:
