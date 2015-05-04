@@ -16,6 +16,6 @@ print "Rebuilding lesionsham step features..."
 cr = read_subjects(lesionsham,selector=stepfeatures)
 cr.to_hdf(lesionshamcache,stepfeatures_key)
 
-print "Rebuilding decorticate visible crossings..."
+print "Rebuilding decorticate step features..."
 cr = read_subjects(decorticate,selector=stepfeatures)
 cr.to_hdf(decorticatecache,stepfeatures_key)
