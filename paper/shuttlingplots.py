@@ -6,6 +6,7 @@ Created on Tue Apr 28 16:01:47 2015
 """
 
 import cv2
+import video
 import imgproc
 import datapath
 import activitytables
@@ -15,7 +16,9 @@ import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 from activitytables import rail_start_cm, rail_stop_cm
-from activitytables import steprois_cm, max_width_cm
+from activitytables import steprois_cm, steprois_crop, max_width_cm
+from preprocess import width_pixel_to_cm, height_pixel_to_cm, max_height_cm
+from preprocess import rail_height_pixels
 
 _stepoffset_ = steprois_cm.center[3][1]
 _splitprotocols_ = ['stabletocenterfree',
@@ -293,3 +296,32 @@ def posturemean(steps,color='b',label=None,ax=None):
         ax.annotate(label,xy=(xmean,ymean),textcoords='offset points')
     ax.set_xlabel('x (cm)')
     ax.set_ylabel('y (cm)')
+    
+def _cmtopixel_(x,y):
+    x = (x / width_pixel_to_cm)
+    y = ((max_height_cm - y) / height_pixel_to_cm) - rail_height_pixels
+    return x,y
+    
+def _pixelcrop_(x,y,cropcenter,cropsize):
+    x -= cropcenter[1] - cropsize[1] / 2
+    y -= cropcenter[0] - cropsize[1] / 2
+    return x,y
+
+def medianposture(steps,info,cropsize=(300,300),ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    xhead = _getnormalizedxhead_(steps)
+    median = steps[xhead == xhead.median()].iloc[-1,:]
+    stepindex = 4 if median.side == 'leftwards' else 3
+    stepcenter = steprois_crop.center[stepindex]
+    info = info.ix[median.name[:2],:]
+    videopath = datapath.relativepath(info,'front_video.avi')
+    frame = video.readsingleframe(videopath,median.frame)
+    frame = imgproc.croprect(stepcenter,cropsize,frame)
+    ax.imshow(frame,cmap='gray')
+    x,y = _cmtopixel_(median.xhead,median.yhead)
+    x,y = _pixelcrop_(x,y,stepcenter,cropsize)
+    ax.scatter(x,y,color='r')
+    ax.set_axis_off()
