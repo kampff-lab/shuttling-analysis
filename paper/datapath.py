@@ -69,3 +69,6 @@ def subjectpath(name):
         return result
     else:
         return _findsubjectpath_(name,decorticate)
+
+def relativepath(info,path):
+    return os.path.join(subjectpath(info.name[0]),info.dirname,path)
