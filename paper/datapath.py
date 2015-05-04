@@ -26,6 +26,8 @@ visiblecrossings_key = 'visiblecrossings'
 fullcrossings_key = 'fullcrossings'
 crossings_key = 'crossings'
 stepfeatures_key = 'stepfeatures'
+leftpokebouts_key = 'task/poke/left/pokebouts'
+rightpokebouts_key = 'task/poke/right/pokebouts'
 
 lesionsham = [os.path.join(lesionshamdata,'JPAK_20'),
               os.path.join(lesionshamdata,'JPAK_21'),
