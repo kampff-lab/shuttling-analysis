@@ -5,16 +5,16 @@ Created on Thu Apr 30 11:22:33 2015
 @author: Gonçalo
 """
 
+import pandas as pd
 import matplotlib.pyplot as plt
-from datapath import lesionsham
+from datapath import lesionshamcache
 from shuttlingplots import timetoreward
-from activitytables import read_subjects
 from activitytables import rewards_key, info_key
 
 # Load data
-days = range(1,17)
-rr = read_subjects(lesionsham,days,key=rewards_key)
-info = read_subjects(lesionsham,days,key=info_key)  
+days = '1 <= session < 17'
+rr = pd.read_hdf(lesionshamcache,rewards_key).query(days)
+info = pd.read_hdf(lesionshamcache,info_key).query(days)
 
 # Plot data
 timetoreward(rr,info)

@@ -8,14 +8,14 @@ Created on Thu Apr 30 11:36:02 2015
 import pandas as pd
 import matplotlib.pyplot as plt
 from shuttlingplots import timetocross_sessions
-from activitytables import read_subjects, info_key
-from datapath import lesionsham, lesionshamcache, fullcrossings_key
+from activitytables import info_key
+from datapath import lesionshamcache, fullcrossings_key
 
 # Load data
-days = range(0,17)
-selection = str.format('trial > 0 and session < {0}',len(days))
+days = 'session < 17'
+selection = str.format('trial > 0 and {0}',days)
 cr = pd.read_hdf(lesionshamcache,fullcrossings_key).query(selection)
-info = read_subjects(lesionsham,days,key=info_key)
+info = pd.read_hdf(lesionshamcache,info_key).query(days)
 
 # Plot data
 timetocross_sessions(cr,info)
