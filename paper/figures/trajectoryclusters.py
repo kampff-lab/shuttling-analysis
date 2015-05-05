@@ -10,16 +10,16 @@ rcParams['figure.figsize'] = 15, 5
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from activitytables import read_subjects, info_key
+from activitytables import info_key
 from activitytables import getballistictrials
 from shuttlingplots import trajectorycluster
-from datapath import lesionsham, lesionshamcache, crossings_key
+from datapath import lesionshamcache, crossings_key
 
 # Load data
 stable = '(1 <= session < 5) and trial > 0'
 unstable = '(9 <= session < 11) and trial > 0'
 restable = '(11 <= session < 13) and trial > 0'
-info = read_subjects(lesionsham,days=[0],key=info_key)
+info = pd.read_hdf(lesionshamcache,info_key).query('session == 0')
 info.reset_index('session',drop=True,inplace=True)
 lightweight = info.weight < 300
 light = str.format("and subject in {0}", list(info[lightweight].index))

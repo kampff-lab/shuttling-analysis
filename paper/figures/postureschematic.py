@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from activitytables import info_key
 from shuttlingplots import medianposture
-from datapath import jumpers, lesionshamcache, stepfeatures_key
+from datapath import lesionshamcache, stepfeatures_key
 
 # Load data
 info = pd.read_hdf(lesionshamcache,info_key)
