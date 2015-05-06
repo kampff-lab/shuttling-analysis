@@ -135,8 +135,7 @@ def cumsumreset(data,reset):
     d = np.diff(np.concatenate(([0.],c[reset])))
     v = data.copy()
     v.ix[reset] = -d
-    return v
-    #return np.cumsum(v)
+    return np.cumsum(v)
     
 def utcfromdatetime64(dt64):
     ts = (dt64 - np.datetime64('1970-01-01T00:00:00Z')) / np.timedelta64(1, 's')
@@ -634,6 +633,16 @@ def biasedsteps(activity,before=200,after=400):
     stf['bias'] = True
     uf['bias'] = False
     return pd.concat((stf,uf))
+    
+def posturebias(steps,n=3):
+    stablebias = []
+    unstablebias = []
+    for key,sf in steps.groupby(level=['subject','session']):
+        bstable = pd.DataFrame(cumsumreset(sf.stepstate3,~sf.stepstate3))
+        stablebias.append(sf[(bstable >= n).shift().fillna(False).values])
+        bunstable = pd.DataFrame(cumsumreset(~sf.stepstate3,sf.stepstate3))
+        unstablebias.append(sf[(bunstable >= n).shift().fillna(False).values])
+    return pd.concat(stablebias),pd.concat(unstablebias)
     
 def compensation(activity):
     cr = crossings(activity)
