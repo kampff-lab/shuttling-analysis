@@ -16,10 +16,8 @@ from datapath import crossingactivity_random_key
 
 # Load data
 bias = 2
-random1 = '(session == 13 and trial > 20)'
-random = '(14 <= session < 17)'
-random = str.format("({0} or {1})",random1,random)
 nonjumpers = str.format("subject not in {0}",jumpers)
+random = '(session == 13 and trial > 20) or (14 <= session < 17)'
 steps = pd.read_hdf(lesionshamcache,stepfeatures_key).query(nonjumpers)
 cract = pd.read_hdf(lesionshamcache,crossingactivity_random_key)
 cract.reset_index(['subject','session','crossing'],inplace=True)
