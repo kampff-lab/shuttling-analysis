@@ -12,15 +12,12 @@ from infotables import names
 from activitytables import posturebias, info_key
 from shuttlingplots import posturehistogram, scatterhistaxes
 from datapath import jumpers, lesionshamcache, stepfeatures_key
-from datapath import crossingactivity_random_key
 
 # Load data
 bias = 2
 nonjumpers = str.format("subject not in {0}",jumpers)
 random = '(session == 13 and trial > 20) or (14 <= session < 17)'
 steps = pd.read_hdf(lesionshamcache,stepfeatures_key).query(nonjumpers)
-cract = pd.read_hdf(lesionshamcache,crossingactivity_random_key)
-cract.reset_index(['subject','session','crossing'],inplace=True)
 
 info = pd.read_hdf(lesionshamcache, info_key).query(nonjumpers)
 group = list(names(info))
