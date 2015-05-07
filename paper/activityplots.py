@@ -22,7 +22,8 @@ from preprocess import steprois_crop, steprois_cm
 from preprocess import gaprois_pixels, gaprois_cm
 from collectionselector import CollectionSelector
 
-def scatterhist(x,y,bins=10,color=None,alpha=1,histalpha=1,axes=None,
+def scatterhist(x,y,xbins=10,ybins=10,
+                color=None,alpha=1,histalpha=1,axes=None,
                 xlim=None,ylim=None):
     if axes is None:
         axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
@@ -38,9 +39,9 @@ def scatterhist(x,y,bins=10,color=None,alpha=1,histalpha=1,axes=None,
         axScatter.set_ylim(ylim)
     
     # now determine nice limits by hand:
-    axHistx.hist(x, bins=bins, range=xlim,alpha=histalpha,
+    axHistx.hist(x, bins=xbins, range=xlim,alpha=histalpha,
                  color=color, edgecolor = 'none')
-    axHisty.hist(y, bins=bins, range=ylim,orientation='horizontal',
+    axHisty.hist(y, bins=ybins, range=ylim,orientation='horizontal',
                  color=color, alpha=histalpha, edgecolor = 'none')
     
     axHistx.set_xticks([])

@@ -17,7 +17,8 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 from activitytables import rail_start_cm, rail_stop_cm
 from activitytables import steprois_cm, steprois_crop, max_width_cm
-from preprocess import width_pixel_to_cm, height_pixel_to_cm, max_height_cm
+from preprocess import width_pixel_to_cm, height_pixel_to_cm
+from preprocess import max_height_cm, center_cm
 from preprocess import rail_height_pixels
 
 _stepoffset_ = steprois_cm.center[3][1]
@@ -231,13 +232,6 @@ def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
     ax.imshow(avg)
     ax.set_axis_off()
     
-def _getnormalizedxhead_(steps):
-    leftwards = steps.side == 'leftwards'
-    xhead = steps.xhead.copy(deep=True)
-    xhead[leftwards] = max_width_cm - xhead[leftwards]
-    xhead -= _stepoffset_
-    return xhead
-    
 def scatterhistaxes():
     plt.figure()
     axScatter = plt.subplot2grid((3,3),(1,0),rowspan=2,colspan=2)
@@ -245,18 +239,27 @@ def scatterhistaxes():
     axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
     return (axScatter,axHistx,axHisty)
 
-def posturehistogram(steps,color='b',histalpha = 0.75,scatteralpha = 0.4,
+def posturehistogram(steps,rangex=None,rangey=None,
+                     color='b',histalpha = 0.75,scatteralpha = 0.4,
                      axes=None):
     if axes is None:
         axes = scatterhistaxes()
+
+    if rangex is None:
+        rangex = (steps.xhead.min(),steps.xhead.max())
         
-    binsize = 0.2
-    ylim = (-1,9)
-    xlim = (20-_stepoffset_,30-_stepoffset_)
-    bins = np.arange(xlim[0],xlim[1]+binsize,binsize)
-    xhead = _getnormalizedxhead_(steps)
-    activityplots.scatterhist(xhead,steps.yhead,color=color,
-                              bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+    if rangey is None:
+        rangey = (steps.yhead.min(),steps.yhead.max())
+        
+    xbinsize = 5 * width_pixel_to_cm
+    ybinsize = 10 * height_pixel_to_cm
+    xbins = np.arange(rangex[0],rangex[1]+xbinsize,xbinsize)
+    ybins = np.arange(rangey[0],rangey[1]+ybinsize,ybinsize)
+    xlim = (np.floor(rangex[0]),np.ceil(rangex[1]))
+    ylim = (np.floor(rangey[0]),np.ceil(rangey[1]))
+    activityplots.scatterhist(steps.xhead,steps.yhead,
+                              xbins=xbins,ybins=ybins,
+                              color=color,axes=axes,xlim=xlim,ylim=ylim,
                               histalpha=histalpha,alpha=scatteralpha)
     axScatter = axes[0]
     axScatter.set_xlabel('x (cm)')
@@ -267,7 +270,7 @@ def posturemean(steps,color='b',label=None,ax=None):
         fig = plt.figure()
         ax = fig.gca()
         
-    xhead = _getnormalizedxhead_(steps)
+    xhead = activitytables.flipleftwards(steps.xhead,steps.side)
     xmean = xhead.mean()
     ymean = steps.yhead.mean()
     xerr = xhead.sem()
@@ -294,7 +297,7 @@ def medianposture(steps,info,cropsize=(300,300),ax=None):
         fig = plt.figure()
         ax = fig.gca()
     
-    xhead = _getnormalizedxhead_(steps)
+    xhead = activitytables.flipleftwards(steps.xhead,steps.side)
     median = steps[xhead == xhead.median()].iloc[-1,:]
     stepindex = 4 if median.side == 'leftwards' else 3
     stepcenter = steprois_crop.center[stepindex]

@@ -966,10 +966,12 @@ def figure1l(info,path):
         ufeatures.xhead -= stepoffset
         
         activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
-                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                                  xbins=bins,ybins=bins,axes=axes,
+                                  xlim=xlim,ylim=ylim,
                                   histalpha=alpha)
         activityplots.scatterhist(ufeatures.xhead,ufeatures.yhead,color='r',
-                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                                  xbins=bins,ybins=bins,axes=axes,
+                                  xlim=xlim,ylim=ylim,
                                   histalpha=alpha)
         axScatter.set_xlabel('x (cm)')
         axScatter.set_ylabel('y (cm)')
@@ -1103,13 +1105,15 @@ def figure1l2(info,path,stf=None,uf=None,name=None,title=None,
     
     stfeatures = pd.concat(pooledst)
     activityplots.scatterhist(stfeatures.xhead,stfeatures.yhead,color='b',
-                              bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                              xbins=bins,ybins=bins,axes=axes,
+                              xlim=xlim,ylim=ylim,
                               histalpha=histalpha,alpha=scatteralpha)
                               
     if len(pooledu) > 0:
         ufeatures = pd.concat(pooledu)
         activityplots.scatterhist(ufeatures.xhead,ufeatures.yhead,color='r',
-                                  bins=bins,axes=axes,xlim=xlim,ylim=ylim,
+                                  xbins=bins,ybins=bins,axes=axes,
+                                  xlim=xlim,ylim=ylim,
                                   histalpha=histalpha,
                                   alpha=scatteralpha)
     axScatter.set_xlabel('x (cm)')
