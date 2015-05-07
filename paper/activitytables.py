@@ -21,7 +21,7 @@ from preprocess import gapslice, stepslice
 from preprocess import storepath, labelpath
 from preprocess import frontactivity_key, rewards_key, info_key
 from preprocess import leftpoke_key, rightpoke_key
-from preprocess import max_width_cm, width_pixel_to_cm
+from preprocess import max_width_cm, width_pixel_to_cm, center_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
 from preprocess import steprois_cm, gaprois_cm
 from preprocess import steprois_crop, gaprois_pixels
@@ -700,7 +700,7 @@ def visiblecrossings(activity):
 def fullcrossings(activity,midcross=True):
     return crossings(activity,midcross,False)
 
-def crossings(activity,midcross=True,crop=True,center=max_width_cm / 2.0):
+def crossings(activity,midcross=True,crop=True,center=center_cm):
     xhead = activity.xhead
     crossings = _getcrossingslice_(xhead,midcross,crop,center)
     if len(crossings) == 0:

@@ -30,6 +30,7 @@ info_key = 'sessioninfo'
 
 max_height_cm = 24.0
 max_width_cm = 50.0
+center_cm = max_width_cm / 2.0
 height_pixel_to_cm = max_height_cm / 680.0
 width_pixel_to_cm = max_width_cm / 1280.0
 rail_height_pixels = 100
