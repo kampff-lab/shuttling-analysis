@@ -150,11 +150,31 @@ def geomediancost(median,xs):
     return np.linalg.norm(xs-median,axis=1).sum()
     
 def zscore(xs):
-    return (xs - xs.mean()) / xs.std()    
+    return (xs - xs.mean()) / xs.std()
+    
+def mediannorm(xs):
+    return xs - xs.median()
+    
+def normalize(xs,func,column=None,by=None,level=None):
+    if column is None:
+        column = xs.columns
+        
+    data = xs[column]
+    if (by is not None) or (level is not None):
+        data = data.groupby(by=by,level=level)
+        
+    xs[column] = data.apply(func)
     
 def mad(xs):
-    median = xs.median()
-    return (xs - median).abs().median()
+    return mediannorm(xs).abs().median()
+    
+def flipleftwards(x,side,aligncenter=True):
+    x = x.copy(deep=True)
+    leftwards = side == 'leftwards'
+    x[leftwards] = max_width_cm - x[leftwards]
+    if aligncenter:
+        x -= steprois_cm.center[3][1]
+    return x
     
 def read_activity(path):
     return pd.read_hdf(storepath(path), frontactivity_key)
