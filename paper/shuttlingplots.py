@@ -158,7 +158,7 @@ def activitysummary(info,rr,lpoke,rpoke,vcr,cr,ax=None):
 
     pooled.ix[:-1].plot(kind='pie',ax=ax)
     
-def averagetrajectory(cract,cr,ax=None):
+def averagetrajectory(cract,cr,color='b',ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
@@ -169,7 +169,7 @@ def averagetrajectory(cract,cr,ax=None):
         #baseline = np.nanmean(ypoints[xpoints < 10])
         ymean = np.mean(ypoints,axis=0)
         yerr = stats.sem(ypoints,axis=0)
-        ax.fill_between(xpoints,ymean-yerr,ymean+yerr,alpha=0.1)
+        ax.fill_between(xpoints,ymean-yerr,ymean+yerr,color=color,alpha=0.1)
     ax.set_xlabel('x (cm)')
     ax.set_ylabel('y (cm)')
     ax.set_ylim(0,6)
