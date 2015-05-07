@@ -25,7 +25,7 @@ _splitprotocols_ = ['stabletocenterfree',
                     'centerfreetostable',
                     'randomizedcenterfree_day1']
                     
-_groupcolors_ = ['b','mistyrose','r','k']
+_groupcolors_ = ['b','m','r','k']
 
 def _groupboxplot_(data,column=None,by=['session'],ax=None):
     box = data.boxplot(column,
