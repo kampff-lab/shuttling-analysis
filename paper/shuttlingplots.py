@@ -20,6 +20,7 @@ from activitytables import steprois_cm, steprois_crop, max_width_cm
 from preprocess import width_pixel_to_cm, height_pixel_to_cm
 from preprocess import max_height_cm, center_cm
 from preprocess import rail_height_pixels
+from preprocess import frames_per_second
 
 _stepoffset_ = steprois_cm.center[3][1]
 _splitprotocols_ = ['stabletocenterfree',
@@ -166,7 +167,7 @@ def averagetrajectory(cract,cr,color='b',ax=None):
     xpoints = np.linspace(rail_start_cm,rail_stop_cm,100)
     for subject,subcr in cr.groupby(level=['subject']):
         ypoints = activitytables.spatialinterp(xpoints,cract,subcr)
-        #baseline = np.nanmean(ypoints[xpoints < 10])
+        #baseline = np.nanmean(ypoints)
         ymean = np.mean(ypoints,axis=0)
         yerr = stats.sem(ypoints,axis=0)
         ax.fill_between(xpoints,ymean-yerr,ymean+yerr,color=color,alpha=0.1)
@@ -174,6 +175,16 @@ def averagetrajectory(cract,cr,color='b',ax=None):
     ax.set_ylabel('y (cm)')
     ax.set_ylim(0,6)
     ax.set_xlim(5,45)
+    
+def averagetimeseries(cract,column,color='b',ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    for key,subcr in cract.groupby(level=['subject','session','crossing']):
+        time = np.arange(0,len(subcr)) / frames_per_second
+        ax.plot(time,subcr[column],color=color)        
+    ax.set_xlabel('time (s)')
     
 def skipprobability(cr,info,ax=None):
     skip = cr.steptime3.isnull() & cr.steptime4.isnull()
