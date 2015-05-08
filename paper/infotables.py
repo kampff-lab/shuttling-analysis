@@ -23,3 +23,18 @@ def names(info):
     
 def cagemates(info):
     return info['cagemate'].unique()
+    
+def _charrange_(stop):
+    s = ord('a')
+    return [chr(s+i) for i in range(stop)]    
+    
+def lesionordermap(info):
+    volume = lesionvolume(info)
+    volume = volume[volume > 0]
+    volume.sort(ascending=False,inplace=True)
+    volume = volume.to_frame().join(info)
+    lid = names(volume)
+    cid = cagemates(volume)
+    lname = ['L'+n for n in _charrange_(len(lid))]
+    cname = ['C'+n for n in _charrange_(len(cid))]
+    return dict(zip(cid,cname)+zip(lid,lname))
