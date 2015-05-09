@@ -37,24 +37,37 @@ for name in group:
     if len(stablebias) == 0 or len(unstablebias) == 0:
         continue
     
-    # Plot data
+    # Select data
+    stablebias = stablebias.rename(columns={'index':'crossing'})
+    unstablebias = unstablebias.rename(columns={'index':'crossing'})
+    stablebias.set_index('crossing',append=True,inplace=True)
+    unstablebias.set_index('crossing',append=True,inplace=True)
+    scract = cract.join(stablebias,how='inner',rsuffix='R')
+    ucract = cract.join(unstablebias,how='inner',rsuffix='R')
+    scract.xhead = flipleftwards(scract.xhead,scract.side)
+    ucract.xhead = flipleftwards(ucract.xhead,ucract.side)    
+    sb_S = scract.query('stepstate3')
+    sb_U = scract.query('not stepstate3')
+    ub_S = ucract.query('stepstate3')
+    ub_U = ucract.query('not stepstate3')
+    
+    # Plot data    
     name = namemap[name]
     fig = plt.figure()
     ax = fig.gca()
-    ss = stablebias.rename(columns={'index':'crossing'}).query('not stepstate3')
-    us = unstablebias.rename(columns={'index':'crossing'}).query('not stepstate3')
-    ss.set_index('crossing',append=True,inplace=True)
-    us.set_index('crossing',append=True,inplace=True)
-    scract = cract.join(ss,how='inner',rsuffix='R')
-    ucract = cract.join(us,how='inner',rsuffix='R')
-    scract.xhead = flipleftwards(scract.xhead,scract.side)
-    ucract.xhead = flipleftwards(ucract.xhead,ucract.side)
-    averagetimeseries(scract,'xhead',color='b',ax=ax)
-    averagetimeseries(ucract,'xhead',color='r',ax=ax)
-    ax.set_ylabel('x (cm)')
-    ax.set_xlim(0,3)
-    proxylegend(['b','r'],['stable bias','unstable bias'],ax=ax)
-    ax.set_title(str.format('{0} (n = {1} trials)',name,len(ss)+len(us)))
+    averagetimeseries(sb_S,color='b',ax=ax,alpha=0.25)
+    averagetimeseries(sb_U,color='cyan',ax=ax,alpha=0.25)
+    averagetimeseries(ub_S,color='orange',ax=ax,alpha=0.25)
+    averagetimeseries(ub_U,color='r',ax=ax,alpha=0.25)
+    proxylegend(['b','cyan','orange','r'],
+                ['stable bias [stable]',
+                 'stable bias [unstable]',
+                 'unstable bias [stable]',
+                 'unstable bias [unstable]'],
+                ax=ax,loc='upper left')
+    ax.set_ylim(0,3.5)
+    ax.set_title(str.format('{0} (n = {1} trials)',name,
+                            len(stablebias)+len(unstablebias)))
     #plt.title(str.format('stable (n = {0} trials)',len(cr.query(stable))))
 plt.show()
     

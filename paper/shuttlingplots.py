@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats as stats
 import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
 from activitytables import rail_start_cm, rail_stop_cm
 from activitytables import steprois_cm, steprois_crop, max_width_cm
 from preprocess import width_pixel_to_cm, height_pixel_to_cm
@@ -176,15 +177,25 @@ def averagetrajectory(cract,cr,color='b',ax=None):
     ax.set_ylim(0,6)
     ax.set_xlim(5,45)
     
-def averagetimeseries(cract,column,color='b',ax=None):
+def averagetimeseries(cract,color='b',ax=None,**kwargs):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
     
+    series = []
+    atime = np.linspace(rail_start_cm,rail_stop_cm,360)-_stepoffset_
     for key,subcr in cract.groupby(level=['subject','session','crossing']):
-        time = np.arange(0,len(subcr)) / frames_per_second
-        ax.plot(time,subcr[column],color=color)        
-    ax.set_xlabel('time (s)')
+        time = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
+        timeseries = interp1d(subcr.xhead,time,bounds_error=False)
+        series.append(timeseries(atime).reshape(1,-1))
+    series = np.concatenate(series,axis=0)
+    ymean = np.mean(series,axis=0)
+    yerr = stats.sem(series,axis=0)
+    ax.plot(atime,ymean,color=color)
+    ax.fill_between(atime,ymean-yerr,ymean+yerr,color=color,**kwargs)
+    ax.set_ylabel('time (s)')
+    ax.set_xlabel('x (cm)')
+    ax.set_xlim(-15,25)
     
 def skipprobability(cr,info,ax=None):
     skip = cr.steptime3.isnull() & cr.steptime4.isnull()
