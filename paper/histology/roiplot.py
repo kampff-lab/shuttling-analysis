@@ -5,10 +5,12 @@ Created on Wed Oct 02 16:46:52 2013
 @author: gonca_000
 """
 
-import utils
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+
+def flatten(l):
+    return [item for sublist in l for item in sublist]
 
 def distance_function(point,rois):
     return [np.linalg.norm(np.array(point-roi,dtype=float)) for roi in rois]
@@ -20,7 +22,7 @@ def triangulate_roi(rois,zstep=1,xscale=1,yscale=1,zscale=1,zoffset=0,swapz=Fals
     verts = []
     for r,(z,roi) in enumerate(rois):
         nz = z + zstep
-        depthstack = utils.flatten([zroi for rz,zroi in rois if rz == z+zstep])
+        depthstack = flatten([zroi for rz,zroi in rois if rz == z+zstep])
         if len(depthstack) <= 0:
             depthstack = roi
             
