@@ -21,7 +21,6 @@ from activitytables import steprois_cm, steprois_crop, max_width_cm
 from preprocess import width_pixel_to_cm, height_pixel_to_cm
 from preprocess import max_height_cm, center_cm
 from preprocess import rail_height_pixels
-from preprocess import frames_per_second
 
 _stepoffset_ = steprois_cm.center[3][1]
 _splitprotocols_ = ['stabletocenterfree',
@@ -196,6 +195,18 @@ def averagetimeseries(cract,color='b',ax=None,**kwargs):
     ax.set_ylabel('time (s)')
     ax.set_xlabel('x (cm)')
     ax.set_xlim(-15,25)
+        
+def averagetimetrajectory(cract,color='b',ax=None,**kwargs):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+    
+    for key,subcr in cract.groupby(level=['subject','session','crossing']):
+        time = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
+        ax.plot(time,subcr.xhead,subcr.yhead,color=color,**kwargs)
+    ax.set_ylabel('x (cm)')
+    ax.set_xlabel('time (s)')
+    ax.set_zlabel('y (cm)')
     
 def skipprobability(cr,info,ax=None):
     skip = cr.steptime3.isnull() & cr.steptime4.isnull()
