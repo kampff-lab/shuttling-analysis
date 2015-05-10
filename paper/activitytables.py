@@ -161,7 +161,7 @@ def normalize(xs,func,column=None,by=None,level=None):
         
     data = xs[column]
     if (by is not None) or (level is not None):
-        data = data.groupby(by=by,level=level)
+        data = data.groupby(by=by,level=level,sort=False)
         
     xs[column] = data.apply(func)
     
