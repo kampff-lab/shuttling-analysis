@@ -45,7 +45,7 @@ for name in group:
     scract = cract.join(stablebias,how='inner',rsuffix='R')
     ucract = cract.join(unstablebias,how='inner',rsuffix='R')
     scract.xhead = flipleftwards(scract.xhead,scract.side)
-    ucract.xhead = flipleftwards(ucract.xhead,ucract.side)    
+    ucract.xhead = flipleftwards(ucract.xhead,ucract.side)
     sb_S = scract.query('stepstate3')
     sb_U = scract.query('not stepstate3')
     ub_S = ucract.query('stepstate3')
