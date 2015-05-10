@@ -164,7 +164,7 @@ def normalize(xs,func,column=None,by=None,level=None):
         data = data.groupby(by=by,level=level,sort=False)
         
     xs[column] = data.apply(func)
-    
+
 def mad(xs):
     return mediannorm(xs).abs().median()
     
@@ -175,6 +175,27 @@ def flipleftwards(x,side,aligncenter=True):
     if aligncenter:
         x -= steprois_cm.center[3][1]
     return x
+    
+def joinstepactivity(steps,crossings,activity):
+    crossings = crossings.rename(columns={'index':'crossing'})
+    crossings.set_index('crossing',append=True,inplace=True)
+    stepact = activity.ix[steps.reset_index('time')['time']]
+    stepact.reset_index(inplace=True)
+    stepact.set_index(['subject','session','crossing'],inplace=True)
+    return stepact.join(crossings,rsuffix='crossing')
+    
+def normalizeposition(xs,inplace=False):
+    pos = ['xhead','yhead']
+    left = xs.side == 'leftwards'
+    right = xs.side == 'rightwards'
+    zlft = xs.loc[left,pos].groupby(level='subject',sort=False).apply(zscore)
+    zrht = xs.loc[right,pos].groupby(level='subject',sort=False).apply(zscore)
+    if not inplace:
+        xs = xs.copy(deep=True)
+    xs.loc[left,pos] = zlft.values
+    xs.loc[right,pos] = zrht.values
+    if not inplace:
+        return xs
     
 def read_activity(path):
     return pd.read_hdf(storepath(path), frontactivity_key)
