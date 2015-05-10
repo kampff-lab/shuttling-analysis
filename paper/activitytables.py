@@ -676,14 +676,10 @@ def compensation(activity):
                        how='inner',
                        lsuffix='_fore',
                        rsuffix='_hind')
-    
-def spatialactivity(activity,offset=20.0,ballistic=True):
-    cr = crossings(activity)
-    if ballistic:
-        cr = getballistictrials(cr)
-    
+                       
+def crossingoffset(activity,crossings,offset=20.0):
     data = []
-    for s,side in cr[['timeslice','side']].values:
+    for s,side in crossings[['timeslice','side']].values:
         trial = activity.ix[s]
         xhead = trial.xhead
         if side == 'leftwards':
@@ -699,6 +695,13 @@ def spatialactivity(activity,offset=20.0,ballistic=True):
         data.append(minact)
         
     return pd.DataFrame(data)
+    
+def spatialactivity(activity,offset=20.0,ballistic=True):
+    cr = crossings(activity)
+    if ballistic:
+        cr = getballistictrials(cr)
+
+    return crossingoffset(activity,crossings,offset)
     
 def crossingactivity(activity,midcross=True,crop=True,
                      center=max_width_cm / 2.0):
