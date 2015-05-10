@@ -343,3 +343,54 @@ def medianposture(steps,info,cropsize=(300,300),ax=None):
     x,y = _pixelcrop_(x,y,stepcenter,cropsize)
     ax.scatter(x,y,color='r')
     ax.set_axis_off()
+    
+def _significance_(p):
+    if p < 0.0001:
+        return '****'
+    elif p < 0.001:
+        return '***'
+    elif p < 0.01:
+        return '**'
+    elif p < 0.05:
+        return '*'
+    else:
+        return 'ns'
+    
+def _heightstats_(condition,names):
+    data = condition.query(str.format('subject in {0}',list(names)))
+    return data.yhead, data.yhead.mean(), data.yhead.sem()
+
+def heightcomparison(trials,groups,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    stable = trials.query('stepstate3')
+    unstable = trials.query('not stepstate3')
+    
+    baridx = 0
+    controlstable = None
+    controlunstable = None
+    for group in groups:
+        st, stmean, sterr = _heightstats_(stable,group)
+        ut, utmean, uterr = _heightstats_(unstable,group)
+        ax.bar(baridx,stmean,color='b',yerr=sterr,label='stable')
+        ax.bar(baridx+1,utmean,color='r',yerr=uterr,label='unstable')
+        if controlstable is None:
+            controlstable = st
+            controlunstable = ut
+        else:
+            _,p = stats.ttest_ind(controlstable,st)
+            ax.annotate(_significance_(p),
+                        (baridx+0.5,stmean+sterr),
+                        ha='center',
+                        va='bottom')
+            _,p = stats.ttest_ind(controlunstable,ut)
+            ax.annotate(_significance_(p),
+                        (baridx+1.5,utmean-uterr),
+                        ha='center',
+                        va='top')
+        baridx += 3
+    plt.xticks(np.arange(1,3*len(groups),3))
+    proxylegend(['b','r'],['stable','unstable'])
+    ax.set_ylabel('nose height (zscore)')
