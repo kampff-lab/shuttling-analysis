@@ -372,7 +372,7 @@ def groupcomparison(column,groups,conditions,colors,ax=None):
         gstats = [_groupstats_(condition,column,group)
                   for condition in conditions]
         for i,((data,mean,yerr),color) in enumerate(zip(gstats,colors)):
-            ax.bar(baridx+i,mean,color=color,yerr=yerr)
+            ax.bar(baridx+i,mean,color=color,yerr=yerr,ecolor='k')
 
         if control is None:
             control = gstats
