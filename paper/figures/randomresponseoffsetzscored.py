@@ -37,24 +37,20 @@ cr = cr.query(random).query(selection)
 steps = joinstepactivity(steps,cr,cract)
 steps = getballistictrials(steps)
 
-offact = crossingoffset(cract,steps,20.0)
-offact.set_index(['subject','session'],inplace=True)
-normalizeposition(offact,inplace=True)
-
-# Plot data
-fig = plt.figure()
-ax = fig.gca()
-stable = offact.query('stepstate3')
-unstable = offact.query('not stepstate3')
-ax.plot(stable.xhead,stable.yhead,'b.')
-ax.plot(unstable.xhead,unstable.yhead,'r.')
-
-fig = plt.figure()
-ax = fig.gca()
-heightcomparison(offact,[controls,small,lesions,matched],ax=ax)
-ax.set_xticklabels(['controls','small\nlesions','lesions','matched\ncontrols'])
-ax.set_title('deviation from mean nose height after contact')
-ax.set_ylim(-1,1)
+for i in range(1,22):
+    offact = crossingoffset(cract,steps,i)
+    offact.set_index(['subject','session'],inplace=True)
+    normalizeposition(offact,inplace=True)
+    
+    fig = plt.figure()
+    ax = fig.gca()
+    heightcomparison(offact,[controls,small,lesions,matched],ax=ax)
+    ax.set_xticklabels(['controls',
+                        'small\nlesions',
+                        'lesions',
+                        'matched\ncontrols'])
+    ax.set_title(str.format('nose height {0} cm after crossing step',i))
+    ax.set_ylim(-1,1)
 plt.show()
     
 # Save plot
