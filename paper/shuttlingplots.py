@@ -356,41 +356,35 @@ def _significance_(p):
     else:
         return 'ns'
     
-def _heightstats_(condition,names):
-    data = condition.query(str.format('subject in {0}',list(names)))
-    return data.yhead, data.yhead.mean(), data.yhead.sem()
+def _groupstats_(condition,column,names):
+    data = condition.query(str.format('subject in {0}',list(names)))[column]
+    return data, data.mean(), data.sem()
 
-def heightcomparison(trials,groups,ax=None):
+def groupcomparison(column,groups,conditions,colors,ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
     
-    stable = trials.query('stepstate3')
-    unstable = trials.query('not stepstate3')
-    
     baridx = 0
-    controlstable = None
-    controlunstable = None
+    control = None
+    baroffset = len(conditions)+1
     for group in groups:
-        st, stmean, sterr = _heightstats_(stable,group)
-        ut, utmean, uterr = _heightstats_(unstable,group)
-        ax.bar(baridx,stmean,color='b',yerr=sterr,label='stable')
-        ax.bar(baridx+1,utmean,color='r',yerr=uterr,label='unstable')
-        if controlstable is None:
-            controlstable = st
-            controlunstable = ut
+        gstats = [_groupstats_(condition,column,group)
+                  for condition in conditions]
+        for i,((data,mean,yerr),color) in enumerate(zip(gstats,colors)):
+            ax.bar(baridx+i,mean,color=color,yerr=yerr)
+
+        if control is None:
+            control = gstats
         else:
-            _,p = stats.ttest_ind(controlstable,st)
-            ax.annotate(_significance_(p),
-                        (baridx+0.5,stmean+sterr),
-                        ha='center',
-                        va='bottom')
-            _,p = stats.ttest_ind(controlunstable,ut)
-            ax.annotate(_significance_(p),
-                        (baridx+1.5,utmean-uterr),
-                        ha='center',
-                        va='top')
-        baridx += 3
-    plt.xticks(np.arange(1,3*len(groups),3))
-    proxylegend(['b','r'],['stable','unstable'])
+            for i,(cdata,gdata) in enumerate(zip(control,gstats)):
+                mean = gdata[1]
+                offset = gdata[2] if mean >= 0 else -gdata[2]
+                _,p = stats.ttest_ind(cdata[0],gdata[0])
+                ax.annotate(_significance_(p),
+                            (baridx+0.5+i,mean+offset),
+                            ha='center',
+                            va='bottom' if mean >= 0 else 'top')
+        baridx += baroffset
+    plt.xticks(np.arange(1,baroffset*len(groups),baroffset))
     ax.set_ylabel('nose height (zscore)')

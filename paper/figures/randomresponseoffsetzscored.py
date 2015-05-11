@@ -6,12 +6,11 @@ Created on Sat May 09 17:39:02 2015
 """
 
 import pandas as pd
-import scipy.stats as stats
 import matplotlib.pyplot as plt
 from infotables import names, cagemates, control, lesion, smalllesion
 from activitytables import info_key, getballistictrials
 from activitytables import crossingoffset, joinstepactivity, normalizeposition
-from shuttlingplots import heightcomparison
+from shuttlingplots import groupcomparison, proxylegend
 from datapath import jumpers, lesionshamcache, stepfeatures_key
 from datapath import crossingactivity_random_key, crossings_key
 
@@ -44,7 +43,13 @@ for i in range(1,22):
     
     fig = plt.figure()
     ax = fig.gca()
-    heightcomparison(offact,[controls,small,lesions,matched],ax=ax)
+    conditions = [offact.query('stepstate3'),
+                  offact.query('not stepstate3')]
+    groupcomparison('yhead',
+                    [controls,small,lesions,matched],
+                    conditions,colors=['b','r'],
+                    ax=ax)
+    proxylegend(['b','r'],['stable','unstable'])
     ax.set_xticklabels(['controls',
                         'small\nlesions',
                         'lesions',
