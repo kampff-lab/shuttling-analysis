@@ -78,5 +78,5 @@ for name in group:
     fig.suptitle(str.format('{0} (n = {1} trials)',name,
                             len(stablebias)+len(unstablebias)))
 plt.show()
-    
+
 # Save plot

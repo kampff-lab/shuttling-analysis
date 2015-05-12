@@ -159,21 +159,22 @@ def activitysummary(info,rr,lpoke,rpoke,vcr,cr,ax=None):
 
     pooled.ix[:-1].plot(kind='pie',ax=ax)
     
-def averagetrajectory(cract,cr,color='b',ax=None):
+def averagetrajectory(cract,cr,baseline=None,column='yhead',
+                      color='b',ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
     
+    selector = lambda x:x[column]
     xpoints = np.linspace(rail_start_cm,rail_stop_cm,100)
     for subject,subcr in cr.groupby(level=['subject']):
-        ypoints = activitytables.spatialinterp(xpoints,cract,subcr)
-        #baseline = np.nanmean(ypoints)
+        ypoints = activitytables.spatialinterp(xpoints,cract,subcr,selector)
+        if baseline is not None:
+            ypoints -= np.nanmean(ypoints[:,baseline])
         ymean = np.mean(ypoints,axis=0)
         yerr = stats.sem(ypoints,axis=0)
         ax.fill_between(xpoints,ymean-yerr,ymean+yerr,color=color,alpha=0.1)
     ax.set_xlabel('x (cm)')
-    ax.set_ylabel('y (cm)')
-    ax.set_ylim(0,6)
     ax.set_xlim(5,45)
     
 def averagetimeseries(cract,column=None,color='b',ax=None,**kwargs):

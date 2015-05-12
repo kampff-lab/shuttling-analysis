@@ -41,9 +41,10 @@ for name in group:
     us = unstablebias.query('not stepstate3')
     averagetrajectory(cract,ss,color='b',ax=ax)
     averagetrajectory(cract,us,color='r',ax=ax)
-    proxylegend(['b','r'],['stable bias','unstable bias'],ax=ax)
     ax.set_title(str.format('{0} (n = {1} trials)',name,len(ss)+len(us)))
-    #plt.title(str.format('stable (n = {0} trials)',len(cr.query(stable))))
+    proxylegend(['b','r'],['stable bias','unstable bias'],ax=ax)
+    ax.set_ylabel('y (cm)')
+    ax.set_ylim(0,6)
 plt.show()
     
 # Save plot
