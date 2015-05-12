@@ -53,21 +53,29 @@ for name in group:
     
     # Plot data    
     name = namemap[name]
-    fig = plt.figure()
-    ax = fig.gca()
-    averagetimeseries(sb_S,color='b',ax=ax,alpha=0.25)
-    averagetimeseries(sb_U,color='cyan',ax=ax,alpha=0.25)
-    averagetimeseries(ub_S,color='orange',ax=ax,alpha=0.25)
-    averagetimeseries(ub_U,color='r',ax=ax,alpha=0.25)
-    proxylegend(['b','cyan','orange','r'],
+    fig, (ax1,ax2) = plt.subplots(1,2)
+    colors = ['b','cyan','orange','r']
+    averagetimeseries(sb_S,color=colors[0],ax=ax1,alpha=0.25)
+    averagetimeseries(sb_U,color=colors[1],ax=ax1,alpha=0.25)
+    averagetimeseries(ub_S,color=colors[2],ax=ax1,alpha=0.25)
+    averagetimeseries(ub_U,color=colors[3],ax=ax1,alpha=0.25)
+    ax1.set_title('average time taken across space')
+    ax1.set_ylabel('time (s)')
+    ax1.set_ylim(0,3.5)
+    averagetimeseries(sb_S,column='yhead',color=colors[0],ax=ax2,alpha=0.25)
+    averagetimeseries(sb_U,column='yhead',color=colors[1],ax=ax2,alpha=0.25)
+    averagetimeseries(ub_S,column='yhead',color=colors[2],ax=ax2,alpha=0.25)
+    averagetimeseries(ub_U,column='yhead',color=colors[3],ax=ax2,alpha=0.25)
+    proxylegend(colors,
                 ['stable bias [stable]',
                  'stable bias [unstable]',
                  'unstable bias [stable]',
                  'unstable bias [unstable]'],
-                ax=ax,loc='upper left')
-    ax.set_ylabel('time (s)')
-    ax.set_ylim(0,3.5)
-    ax.set_title(str.format('{0} (n = {1} trials)',name,
+                ax=ax2,loc='upper left')
+    ax2.set_title('average nose trajectory')
+    ax2.set_ylabel('nose height (cm)')
+    ax2.set_ylim(1,4)
+    fig.suptitle(str.format('{0} (n = {1} trials)',name,
                             len(stablebias)+len(unstablebias)))
 plt.show()
     
