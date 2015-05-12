@@ -176,7 +176,7 @@ def averagetrajectory(cract,cr,color='b',ax=None):
     ax.set_ylim(0,6)
     ax.set_xlim(5,45)
     
-def averagetimeseries(cract,color='b',ax=None,**kwargs):
+def averagetimeseries(cract,column=None,color='b',ax=None,**kwargs):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
@@ -184,15 +184,17 @@ def averagetimeseries(cract,color='b',ax=None,**kwargs):
     series = []
     atime = np.linspace(rail_start_cm,rail_stop_cm,360)-_stepoffset_
     for key,subcr in cract.groupby(level=['subject','session','crossing']):
-        time = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
-        timeseries = interp1d(subcr.xhead,time,bounds_error=False)
+        if column is None:
+            data = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
+        else:
+            data = subcr[column]
+        timeseries = interp1d(subcr.xhead,data,bounds_error=False)
         series.append(timeseries(atime).reshape(1,-1))
     series = np.concatenate(series,axis=0)
     ymean = np.mean(series,axis=0)
     yerr = stats.sem(series,axis=0)
     ax.plot(atime,ymean,color=color)
     ax.fill_between(atime,ymean-yerr,ymean+yerr,color=color,**kwargs)
-    ax.set_ylabel('time (s)')
     ax.set_xlabel('x (cm)')
     ax.set_xlim(-15,25)
         

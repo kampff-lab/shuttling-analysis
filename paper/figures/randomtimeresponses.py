@@ -65,10 +65,10 @@ for name in group:
                  'unstable bias [stable]',
                  'unstable bias [unstable]'],
                 ax=ax,loc='upper left')
+    ax.set_ylabel('time (s)')
     ax.set_ylim(0,3.5)
     ax.set_title(str.format('{0} (n = {1} trials)',name,
                             len(stablebias)+len(unstablebias)))
-    #plt.title(str.format('stable (n = {0} trials)',len(cr.query(stable))))
 plt.show()
     
 # Save plot
