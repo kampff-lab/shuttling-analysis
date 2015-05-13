@@ -43,27 +43,24 @@ steps.xhead = flipleftwards(steps.xhead,steps.side)
 normalize(steps,mediannorm,['xhead','yhead'],level=['subject'])
 steps = steps.rename(columns={'index':'time'})
 
-# Normalize data and baseline
+# Normalize data
 cract.reset_index(inplace=True)
 cract.set_index(['subject','session','crossing'],inplace=True)
 cract = cract.join(steps,how='inner',rsuffix='R')
 cract.xhead = flipleftwards(cract.xhead,cract.side)
 cract.xhead_speed[cract.side == 'leftwards'] *= -1
-#cract = cract.groupby(level='subject').transform(
-#        lambda x:baseline(x,column='xhead_speed',
-#                          expr='xhead < -10 and xheadR >= 0'))
 bias = cract.eval('xheadR >= 0')
 scract = cract[bias]
 ucract = cract[~bias]
-
 sb_SA = scract.query('stepstate3')
 sb_UA = scract.query('not stepstate3')
 ub_SA = ucract.query('stepstate3')
 ub_UA = ucract.query('not stepstate3')
 
 # Select data
-for name in group:
-    selection = str.format("subject in {0}",[name])
+for selected in [controls,lesions]:
+    names = selected
+    selection = str.format("subject in {0}",names)
     sb_S = sb_SA.query(selection)
     sb_U = sb_UA.query(selection)
     ub_S = ub_SA.query(selection)
@@ -71,7 +68,6 @@ for name in group:
     
     # Plot data
     alpha = 0.25
-    name = namemap[name]
     baseline = slice(0,28)
     fig,(ax1,ax2) = plt.subplots(1,2)
     averagetimeseries(pd.concat([sb_S,ub_S]),'xhead_speed',baseline=baseline,
@@ -100,7 +96,8 @@ for name in group:
                  'unstable [+b]',
                  'unstable [-b]'],
                 ax=ax2,loc='upper left')
-    fig.suptitle(str.format('{0} (n = {1} trials)',name,
+    names = [namemap[name] for name in names]
+    fig.suptitle(str.format('{0} (n = {1} trials)',names,
                             len(steps.query(selection))))
 plt.show()
 
