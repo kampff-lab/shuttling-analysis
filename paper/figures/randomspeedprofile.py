@@ -58,8 +58,8 @@ ub_SA = ucract.query('stepstate3')
 ub_UA = ucract.query('not stepstate3')
 
 # Select data
-for selected in [controls,lesions]:
-    names = selected
+for selected in group:
+    names = [selected]
     selection = str.format("subject in {0}",names)
     sb_S = sb_SA.query(selection)
     sb_U = sb_UA.query(selection)
@@ -97,7 +97,8 @@ for selected in [controls,lesions]:
                  'unstable [-b]'],
                 ax=ax2,loc='upper left')
     names = [namemap[name] for name in names]
-    fig.suptitle(str.format('{0} (n = {1} trials)',names,
+    title = names if len(names) > 1 else names[0]
+    fig.suptitle(str.format('{0} (n = {1} trials)',title,
                             len(steps.query(selection))))
 plt.show()
 
