@@ -18,6 +18,9 @@ def smalllesion(info):
 def lesion(info):
     return info[lesionvolume(info) > 15]
     
+def anylesion(info):
+    return info[lesionvolume(info) > 0]
+    
 def names(info):
     return info.reset_index('subject')['subject'].unique()
     
