@@ -5,12 +5,15 @@ Created on Tue May 12 15:20:47 2015
 @author: Gonçalo
 """
 
+from pylab import rcParams
+rcParams['figure.figsize'] = 12, 5
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from infotables import names,control,lesion,cagemates,lesionordermap
 from activitytables import joinstepactivity, getballistictrials, info_key
 from activitytables import normalize, mediannorm, flipleftwards
-from shuttlingplots import averagetimeseries, averagetrajectory, proxylegend
+from shuttlingplots import averagetimeseries, proxylegend
 from datapath import jumpers, lesionshamcache, crossings_key
 from datapath import crossingactivity_random_key, stepfeatures_key
 
@@ -63,25 +66,37 @@ for name in group:
     ub_S = ucract.query('stepstate3')
     ub_U = ucract.query('not stepstate3')
     
-    # Plot data    
+    # Plot data
+    alpha = 0.25
     name = namemap[name]
-    fig = plt.figure()
-    ax = fig.gca()
     baseline = slice(0,28)
-    colors = ['b','orange','cyan','r']
-    averagetimeseries(sb_S,baseline,'xhead_speed',ax=ax,color='b',alpha=0.25)
-    averagetimeseries(ub_S,baseline,'xhead_speed',ax=ax,color='orange',alpha=0.25)
-    averagetimeseries(sb_U,baseline,'xhead_speed',ax=ax,color='cyan',alpha=0.25)
-    averagetimeseries(ub_U,baseline,'xhead_speed',ax=ax,color='r',alpha=0.25)
-    ax.set_title('average speed across space')
-    ax.set_ylabel('speed (cm/s)')
-    ax.set_ylim(-20,30)
-    proxylegend(colors,
-                ['stable bias [stable]',
-                 'unstable bias [stable]',
-                 'stable bias [unstable]',
-                 'unstable bias [unstable]'],
-                ax=ax,loc='upper left')
+    fig,(ax1,ax2) = plt.subplots(1,2)
+    averagetimeseries(pd.concat([sb_S,ub_S]),baseline,'xhead_speed',
+                      ax=ax1,color='b',alpha=alpha)
+    averagetimeseries(pd.concat([sb_U,ub_U]),baseline,'xhead_speed',
+                      ax=ax1,color='r',alpha=alpha)
+    proxylegend(['b','r'],['stable','unstable'],ax=ax1,loc='upper left')    
+    ax1.set_title('average speed across space')
+    ax1.set_ylabel('speed (cm/s)')
+    ax1.set_ylim(-20,30)
+    
+    averagetimeseries(sb_S,baseline,'xhead_speed',
+                      ax=ax2,color='b',alpha=alpha)
+    averagetimeseries(ub_S,baseline,'xhead_speed',
+                      ax=ax2,color='orange',alpha=alpha)
+    averagetimeseries(sb_U,baseline,'xhead_speed',
+                      ax=ax2,color='cyan',alpha=alpha)
+    averagetimeseries(ub_U,baseline,'xhead_speed',
+                      ax=ax2,color='r',alpha=alpha)
+    ax2.set_title('average speed across space')
+    ax2.set_ylabel('speed (cm/s)')
+    ax2.set_ylim(-20,30)
+    proxylegend(['b','orange','cyan','r'],
+                ['stable [+b]',
+                 'stable [-b]',
+                 'unstable [+b]',
+                 'unstable [-b]'],
+                ax=ax2,loc='upper left')
     fig.suptitle(str.format('{0} (n = {1} trials)',name,
                             len(stablebias)+len(unstablebias)))
 plt.show()
