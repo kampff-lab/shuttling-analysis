@@ -41,52 +41,55 @@ steps = joinstepactivity(steps,cr,cract)
 steps = getballistictrials(steps)
 steps.xhead = flipleftwards(steps.xhead,steps.side)
 normalize(steps,mediannorm,['xhead','yhead'],level=['subject'])
-steps_S = steps.query('xhead >= 0').rename(columns={'index':'time'})
-steps_U = steps.query('xhead < 0').rename(columns={'index':'time'})
+steps = steps.rename(columns={'index':'time'})
+
+# Normalize data and baseline
 cract.reset_index(inplace=True)
 cract.set_index(['subject','session','crossing'],inplace=True)
+cract = cract.join(steps,how='inner',rsuffix='R')
+cract.xhead = flipleftwards(cract.xhead,cract.side)
+cract.xhead_speed[cract.side == 'leftwards'] *= -1
+#cract = cract.groupby(level='subject').transform(
+#        lambda x:baseline(x,column='xhead_speed',
+#                          expr='xhead < -10 and xheadR >= 0'))
+bias = cract.eval('xheadR >= 0')
+scract = cract[bias]
+ucract = cract[~bias]
+
+sb_SA = scract.query('stepstate3')
+sb_UA = scract.query('not stepstate3')
+ub_SA = ucract.query('stepstate3')
+ub_UA = ucract.query('not stepstate3')
 
 # Select data
 for name in group:
     selection = str.format("subject in {0}",[name])
-    stablebias = steps_S.query(selection)
-    unstablebias = steps_U.query(selection)
-    if len(stablebias) == 0 or len(unstablebias) == 0:
-        continue
-    
-    # Select data
-    scract = cract.join(stablebias,how='inner',rsuffix='R')
-    ucract = cract.join(unstablebias,how='inner',rsuffix='R')
-    scract.xhead = flipleftwards(scract.xhead,scract.side)
-    ucract.xhead = flipleftwards(ucract.xhead,ucract.side)    
-    scract.xhead_speed[scract.side == 'leftwards'] *= -1
-    ucract.xhead_speed[ucract.side == 'leftwards'] *= -1
-    sb_S = scract.query('stepstate3')
-    sb_U = scract.query('not stepstate3')
-    ub_S = ucract.query('stepstate3')
-    ub_U = ucract.query('not stepstate3')
+    sb_S = sb_SA.query(selection)
+    sb_U = sb_UA.query(selection)
+    ub_S = ub_SA.query(selection)
+    ub_U = ub_UA.query(selection)
     
     # Plot data
     alpha = 0.25
     name = namemap[name]
     baseline = slice(0,28)
     fig,(ax1,ax2) = plt.subplots(1,2)
-    averagetimeseries(pd.concat([sb_S,ub_S]),baseline,'xhead_speed',
+    averagetimeseries(pd.concat([sb_S,ub_S]),'xhead_speed',baseline=baseline,
                       ax=ax1,color='b',alpha=alpha)
-    averagetimeseries(pd.concat([sb_U,ub_U]),baseline,'xhead_speed',
+    averagetimeseries(pd.concat([sb_U,ub_U]),'xhead_speed',baseline=baseline,
                       ax=ax1,color='r',alpha=alpha)
     proxylegend(['b','r'],['stable','unstable'],ax=ax1,loc='upper left')    
     ax1.set_title('average speed across space')
     ax1.set_ylabel('speed (cm/s)')
     ax1.set_ylim(-20,30)
     
-    averagetimeseries(sb_S,baseline,'xhead_speed',
+    averagetimeseries(sb_S,'xhead_speed',baseline=baseline,
                       ax=ax2,color='b',alpha=alpha)
-    averagetimeseries(ub_S,baseline,'xhead_speed',
+    averagetimeseries(ub_S,'xhead_speed',baseline=baseline,
                       ax=ax2,color='orange',alpha=alpha)
-    averagetimeseries(sb_U,baseline,'xhead_speed',
+    averagetimeseries(sb_U,'xhead_speed',baseline=baseline,
                       ax=ax2,color='cyan',alpha=alpha)
-    averagetimeseries(ub_U,baseline,'xhead_speed',
+    averagetimeseries(ub_U,'xhead_speed',baseline=baseline,
                       ax=ax2,color='r',alpha=alpha)
     ax2.set_title('average speed across space')
     ax2.set_ylabel('speed (cm/s)')
@@ -98,7 +101,7 @@ for name in group:
                  'unstable [-b]'],
                 ax=ax2,loc='upper left')
     fig.suptitle(str.format('{0} (n = {1} trials)',name,
-                            len(stablebias)+len(unstablebias)))
+                            len(steps.query(selection))))
 plt.show()
 
 # Save plot

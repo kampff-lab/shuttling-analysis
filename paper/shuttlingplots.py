@@ -159,7 +159,7 @@ def activitysummary(info,rr,lpoke,rpoke,vcr,cr,ax=None):
 
     pooled.ix[:-1].plot(kind='pie',ax=ax)
     
-def averagetrajectory(cract,cr,baseline=None,column='yhead',
+def averagetrajectory(cract,cr,column='yhead',baseline=None,
                       color='b',ax=None):
     if ax is None:
         fig = plt.figure()
@@ -177,7 +177,7 @@ def averagetrajectory(cract,cr,baseline=None,column='yhead',
     ax.set_xlabel('x (cm)')
     ax.set_xlim(5,45)
     
-def averagetimeseries(cract,baseline=None,column=None,
+def averagetimeseries(cract,column=None,baseline=None,
                       color='b',ax=None,**kwargs):
     if ax is None:
         fig = plt.figure()
@@ -191,10 +191,12 @@ def averagetimeseries(cract,baseline=None,column=None,
         else:
             data = subcr[column]
         timeseries = interp1d(subcr.xhead,data,bounds_error=False)
-        series.append(timeseries(atime).reshape(1,-1))
+        ypoints = timeseries(atime).reshape(1,-1)
+        if baseline is not None:
+            ypoints -= np.median(ypoints[:,baseline])
+        series.append(ypoints)
+        
     series = np.concatenate(series,axis=0)
-    if baseline is not None:
-        series -= np.nanmean(series[:,baseline])
     ymean = np.mean(series,axis=0)
     yerr = stats.sem(series,axis=0)
     ax.plot(atime,ymean,color=color)
