@@ -8,9 +8,9 @@ Created on Sat May 09 17:39:02 2015
 import pandas as pd
 import matplotlib.pyplot as plt
 from infotables import names, cagemates, control, lesion, smalllesion
-from activitytables import info_key, getballistictrials
+from activitytables import info_key, getballistictrials, posturebias
 from activitytables import crossingoffset, joinstepactivity, normalizeposition
-from shuttlingplots import groupcomparison, proxylegend
+from shuttlingplots import conditioncomparison, proxylegend
 from datapath import jumpers, lesionshamcache, stepfeatures_key
 from datapath import crossingactivity_random_key, crossings_key
 
@@ -36,26 +36,42 @@ cr = cr.query(random).query(selection)
 steps = joinstepactivity(steps,cr,cract)
 steps = getballistictrials(steps)
 
-for i in range(1,22):
+for i in range(21,22):
     offact = crossingoffset(cract,steps,i)
     offact.set_index(['subject','session'],inplace=True)
     normalizeposition(offact,inplace=True)
+    stablebias,unstablebias = posturebias(offact,n=2)
     
-    fig = plt.figure()
-    ax = fig.gca()
+    fig, (ax1,ax2) = plt.subplots(1,2)
+    colors = ['b','cyan','orange','r']
+    grouplabels = ['controls','small\nlesions','lesions','matched\ncontrols']
     conditions = [offact.query('stepstate3'),
                   offact.query('not stepstate3')]
-    groupcomparison('yhead',
+    conditioncomparison('yhead',
                     [controls,small,lesions,matched],
-                    conditions,colors=['b','r'],
-                    ax=ax)
-    proxylegend(['b','r'],['stable','unstable'])
-    ax.set_xticklabels(['controls',
-                        'small\nlesions',
-                        'lesions',
-                        'matched\ncontrols'])
-    ax.set_title(str.format('nose height {0} cm after crossing step',i))
-    ax.set_ylim(-1,1)
+                    conditions,colors=[colors[0],colors[-1]],
+                    ax=ax1)
+    proxylegend([colors[0],colors[-1]],['stable','unstable'],ax=ax1)
+    ax1.set_xticklabels(grouplabels)
+    ax1.set_ylim(-1,1)
+    conditions = [stablebias.query('stepstate3'),
+                  stablebias.query('not stepstate3'),
+                  unstablebias.query('stepstate3'),
+                  unstablebias.query('not stepstate3')]
+    conditioncomparison('yhead',
+                    [controls,small,lesions,matched],
+                    conditions,colors=colors,
+                    ax=ax2)
+    proxylegend(colors,['stable [R]',
+                        'stable [W]',
+                        'unstable [W]',
+                        'unstable [R]'],
+                ax=ax2)
+    xmin,xmax = ax2.get_xlim()
+    ax2.set_xlim(xmin,xmax+8)
+    ax2.set_xticklabels(grouplabels)
+    ax2.set_ylim(-1,1)
+    fig.suptitle(str.format('nose height {0} cm after crossing step',i))
 plt.show()
     
 # Save plot

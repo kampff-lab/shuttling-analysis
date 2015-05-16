@@ -352,11 +352,11 @@ def _significance_(p):
     else:
         return 'ns'
     
-def _groupstats_(condition,column,names):
+def _conditionstats_(condition,column,names):
     data = condition.query(str.format('subject in {0}',list(names)))[column]
     return data, data.mean(), data.sem()
 
-def groupcomparison(column,groups,conditions,colors,ax=None):
+def conditioncomparison(column,groups,conditions,colors,ax=None):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
@@ -365,7 +365,7 @@ def groupcomparison(column,groups,conditions,colors,ax=None):
     control = None
     baroffset = len(conditions)+1
     for group in groups:
-        gstats = [_groupstats_(condition,column,group)
+        gstats = [_conditionstats_(condition,column,group)
                   for condition in conditions]
         for i,((data,mean,yerr),color) in enumerate(zip(gstats,colors)):
             ax.bar(baridx+i,mean,color=color,yerr=yerr,ecolor='k')
