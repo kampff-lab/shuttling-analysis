@@ -382,5 +382,6 @@ def groupcomparison(column,groups,conditions,colors,ax=None):
                             ha='center',
                             va='bottom' if mean >= 0 else 'top')
         baridx += baroffset
-    plt.xticks(np.arange(1,baroffset*len(groups),baroffset))
+    xticks = np.arange(len(conditions)/2.0,baroffset*len(groups),baroffset)
+    ax.set_xticks(xticks)
     ax.set_ylabel('nose height (zscore)')
