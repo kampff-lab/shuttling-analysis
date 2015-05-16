@@ -347,6 +347,22 @@ def spatialinterp(xpoints,activity,crossings,selector=lambda x:x.yhead):
         lambda cr:_crossinterp_(cr,activity,xpoints,ypoints,selector),
         axis=1)
     return np.array(ypoints)
+    
+def spatialaverage(xpoints,crossingactivity,column=None,baseline=None):
+    ypoints = []
+    trials = crossingactivity.groupby(level=['subject','session','crossing'])
+    for key,trial in trials:
+        if column is None:
+            data = (trial.time - trial.time[0]) / np.timedelta64(1,'s')
+        else:
+            data = trial[column]
+        curve = interp1d(trial.xhead,data,bounds_error=False)
+        data = curve(xpoints).reshape(1,-1)
+        if baseline is not None:
+            data -= np.median(data[:,baseline])
+        ypoints.append(data)        
+    ypoints = np.concatenate(ypoints,axis=0)
+    return np.mean(ypoints,axis=0),stats.sem(ypoints,axis=0)
 
 def crossingspatialaverage(activity,crossings,selector=lambda x:x.yhead):
     ypoints = []
