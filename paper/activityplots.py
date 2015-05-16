@@ -49,6 +49,15 @@ def scatterhist(x,y,xbins=10,ybins=10,
     axHistx.set_xlim(axScatter.get_xlim())
     axHisty.set_ylim(axScatter.get_ylim())
     
+def boundedcurve(x,y,yerr=None,color='b',ax=None,**kwargs):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    ax.plot(x,y,color=color)
+    if yerr is not None:
+        ax.fill_between(x,y-yerr,y+yerr,color=color,**kwargs)
+    
 def xplot(sts,col='xhead',style='k',alpha=0.2):
     gsts = sts.set_index('crossindex',append=True)
     grouplevel = ['subject','session','crossindex']
