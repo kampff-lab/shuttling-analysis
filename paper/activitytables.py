@@ -20,7 +20,6 @@ from preprocess import appendtrialinfo
 from preprocess import gapslice, stepslice
 from preprocess import storepath, labelpath
 from preprocess import frontactivity_key, rewards_key, info_key
-from preprocess import leftpoke_key, rightpoke_key
 from preprocess import max_width_cm, width_pixel_to_cm, center_cm
 from preprocess import rail_start_pixels, rail_stop_pixels
 from preprocess import steprois_cm, gaprois_cm
