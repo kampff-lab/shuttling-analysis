@@ -385,3 +385,16 @@ def conditioncomparison(column,groups,conditions,colors,ax=None):
     xticks = np.arange(len(conditions)/2.0,baroffset*len(groups),baroffset)
     ax.set_xticks(xticks)
     ax.set_ylabel('nose height (zscore)')
+
+def groupcomparison(groups,colors,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+    
+    for i,(group,color) in enumerate(zip(groups,colors)):
+        mean = np.mean(group)
+        yerr = stats.sem(group)
+        ax.scatter([i]*len(group),group,color=color,s=30)
+        ax.errorbar(i+0.2,mean,yerr=yerr,ecolor='k',fmt=None,
+                    elinewidth=3,capthick=3,capsize=6)
+    ax.set_xlim(-1,len(groups))
