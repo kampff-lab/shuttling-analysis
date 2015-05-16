@@ -177,30 +177,18 @@ def averagetrajectory(cract,cr,column='yhead',baseline=None,
     ax.set_xlabel('x (cm)')
     ax.set_xlim(5,45)
     
+def createspaceaxis():
+    return np.linspace(rail_start_cm,rail_stop_cm,72)-_stepoffset_
+    
 def averagetimeseries(cract,column=None,baseline=None,
                       color='b',ax=None,**kwargs):
     if ax is None:
         fig = plt.figure()
         ax = fig.gca()
     
-    series = []
-    atime = np.linspace(rail_start_cm,rail_stop_cm,72)-_stepoffset_
-    for key,subcr in cract.groupby(level=['subject','session','crossing']):
-        if column is None:
-            data = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
-        else:
-            data = subcr[column]
-        timeseries = interp1d(subcr.xhead,data,bounds_error=False)
-        ypoints = timeseries(atime).reshape(1,-1)
-        if baseline is not None:
-            ypoints -= np.median(ypoints[:,baseline])
-        series.append(ypoints)
-        
-    series = np.concatenate(series,axis=0)
-    ymean = np.mean(series,axis=0)
-    yerr = stats.sem(series,axis=0)
-    ax.plot(atime,ymean,color=color)
-    ax.fill_between(atime,ymean-yerr,ymean+yerr,color=color,**kwargs)
+    xpoints = createspaceaxis()
+    ymean,yerr = activitytables.spatialaverage(xpoints,cract,column,baseline)
+    activityplots.boundedcurve(xpoints,ymean,yerr,color=color,ax=ax,**kwargs)
     ax.set_xlabel('x (cm)')
     ax.set_xlim(-15,25)
         
