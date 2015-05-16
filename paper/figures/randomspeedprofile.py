@@ -128,7 +128,7 @@ rcParams['figure.figsize'] = 6, 5
 groupcomparison([speedupC,speedupL],['b','r'])
 plt.xticks([0,1],['control','lesion'])
 plt.ylabel('speedup (cm/s)')
-plt.title('speed profile difference (all)')
+plt.title('speed profile difference')
 plt.show()
 
 # Save plot
