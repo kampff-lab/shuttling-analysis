@@ -516,7 +516,7 @@ def __spatialaveragesbysession__(subjects,cr,path,selector=lambda x:x.yhead,
         fig = plt.figure()
         sact = activitytables.read_subjects(subjects,days=[session])
         
-        x,y,yerr = activitytables.spatialaverage(sact,group,selector)
+        x,y,yerr = activitytables.crossingspatialaverage(sact,group,selector)
         activityplots.trajectoryplot(sact,group,alpha=0.2,flip=True,
                                      selector=selector)
         plt.fill_between(x,y-yerr,y+yerr)
@@ -548,7 +548,7 @@ def __spatialaveragesoverlay__(cr,path,selector=lambda x:x.yhead,
         subjectpath = os.path.join(activitymovies.datafolder,subject)
         sact = activitytables.read_subjects(subjectpath,days=days)
         
-        x,y,yerr = activitytables.spatialaverage(sact,group,selector)
+        x,y,yerr = activitytables.crossingspatialaverage(sact,group,selector)
         plt.fill_between(x,y-yerr,y+yerr)
         
         if xlim is not None:
@@ -576,7 +576,7 @@ def __spatialaverages__(cr,path,selector=lambda x:x.yhead,
         subjectpath = os.path.join(activitymovies.datafolder,subject)
         sact = activitytables.read_subjects(subjectpath,days=[session])
         
-        x,y,yerr = activitytables.spatialaverage(sact,group,selector)
+        x,y,yerr = activitytables.crossingspatialaverage(sact,group,selector)
         activityplots.trajectoryplot(sact,group,alpha=0.2,flip=True,
                                      selector=selector)
         plt.fill_between(x,y-yerr,y+yerr)
@@ -616,12 +616,12 @@ def __spatialaveragecomparison__(cr,path,selector=lambda x:x.yhead,
     
         stact = act[act.stepstate3]
         stcr = group[group.stepstate3]
-        x,y,yerr = activitytables.spatialaverage(stact,stcr,selector)
+        x,y,yerr = activitytables.crossingspatialaverage(stact,stcr,selector)
         plt.fill_between(x,y-yerr,y+yerr,color='b')
         
         uact = act[~act.stepstate3]
         ucr = group[~group.stepstate3]
-        x,y,yerr = activitytables.spatialaverage(uact,ucr,selector)
+        x,y,yerr = activitytables.crossingspatialaverage(uact,ucr,selector)
         plt.fill_between(x,y-yerr,y+yerr,color='r')
         
         p1 = plt.Rectangle((0, 0), 1, 1, fc='b')

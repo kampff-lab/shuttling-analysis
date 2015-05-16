@@ -348,7 +348,7 @@ def spatialinterp(xpoints,activity,crossings,selector=lambda x:x.yhead):
         axis=1)
     return np.array(ypoints)
 
-def spatialaverage(activity,crossings,selector=lambda x:x.yhead):
+def crossingspatialaverage(activity,crossings,selector=lambda x:x.yhead):
     ypoints = []
     xpoints = np.linspace(rail_start_cm,rail_stop_cm,100)
     for s,side in crossings[['timeslice','side']].values:
