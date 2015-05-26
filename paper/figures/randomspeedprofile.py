@@ -6,7 +6,7 @@ Created on Tue May 12 15:20:47 2015
 """
 
 from pylab import rcParams
-rcParams['figure.figsize'] = 12, 5
+rcParams['figure.figsize'] = 15, 5
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -63,6 +63,7 @@ ub_UA = ucract.query('not stepstate3')
 # Select data
 sts = []
 uts = []
+fig,(ax1,ax2,ax3) = plt.subplots(1,3)
 for selected in group:
     names = [selected]
     selection = str.format("subject in {0}",names)
@@ -71,47 +72,56 @@ for selected in group:
     ub_S = ub_SA.query(selection)
     ub_U = ub_UA.query(selection)
     
-    # Plot data
-    alpha = 0.25
+    # Select data
     baseline = slice(0,28)
     xpoints = createspaceaxis()
-    fig,(ax1,ax2) = plt.subplots(1,2)
     st,sterr = spatialaverage(xpoints,pd.concat([sb_S,ub_S]),'xhead_speed',
                               baseline=baseline)
     ut,uterr = spatialaverage(xpoints,pd.concat([sb_U,ub_U]),'xhead_speed',
                               baseline=baseline)
-    boundedcurve(xpoints,st,sterr,color='b',ax=ax1,alpha=alpha)
-    boundedcurve(xpoints,ut,uterr,color='r',ax=ax1,alpha=alpha)
-    proxylegend(['b','r'],['stable','unstable'],ax=ax1,loc='upper left')    
-    ax1.set_title('average speed across space')
-    ax1.set_xlabel('x (cm)')
-    ax1.set_ylabel('speed (cm/s)')
-    ax1.set_xlim(-15,25)    
-    ax1.set_ylim(-20,30)
     sts.append(st)
     uts.append(ut)
     
-    averagetimeseries(sb_S,'xhead_speed',baseline=baseline,
-                      ax=ax2,color='b',alpha=alpha)
-    averagetimeseries(ub_S,'xhead_speed',baseline=baseline,
-                      ax=ax2,color='orange',alpha=alpha)
-    averagetimeseries(sb_U,'xhead_speed',baseline=baseline,
-                      ax=ax2,color='cyan',alpha=alpha)
-    averagetimeseries(ub_U,'xhead_speed',baseline=baseline,
-                      ax=ax2,color='r',alpha=alpha)
-    ax2.set_title('average speed across space')
-    ax2.set_ylabel('speed (cm/s)')
-    ax2.set_ylim(-20,30)
-    proxylegend(['b','orange','cyan','r'],
-                ['stable [+b]',
-                 'stable [-b]',
-                 'unstable [+b]',
-                 'unstable [-b]'],
-                ax=ax2,loc='upper left')
-    names = [namemap[name] for name in names]
-    title = names if len(names) > 1 else names[0]
-    fig.suptitle(str.format('{0} (n = {1} trials)',title,
-                            len(steps.query(selection))))
+    # Plot data
+    if namemap[selected] == 'Ca':
+        ax = ax1
+    elif namemap[selected] == 'Lb':
+        ax = ax2
+    else:
+        ax = None
+
+    if ax is not None:
+        alpha = 0.25
+        boundedcurve(xpoints,st,sterr,color='b',ax=ax,alpha=alpha)
+        boundedcurve(xpoints,ut,uterr,color='r',ax=ax,alpha=alpha)
+        proxylegend(['b','r'],['stable','unstable'],ax=ax,loc='upper left')    
+        ax.set_title('average speed across space')
+        ax.set_xlabel('x (cm)')
+        ax.set_ylabel('speed (cm/s)')
+        ax.set_xlim(-15,25)    
+        ax.set_ylim(-20,30)
+    
+#    averagetimeseries(sb_S,'xhead_speed',baseline=baseline,
+#                      ax=ax2,color='b',alpha=alpha)
+#    averagetimeseries(ub_S,'xhead_speed',baseline=baseline,
+#                      ax=ax2,color='orange',alpha=alpha)
+#    averagetimeseries(sb_U,'xhead_speed',baseline=baseline,
+#                      ax=ax2,color='cyan',alpha=alpha)
+#    averagetimeseries(ub_U,'xhead_speed',baseline=baseline,
+#                      ax=ax2,color='r',alpha=alpha)
+#    ax2.set_title('average speed across space')
+#    ax2.set_ylabel('speed (cm/s)')
+#    ax2.set_ylim(-20,30)
+#    proxylegend(['b','orange','cyan','r'],
+#                ['stable [+b]',
+#                 'stable [-b]',
+#                 'unstable [+b]',
+#                 'unstable [-b]'],
+#                ax=ax2,loc='upper left')
+#    names = [namemap[name] for name in names]
+#    title = names if len(names) > 1 else names[0]
+#    fig.suptitle(str.format('{0} (n = {1} trials)',title,
+#                            len(steps.query(selection))))
 
 # Create data summary
 names = [namemap[name] for name in group]
@@ -125,10 +135,12 @@ speedupL = speedup[names.str.startswith('L')]
 
 # Plot data summary
 rcParams['figure.figsize'] = 6, 5
-groupcomparison([speedupC,speedupL],['b','r'])
-plt.xticks([0,1],['control','lesion'])
-plt.ylabel('speedup (cm/s)')
-plt.title('speed profile difference')
+groupcomparison([speedupC,speedupL],['b','r'],ax=ax3)
+ax3.set_xticks([0,1])
+ax3.set_xticklabels(['control','lesion'])
+ax3.set_ylabel('speedup (cm/s)')
+ax3.set_title('speed profile difference')
+plt.tight_layout()
 plt.show()
 
 # Save plot
