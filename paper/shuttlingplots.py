@@ -392,8 +392,8 @@ def groupcomparison(groups,colors,ax=None):
         ax = fig.gca()
     
     for i,(group,color) in enumerate(zip(groups,colors)):
-        mean = np.mean(group)
-        yerr = stats.sem(group)
+        mean = group.mean()
+        yerr = group.sem()
         ax.scatter([i]*len(group),group,color=color,s=30)
         ax.errorbar(i+0.2,mean,yerr=yerr,ecolor='k',fmt=None,
                     elinewidth=3,capthick=3,capsize=6)
