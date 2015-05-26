@@ -398,3 +398,27 @@ def groupcomparison(groups,colors,ax=None):
         ax.errorbar(i+0.2,mean,yerr=yerr,ecolor='k',fmt=None,
                     elinewidth=3,capthick=3,capsize=6)
     ax.set_xlim(-1,len(groups))
+
+def barcomparison(data,color,left=0,by=None,level=None,column=None,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+        
+    if column is None:
+        column = data.columns
+    
+    grouped = data.groupby(by=by,level=level,sort=False)
+    if isinstance(color,str):
+        color = [color] * len(grouped)
+
+    width = 0.8
+    for i,((key,group),c) in enumerate(zip(grouped,color)):
+        group = group[column]
+        mean = group.mean()
+        yerr = group.sem()
+        ax.bar(left+i,mean,yerr=yerr,
+               color=c,ecolor='k',width=width,zorder=1,
+               linewidth=1,error_kw={'elinewidth':2,'capthick':2,'capsize':4})
+        ax.scatter([left+i+width/2]*len(group),group,s=15,
+                   color=c,edgecolor='k',zorder=2)
+    ax.set_xticks([left+i+width/2 for i in range(len(grouped))])
