@@ -270,6 +270,7 @@ def averageposturecomparison(cract,info,cr1,cr2,cr3=None,
     avg = cv2.merge((avg1,avg2,avg3))
     avg = avg.astype(np.uint8)
     avg = cv2.convertScaleAbs(avg,alpha=1.4,beta=0.0)
+    cv2.flip(avg,1,avg)
     ax.imshow(avg)
     ax.set_axis_off()
     
