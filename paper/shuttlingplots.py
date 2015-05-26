@@ -17,10 +17,11 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from activitytables import rail_start_cm, rail_stop_cm
-from activitytables import steprois_cm, steprois_crop, max_width_cm
+from activitytables import steprois_cm, steprois_crop
 from preprocess import width_pixel_to_cm, height_pixel_to_cm
 from preprocess import max_height_cm, center_cm
-from preprocess import rail_height_pixels
+from preprocess import rail_height_pixels, steprois_pixels
+from roiset import RoiSet
 
 _stepoffset_ = steprois_cm.center[3][1]
 _splitprotocols_ = ['stabletocenterfree',
@@ -343,9 +344,26 @@ def medianposture(steps,info,cropsize=(300,300),ax=None):
     stepcenter = steprois_crop.center[stepindex]
     info = info.ix[median.name[:2],:]
     videopath = datapath.relativepath(info,'front_video.avi')
-    frame = video.readsingleframe(videopath,median.frame)
+    
+    background = video.readsinglebackground(videopath,median.frame)
+    background = cv2.cvtColor(background,cv2.cv.CV_GRAY2BGR)
+    background *= 2.1
+    
+    frame = video.readsingleframe(videopath,median.frame,segmented=True)
+    _,mask = cv2.threshold(frame,3,255,cv2.cv.CV_THRESH_BINARY)
+    mask = mask.astype(np.bool)
+    frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
+    frame *= 2.1
+    
+    frame[mask,...] += background[mask,...]
+    fliprois = RoiSet(steprois_pixels.rois,flipxy=True)
+    pts = np.array(fliprois.rois[stepindex])
+    cv2.polylines(background,[pts],True,(0,0,255),2)
+    background[mask,...] = frame[mask,...]
+    frame = background
+    
     frame = imgproc.croprect(stepcenter,cropsize,frame)
-    ax.imshow(frame,cmap='gray')
+    ax.imshow(frame)
     x,y = _cmtopixel_(median.xhead,median.yhead)
     x,y = _pixelcrop_(x,y,stepcenter,cropsize)
     ax.scatter(x,y,color='r')
