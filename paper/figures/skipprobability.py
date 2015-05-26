@@ -20,8 +20,9 @@ from datapath import lesionshamcache, crossings_key
 stable = '(3 <= session < 5)'
 unstable = '(9 <= session < 11)'
 restable = '(11 <= session < 13)'
-selected = str.format('({0} or {1} or {2}) and trial > 0',
-                      stable,unstable,restable)
+removed = "subject not in ['JPAK_20']"
+selected = str.format("({0} or {1} or {2}) and {3} and trial > 0",
+                      stable,unstable,restable,removed)
 info = pd.read_hdf(lesionshamcache,info_key)
 cr = pd.read_hdf(lesionshamcache,crossings_key)
 cr = getballistictrials(cr)

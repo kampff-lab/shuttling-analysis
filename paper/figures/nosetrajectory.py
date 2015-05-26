@@ -19,13 +19,16 @@ from datapath import crossingactivity_restable_key
 from datapath import jumpers
 
 # Load data
-stable = '(3 <= session < 5) and trial > 0'
-unstable = '(9 <= session < 11) and trial > 0'
-restable = '(11 <= session < 13) and trial > 0'
+stable = '(3 <= session < 5)'
+unstable = '(9 <= session < 11)'
+restable = '(11 <= session < 13)'
+removed = "subject not in ['JPAK_20']"
+selected = str.format("({0} or {1} or {2}) and {3} and trial > 0",
+                      stable,unstable,restable,removed)
 nonjumpers = str.format("subject not in {0}",jumpers)
 jumpers = str.format("subject in {0}",jumpers)
 cr = pd.read_hdf(lesionshamcache,crossings_key)
-cr = getballistictrials(cr)
+cr = getballistictrials(cr).query(selected)
 
 # Plot data
 f, (sx,ux,rx) = plt.subplots(1,3)
