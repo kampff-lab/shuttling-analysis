@@ -38,10 +38,9 @@ info.reset_index('session',drop=True,inplace=True)
 
 # Plot data
 f, (sx,ux,rx) = plt.subplots(1,3)
-level = 'subject'
-skipprobability_subject(cr.query(stable),info,level=level,ax=sx)
-skipprobability_subject(cr.query(unstable),info,level=level,ax=ux)
-skipprobability_subject(cr.query(restable),info,level=level,ax=rx)
+skipprobability_subject(cr.query(stable),info,ax=sx)
+skipprobability_subject(cr.query(unstable),info,ax=ux)
+skipprobability_subject(cr.query(restable),info,ax=rx)
 sx.set_title('stable')
 ux.set_title('unstable')
 rx.set_title('restable')

@@ -204,16 +204,12 @@ def averagetimetrajectory(cract,color='b',ax=None,**kwargs):
     ax.set_xlabel('time (s)')
     ax.set_zlabel('y (cm)')
     
-def _skipfrequency_(cr,by=None,level=None):
-    skiptrials = cr.steptime3.isnull() & cr.steptime4.isnull()
-    skipfreq = cr[skiptrials].groupby(by=by,level=level).size()
-    total = cr.groupby(by=by,level=level).size()
+def skipprobability_subject(cr,info,ax=None):
+    skip = cr.steptime3.isnull() & cr.steptime4.isnull()
+    skipfreq = skip.groupby(level=['subject']).sum()
+    total = cr.groupby(level=['subject']).size()
     pskip = skipfreq / total
     pskip.name = 'skipfrequency'
-    return pskip
-    
-def skipprobability_subject(cr,info,by=None,level=None,ax=None):
-    pskip = _skipfrequency_(cr,by,level)
     pskip = activitytables.groupbylesionvolumes(pskip,info,rename=True)
     pskip.reset_index('lesion',drop=True,inplace=True)
     ax = pskip.plot(kind='bar',ax=ax,grid=False,legend=False)
