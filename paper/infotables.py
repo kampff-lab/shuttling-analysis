@@ -6,7 +6,9 @@ Created on Mon May 04 18:57:40 2015
 """
 
 def lesionvolume(info):
-    return info['lesionleft'] + info['lesionright']
+    volume = info['lesionleft'] + info['lesionright']
+    volume.name = 'lesionvolume'
+    return volume
     
 def control(info):
     return info[lesionvolume(info) == 0]
@@ -29,7 +31,7 @@ def cagemates(info):
     
 def _charrange_(stop):
     s = ord('a')
-    return [chr(s+i) for i in range(stop)]    
+    return [chr(s+i) for i in range(stop)]
     
 def lesionordermap(info):
     volume = lesionvolume(info)
