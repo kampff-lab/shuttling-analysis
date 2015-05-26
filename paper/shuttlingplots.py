@@ -204,6 +204,17 @@ def averagetimetrajectory(cract,color='b',ax=None,**kwargs):
     ax.set_xlabel('time (s)')
     ax.set_zlabel('y (cm)')
     
+def skipprobability(cr,ax=None):
+    cr = cr.copy(deep=True)
+    skip = cr.steptime3.isnull() & cr.steptime4.isnull()
+    cr['skip'] = skip
+    cr.reset_index(inplace=True)
+    grouped = cr.groupby(['protocol','subject'],sort=False)['skip']
+    result = pd.concat([grouped.sum(),grouped.count()],axis=1)
+    result.columns = ['skip','total']
+    result['frequency'] = result.skip / result.total
+    return result
+    
 def skipprobability_subject(cr,info,ax=None):
     skip = cr.steptime3.isnull() & cr.steptime4.isnull()
     skipfreq = skip.groupby(level=['subject']).sum()
