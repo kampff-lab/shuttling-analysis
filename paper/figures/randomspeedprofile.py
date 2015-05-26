@@ -15,7 +15,7 @@ from activitytables import joinstepactivity, getballistictrials, info_key
 from activitytables import normalize, mediannorm, flipleftwards
 from activitytables import spatialaverage
 from activityplots import boundedcurve
-from shuttlingplots import averagetimeseries, createspaceaxis
+from shuttlingplots import createspaceaxis
 from shuttlingplots import groupcomparison, proxylegend
 from datapath import jumpers, lesionshamcache, crossings_key
 from datapath import crossingactivity_random_key, stepfeatures_key
@@ -100,28 +100,6 @@ for selected in group:
         ax.set_ylabel('speed (cm/s)')
         ax.set_xlim(-15,25)    
         ax.set_ylim(-20,30)
-    
-#    averagetimeseries(sb_S,'xhead_speed',baseline=baseline,
-#                      ax=ax2,color='b',alpha=alpha)
-#    averagetimeseries(ub_S,'xhead_speed',baseline=baseline,
-#                      ax=ax2,color='orange',alpha=alpha)
-#    averagetimeseries(sb_U,'xhead_speed',baseline=baseline,
-#                      ax=ax2,color='cyan',alpha=alpha)
-#    averagetimeseries(ub_U,'xhead_speed',baseline=baseline,
-#                      ax=ax2,color='r',alpha=alpha)
-#    ax2.set_title('average speed across space')
-#    ax2.set_ylabel('speed (cm/s)')
-#    ax2.set_ylim(-20,30)
-#    proxylegend(['b','orange','cyan','r'],
-#                ['stable [+b]',
-#                 'stable [-b]',
-#                 'unstable [+b]',
-#                 'unstable [-b]'],
-#                ax=ax2,loc='upper left')
-#    names = [namemap[name] for name in names]
-#    title = names if len(names) > 1 else names[0]
-#    fig.suptitle(str.format('{0} (n = {1} trials)',title,
-#                            len(steps.query(selection))))
 
 # Create data summary
 names = [namemap[name] for name in group]
