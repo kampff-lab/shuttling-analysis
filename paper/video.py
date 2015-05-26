@@ -5,9 +5,11 @@ Created on Sat Nov 23 14:50:34 2013
 @author: gonca_000
 """
 
+import os
 import cv2
 import numpy as np
 import pandas as pd
+import activitymovies
 
 class video:        
     def __init__(self, videopath, timepath=None):
@@ -32,6 +34,11 @@ class video:
     def release(self):
         self.capture.release()
         
+    def frametime(self, frameindex):
+        if self.timestamps is None:
+            raise ValueError("video does not have timestamps")
+        return self.timestamps[frameindex]
+        
     def frameindex(self, time):
         if self.timestamps is None:
             raise ValueError("video does not have timestamps")
@@ -42,6 +49,14 @@ class video:
         result,frame = self.capture.read()
         return frame
         
+    def background(self, frameindex):
+        if self.timestamps is None:
+            raise ValueError("video does not have timestamps")
+        frametime = self.frametime(frameindex)
+        vidfolder = os.path.split(self.path)[0]
+        backfolder = os.path.join(vidfolder,r'Analysis\Background')
+        return activitymovies.getbackground(backfolder,frametime)
+        
     def movie(self, framestart, frameend):
         self.capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,framestart)
         while self.capture.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) < frameend:
@@ -51,9 +66,22 @@ class video:
             else:
                 break
             
-def readsingleframe(videopath,frameindex):
-    with video(videopath) as vid:
-        return vid.frame(frameindex)
+def readsingleframe(videopath,frameindex,segmented=False):
+    timepath = None
+    if segmented:
+        timepath = os.path.splitext(videopath)[0] + ".csv"
+
+    with video(videopath,timepath) as vid:
+        frame = vid.frame(frameindex)
+        if segmented:
+            background = vid.background(frameindex)
+            cv2.subtract(frame,background,frame)
+        return frame
+        
+def readsinglebackground(videopath,frameindex):
+    timepath = os.path.splitext(videopath)[0] + ".csv"
+    with video(videopath,timepath) as vid:
+        return vid.background(frameindex)
 
 def readframe(movie):
     index = movie.capture.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
