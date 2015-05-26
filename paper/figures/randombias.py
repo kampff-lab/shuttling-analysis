@@ -36,7 +36,7 @@ rangex = (steps.xhead.min(),steps.xhead.max())
 rangey = (steps.yhead.min(),steps.yhead.max())
 posturehistogram(stablebias,rangex,rangey,color='b',axes=axes)
 posturehistogram(unstablebias,rangex,rangey,color='r',axes=axes)
-axScatter.legend(['stable', 'unstable'],loc=2)
+axScatter.legend(['+bias', '-bias'],loc=2)
 ntrials = len(stablebias) + len(unstablebias)
 t,p = stats.ttest_ind(stablebias.xhead,unstablebias.xhead)
 axHistx.set_title(str.format("bias = {2}, n = {0} trials (p = {1:.5f})",
