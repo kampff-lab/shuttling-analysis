@@ -333,6 +333,16 @@ def _pixelcrop_(x,y,cropcenter,cropsize):
     x -= cropcenter[1] - cropsize[1] / 2
     y -= cropcenter[0] - cropsize[1] / 2
     return x,y
+    
+def _stepframes_(steps,info,cropsize=(300,300)):
+    stepframes = []
+    for key,scr in steps.groupby(level=['subject','session']):
+        sinfo = info.loc[[key],:]
+        stepframes += activitytables.roiframes(scr.frame,scr.side,sinfo,4,3,
+                                               activitytables.cropstep,
+                                               cropsize=cropsize,
+                                               subtractBackground=True)
+    return stepframes
 
 def medianposture(steps,info,cropsize=(300,300),ax=None):
     if ax is None:
