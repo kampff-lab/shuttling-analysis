@@ -120,7 +120,7 @@ def showmovie(movie,framestart=0,fps=0,frameend=None):
             frame, index = readframe(movie)
     cv2.destroyWindow('win')
             
-def mvshow(winname, frames, interval = 1000.0 / 25, stepkey = -1):
+def mvshow(winname, frames, interval = 1000 / 25, stepkey = -1):
     for frame in frames:
         key = None
         cv2.imshow(winname,frame)
