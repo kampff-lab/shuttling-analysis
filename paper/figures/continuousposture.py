@@ -40,6 +40,6 @@ for i,(s,d) in enumerate(steps.groupby(level='subject')):
     ax.set_ylabel('nose x (cm)')
 plt.suptitle('step posture')
 plt.tight_layout()
+plt.show()
 
 # Save plot
-plt.show()
