@@ -6,6 +6,7 @@ Created on Thu Apr 30 11:20:49 2015
 """
 
 import os
+import pandas as pd
 
 _lesionshampath_ = r'D:/Protocols/Shuttling/LightDarkServoStable'
 _decorticatepath_ = r'D:/Protocols/Shuttling/Decorticate'
@@ -74,3 +75,10 @@ def subjectpath(name):
 
 def relativepath(info,path):
     return os.path.join(subjectpath(info.name[0]),info.dirname,path)
+
+def sessionpath(info,path=''):
+    return pd.Series(info.reset_index().apply(
+        lambda x:os.path.join(subjectpath(x.subject), x.dirname, path),
+        axis=1).values,
+        index = info.index,
+        name='path')
