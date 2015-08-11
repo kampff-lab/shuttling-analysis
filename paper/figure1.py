@@ -1238,8 +1238,8 @@ def __getclips__(act,cr,info,rowidx=slice(None)):
 def __processclips__(clips,xcrop=None,ycrop=None):
     for index,clip in clips:
         frames = activitymovies.framesiterable(clip.path,
-                                               clip.frame-120,
-                                               clip.frame+600)
+                                               xrange(clip.frame-120,
+                                                      clip.frame+600))
         if clip.side == 'rightwards':
             frames = (cv2.flip(frame,1) for frame in frames)
         if xcrop is not None or ycrop is not None:

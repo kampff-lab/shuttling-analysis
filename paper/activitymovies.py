@@ -18,19 +18,21 @@ import matplotlib.gridspec as gridspec
 datafolder = r'D:/Protocols/Shuttling/LightDarkServoStable/Data'
 
 class framesiterable:
-    def __init__(self, path, start, stop):
+    def __init__(self, path, frames):
         self.path = path
-        self.start = int(start)
-        self.stop = int(stop)
+        self.frames = frames
         
     def __iter__(self):
         capture = cv2.VideoCapture(self.path)
-        capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, self.start)
         try:
-            for i in range(self.start, self.stop):
+            prev = None
+            for i in self.frames:
+                if prev is None or (i - prev) != 1:
+                    capture.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, i)
                 ret, frame = capture.read()
                 if not ret:
                     break
+                prev = i
                 yield frame
         finally:
             capture.release()
@@ -80,7 +82,10 @@ def showcrossingmovies(crossings,sessioninfo):
 #    cr = crossings.reset_index('index').join(moviepath)
     cr = crossings.join(moviepath)
     cr.set_index('index',append=True,inplace=True)
-    mvs = cr.apply(lambda x:framesiterable(x.path,x.slices.start,x.slices.stop),axis=1)
+    mvs = cr.apply(lambda x:
+        framesiterable(x.path,
+                       xrange(x.slices.start,x.slices.stop)),
+                       axis=1)
     showmovies(mvs,fps=120)
     
 #def getmovieframe(activity,key,sessioninfo):
@@ -93,7 +98,7 @@ def getmovieframes(sessioninfo,frames):
     videos = []
     for movie in moviepath:
         for frame in frames:
-            videos.append(framesiterable(movie,frame,frame+1))
+            videos.append(framesiterable(movie,xrange(frame,frame+1)))
     return (f for video in videos for f in video)
 
 def getmoviepath(sessioninfo):
@@ -139,7 +144,7 @@ def getcrossingframes(crossings,sessioninfo):
         for crossing in group.slices:
             startframe = crossing.start
             stopframe = crossing.stop
-            videos.append(framesiterable(path, startframe, stopframe))
+            videos.append(framesiterable(path, xrange(startframe, stopframe)))
         if len(videos) == 1:
             videos = videos[0]
         sessions.append(videos)
