@@ -5,9 +5,9 @@ Created on Mon May 04 19:31:59 2015
 @author: Gonçalo
 """
 
-from activitytables import read_subjects
 from activitytables import rewards_key
-from activitytables import leftpoke_key, rightpoke_key, pokebouts
+from activitytables import read_subjects, pokebouts
+from preprocess import leftpoke_key, rightpoke_key
 from datapath import lesionsham, decorticate
 from datapath import lesionshamcache, decorticatecache
 from datapath import leftpokebouts_key, rightpokebouts_key
