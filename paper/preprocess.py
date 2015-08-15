@@ -132,7 +132,7 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
     print "Generating datasets..."
     for i,path in enumerate(datafolders):
         print "Generating dataset for "+ path + "..."
-        createdataset(i,path,overwrite=True)
+        createdataset(i,path,overwrite)
         
 def storepath(path):
     return os.path.join(path, analysisfolder, h5filename)
