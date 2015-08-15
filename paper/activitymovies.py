@@ -169,7 +169,8 @@ def showmovie(movie,fps=0):
     cv2.destroyWindow('win')
     del frames
     
-def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),isColor=True):
+def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),
+              isColor=True,flip=None):
     writer = None
     try:
         for frame in frames:
@@ -179,6 +180,8 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),isCol
     
             if isColor and frame.ndim < 3:
                 frame = cv2.cvtColor(frame,cv2.cv.CV_GRAY2BGR)
+            if flip is not None:
+                frame = cv2.flip(frame,flip)
             writer.write(frame)
     finally:
         if writer is not None:
