@@ -59,6 +59,10 @@ decorticate = [os.path.join(decorticatedata,'JPAK_79'),
                
 jumpers = ['JPAK_38'] + [str.format('JPAK_{0}',i) for i in range(48,56)]
                
+def ensurefolder(folder):
+    if not os.path.exists(folder):
+        os.mkdir(folder)        
+
 def _findsubjectpath_(name,subjects):
     result = filter(lambda x: os.path.split(x)[1] == name,subjects)
     if len(result) > 0:
