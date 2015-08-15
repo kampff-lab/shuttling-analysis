@@ -94,12 +94,20 @@ def showcrossingmovies(crossings,sessioninfo):
 #    moviepath = os.path.join(datafolder,subject,entry.dirname,'front_video.avi')
     
 def getmovieframes(sessioninfo,frames):
-    moviepath = getmoviepath(sessioninfo)
     videos = []
-    for movie in moviepath:
-        for frame in frames:
-            videos.append(framesiterable(movie,xrange(frame,frame+1)))
-    return (f for video in videos for f in video)
+    moviepath = getmoviepath(sessioninfo)
+    cframes = frames.reset_index()
+    clipshift = (cframes.subject != cframes.subject.shift()) |\
+                (cframes.session != cframes.session.shift()) |\
+                (cframes.frame.diff() > 1)
+    cframes['_group_'] = clipshift.cumsum()
+    for (subject,session,g),clip in cframes.groupby(['subject',
+                                                     'session',
+                                                     '_group_'],
+                                                     sort=False):
+        movie = moviepath.ix[(subject,session)]
+        videos.append(framesiterable(movie,clip.frame))
+    return (f for vid in videos for f in vid)
 
 def getmoviepath(sessioninfo):
     return getrelativepath(sessioninfo,'front_video.avi')
