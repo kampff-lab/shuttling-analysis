@@ -5,22 +5,6 @@ Created on Mon May 04 18:57:40 2015
 @author: Gonçalo
 """
 
-def habituation(info):
-    return info.query("session == 0")
-
-def stable(info):
-    return info.query("1 <= session < 5")
-    
-def unstable(info):
-    return info.query("6 <= session < 11")
-    
-def restable(info):
-    return info[info.protocol.str.contains('stable') &\
-                info.eval("11 <= session < 14")]
-                
-def random(info):
-    return info[info.protocol.str.contains('randomizedcenterfree_')]
-
 def lesionvolume(info):
     volume = info['lesionleft'] + info['lesionright']
     volume.name = 'lesionvolume'
