@@ -10,7 +10,6 @@ import glob
 import shutil
 import filecmp
 import dateutil
-import datetime
 import subprocess
 import numpy as np
 import pandas as pd
