@@ -70,6 +70,7 @@ gaprois_cm = RoiSet(gaprois_pixels.rois,
                     scale=(height_pixel_to_cm,width_pixel_to_cm))
 
 h5filename = 'session.hdf5'
+discardfilename = 'discard.me'
 labelh5filename = 'labels.hdf5'
 analysisfolder = 'Analysis'
 backgroundfolder = 'Background'
@@ -100,9 +101,12 @@ def parserois(soup):
     return detectors
 
 def process_subjects(datafolders,preprocessing=True,overwrite=False):
+    if isinstance(datafolders, str):
+        datafolders = [datafolders]
+    
     for basefolder in datafolders:
         datafolders = [path for path in directorytree(basefolder,1)
-                       if os.path.isdir(path)]
+                       if os.path.isdir(path) and not discardpath(path)]
         process_sessions(datafolders,preprocessing,overwrite)
         
 def process_sessions(datafolders,preprocessing=True,overwrite=None):
@@ -133,6 +137,9 @@ def process_sessions(datafolders,preprocessing=True,overwrite=None):
         print "Generating dataset for "+ path + "..."
         createdataset(i,path,overwrite)
         
+def discardpath(path):
+    return os.path.exists(os.path.join(path, discardfilename))
+
 def storepath(path):
     return os.path.join(path, analysisfolder, h5filename)
     
