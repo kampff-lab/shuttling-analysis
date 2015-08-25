@@ -7,9 +7,9 @@ Created on Sun Sep 14 05:22:49 2014
 
 import os
 import cv2
+import glob
 import video
 import imgproc
-import sessions
 import datetime
 import numpy as np
 import pandas as pd
@@ -228,6 +228,19 @@ def appendlabels(data,labelspath):
                 except ValueError:
                     value = value
                 data[label] = value
+                
+def findsessions(folder, days=None):
+    sessionpaths = glob.glob(os.path.join(folder,'**/front_video.csv'))
+    folders = (os.path.split(path)[0] for path in sessionpaths)
+    folders = [path for path in folders if os.path.exists(storepath(path))]
+    if days is not None:
+        if type(days) is slice:
+            folders = folders[days]
+        elif np.iterable(days):
+            folders = [folders[day] for day in days]
+        else:
+            folders = [folders[days]]
+    return folders
     
 def read_subjects(folders, days=None,
                   key=frontactivity_key, selector=None,includeinfokey=True):
@@ -236,7 +249,7 @@ def read_subjects(folders, days=None,
                       
     subjects = []
     for path in folders:
-        subject = read_sessions(sessions.findsessions(path, days),
+        subject = read_sessions(findsessions(path, days),
                                 key,selector,includeinfokey)
         subjects.append(subject)
     return pd.concat(subjects)
