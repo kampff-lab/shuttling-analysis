@@ -294,6 +294,21 @@ def scatterhistaxes():
     axHistx = plt.subplot2grid((3,3),(0,0),colspan=2)
     axHisty = plt.subplot2grid((3,3),(1,2),rowspan=2)
     return (axScatter,axHistx,axHisty)
+    
+def _scatterhist_(x,y,rangex,rangey,xbinsize,ybinsize,
+                  color='b',histalpha = 0.75,scatteralpha = 0.4,
+                  axes=None):
+    if axes is None:
+        axes = scatterhistaxes()
+    
+    xbins = np.arange(rangex[0],rangex[1]+xbinsize,xbinsize)
+    ybins = np.arange(rangey[0],rangey[1]+ybinsize,ybinsize)
+    xlim = (np.floor(rangex[0]),np.ceil(rangex[1]))
+    ylim = (np.floor(rangey[0]),np.ceil(rangey[1]))
+    activityplots.scatterhist(x,y,
+                              xbins=xbins,ybins=ybins,
+                              color=color,axes=axes,xlim=xlim,ylim=ylim,
+                              histalpha=histalpha,alpha=scatteralpha)
 
 def posturehistogram(steps,rangex=None,rangey=None,
                      color='b',histalpha = 0.75,scatteralpha = 0.4,
@@ -309,17 +324,57 @@ def posturehistogram(steps,rangex=None,rangey=None,
         
     xbinsize = 5 * width_pixel_to_cm
     ybinsize = 10 * height_pixel_to_cm
-    xbins = np.arange(rangex[0],rangex[1]+xbinsize,xbinsize)
-    ybins = np.arange(rangey[0],rangey[1]+ybinsize,ybinsize)
-    xlim = (np.floor(rangex[0]),np.ceil(rangex[1]))
-    ylim = (np.floor(rangey[0]),np.ceil(rangey[1]))
-    activityplots.scatterhist(steps.xhead,steps.yhead,
-                              xbins=xbins,ybins=ybins,
-                              color=color,axes=axes,xlim=xlim,ylim=ylim,
-                              histalpha=histalpha,alpha=scatteralpha)
+    _scatterhist_(steps.xhead,steps.yhead,
+                  rangex,rangey,
+                  xbinsize,ybinsize,
+                  color=color,
+                  histalpha=histalpha,
+                  scatteralpha=scatteralpha,
+                  axes=axes)
     axScatter = axes[0]
     axScatter.set_xlabel('x (cm)')
     axScatter.set_ylabel('y (cm)')
+    
+def speedhistogram(steps,rangex=None,rangey=None,
+                   color='b',histalpha = 0.75,scatteralpha = 0.4,
+                   axes=None):
+    if axes is None:
+        axes = scatterhistaxes()
+
+    if rangex is None:
+        rangex = (steps.xhead_speed.min(),steps.xhead_speed.max())
+        
+    if rangey is None:
+        rangey = (steps.yhead_speed.min(),steps.yhead_speed.max())
+        
+    xbinsize = 5 * width_pixel_to_cm
+    ybinsize = 10 * height_pixel_to_cm
+    _scatterhist_(steps.xhead_speed,steps.yhead_speed,
+                  rangex,rangey,
+                  xbinsize,ybinsize,
+                  color=color,
+                  histalpha=histalpha,
+                  scatteralpha=scatteralpha,
+                  axes=axes)
+    axScatter = axes[0]
+    axScatter.set_xlabel('x (cm / s)')
+    axScatter.set_ylabel('y (cm / s)')
+    
+def speedcorrelation(steps,rangex=None,rangey=None,
+                     color='b',alpha=0.4,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+        
+    ax.scatter(steps.xhead_speed,steps.xhead,c=color,
+               edgecolors='none',alpha=alpha)    
+    m,b,r,p,err = stats.linregress(steps.xhead_speed,steps.xhead)
+    xline = np.linspace(rangex[0],rangex[1],100)
+    #plt.plot(xline,m*xline+b,'k')
+    ax.set_xlim(rangex)
+    ax.set_ylim(rangey)
+    ax.set_xlabel('speed (cm / s)')
+    ax.set_ylabel('progression (cm)')
     
 def posturemean(steps,color='b',label=None,ax=None):
     if ax is None:
