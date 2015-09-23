@@ -376,6 +376,22 @@ def speedcorrelation(steps,rangex=None,rangey=None,
     ax.set_xlabel('speed (cm / s)')
     ax.set_ylabel('progression (cm)')
     
+def posturecontinuous(steps,ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+        
+    ticks = list(steps.stepstate3.diff().nonzero()[0])
+    ticks = ticks[1:4] + [ticks[-1]]
+    steps.xhead.plot(ax=ax,
+                 style='.',
+                 xticks=ticks)
+    ax.yaxis.grid(False)
+    ax.set_xticklabels(['ut','st','rd','all'])
+    ax.set_ylim(0,8)
+    ax.set_xlabel('trial')
+    ax.set_ylabel('nose x (cm)')
+    
 def posturemean(steps,color='b',label=None,ax=None):
     if ax is None:
         fig = plt.figure()

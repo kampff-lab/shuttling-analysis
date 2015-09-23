@@ -7,6 +7,7 @@ Created on Mon Aug 03 14:06:38 2015
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from shuttlingplots import posturecontinuous
 from activitytables import flipleftwards, info_key
 from datapath import jumpers, lesionshamcache, stepfeatures_key
 from infotables import names, control, lesion, smalllesion, anylesion
@@ -24,20 +25,16 @@ steps = pd.read_hdf(lesionshamcache,stepfeatures_key).query(nonjumpers)
 steps.xhead = flipleftwards(steps.xhead,steps.side)
 
 # Plot data
+ax = plt.gca()
+posturecontinuous(steps.query("subject == 'JPAK_21'"),ax)
+ax.set_title(str.format('step posture ({0})',lesionmap['JPAK_21']))
+
 steps = steps.query("subject != 'JPAK_20'")
 fig, axes = plt.subplots(3,4)
 for i,(s,d) in enumerate(steps.groupby(level='subject')):
     ax = axes[i / 4][i % 4]
-    ticks = list(d.stepstate3.diff().nonzero()[0])
-    ticks = ticks[1:4] + [ticks[-1]]
-    d.xhead.plot(ax=ax,
-                 style='.',
-                 title=lesionmap[s],
-                 xticks=ticks)
-    ax.set_xticklabels(['ut','st','rd','all'])
-    ax.set_ylim(0,8)
-    ax.set_xlabel('trial')
-    ax.set_ylabel('nose x (cm)')
+    posturecontinuous(d, ax)
+    ax.set_title(lesionmap[s])
 plt.suptitle('step posture')
 plt.tight_layout()
 plt.show()
