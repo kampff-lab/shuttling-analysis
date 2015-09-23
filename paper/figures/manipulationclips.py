@@ -40,4 +40,4 @@ for (subject,session),sact in act.groupby(level=['subject','session']):
         continue
     savemovie(frames, fname, 120, flip=fliptrials.get(subject,None))
     sact.reset_index().time.to_csv(tname,index=False,
-                                   date_format='%Y-%m-%dT%H:%M:%S.%f%z')
+                                   date_format='%Y-%m-%dT%H:%M:%S.%f+00:00')
