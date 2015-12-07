@@ -110,6 +110,8 @@ def process_subjects(datafolders,preprocessing=True,overwrite=False):
         process_sessions(datafolders,preprocessing,overwrite)
         
 def process_sessions(datafolders,preprocessing=True,overwrite=None):
+    if isinstance(datafolders, str):
+        datafolders = [datafolders]
     
     if preprocessing:
         print 'Generating labels...'
