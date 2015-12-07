@@ -31,28 +31,28 @@ def vline(x):
     
 ### MANIPULATION ETHOGRAM ###
     
-paths = np.array([r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_20/2013_04_05-11_47/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_21/2013_04_05-12_21/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_22/2013_04_12-14_59/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_23/2013_04_12-14_26/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_24/2013_04_19-12_45/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_25/2013_04_19-13_20/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_26/2013_04_26-14_25/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_27/2013_04_26-13_52/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_28/2013_05_03-15_32/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_29/2013_05_03-16_06/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_36/2013_07_12-10_43/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_37/2013_07_12-11_16/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_38/2013_07_12-12_33/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_39/2013_07_12-12_00/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_48/2014_03_07-11_36/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_49/2014_03_07-12_10/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_50/2014_03_07-12_56/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_51/2014_03_07-13_31/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_52/2014_03_14-17_02/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_53/2014_03_14-16_25/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_54/2014_03_14-18_25/Analysis',
-r'G:/Protocols/Behavior/Shuttling/LightDarkServoStable/Data/JPAK_55/2014_03_14-17_49/Analysis'])
+paths = np.array([r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_20/2013_04_05-11_47/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_21/2013_04_05-12_21/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_22/2013_04_12-14_59/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_23/2013_04_12-14_26/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_24/2013_04_19-12_45/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_25/2013_04_19-13_20/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_26/2013_04_26-14_25/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_27/2013_04_26-13_52/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_28/2013_05_03-15_32/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_29/2013_05_03-16_06/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_36/2013_07_12-10_43/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_37/2013_07_12-11_16/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_38/2013_07_12-12_33/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_39/2013_07_12-12_00/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_48/2014_03_07-11_36/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_49/2014_03_07-12_10/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_50/2014_03_07-12_56/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_51/2014_03_07-13_31/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_52/2014_03_14-17_02/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_53/2014_03_14-16_25/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_54/2014_03_14-18_25/Analysis',
+r'D:/Protocols/Shuttling/LightDarkServoStable/Data/JPAK_55/2014_03_14-17_49/Analysis'])
 lesion_shuffle = paths[[1,5,13,11,3,19,9,15,21,17,7,   0,4,12,10,2,18,8,14,20,16,6]]
 #lesion_shuffle = paths[[1,5,13,3,11,9,7,0,4,12,2,10,8,6]]
 #lesion_shuffle = paths[[0,4,12,2,10,8,6,1,5,13,3,11,9,7]]
@@ -88,7 +88,7 @@ def make_ethogram(ethograms,label=True,title=None,legend=True):
     #hline(13.5)
     hline(ytks[midpoint]-1)
     xlabel('time from first contact (s)')
-    xlim([0,3])
+    xlim([0,30])
     ethogram_artists = [plt.Rectangle((0,0),1,1,fc=color) for color in event_color_scheme.values()[0:4]]
     plt.legend(ethogram_artists,event_color_scheme.keys(),bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     if title is not None:
