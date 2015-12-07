@@ -18,7 +18,8 @@ shuffle = ['JPAK_49', 'JPAK_28', 'JPAK_23', 'JPAK_50', 'JPAK_38', 'JPAK_37',
 def read_annotations():
     frames = []
     filenames = os.listdir(annotationpath)
-    filenames = ((int(name.split('_',2)[1]),name) for name in filenames)
+    filenames = ((int(name.split('_',2)[1]),name) for name in filenames
+                 if os.path.isfile(os.path.join(annotationpath, name)))
     filenames = sorted(filenames,key=lambda x:x[0])
     for i,name in filenames:
         subject = shuffle[i]
