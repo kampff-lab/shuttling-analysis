@@ -175,7 +175,7 @@ def averagetrajectory(cract,cr,column='yhead',baseline=None,
         ymean = np.mean(ypoints,axis=0)
         yerr = stats.sem(ypoints,axis=0)
         ax.fill_between(xpoints,ymean-yerr,ymean+yerr,color=color,alpha=0.1)
-    ax.set_xlabel('x (cm)')
+    ax.set_xlabel('progression (cm)')
     ax.set_xlim(5,45)
     
 def createspaceaxis():
@@ -201,9 +201,9 @@ def averagetimetrajectory(cract,color='b',ax=None,**kwargs):
     for key,subcr in cract.groupby(level=['subject','session','crossing']):
         time = (subcr.time - subcr.time[0]) / np.timedelta64(1,'s')
         ax.plot(time,subcr.xhead,subcr.yhead,color=color,**kwargs)
-    ax.set_ylabel('x (cm)')
+    ax.set_ylabel('progression (cm)')
     ax.set_xlabel('time (s)')
-    ax.set_zlabel('y (cm)')
+    ax.set_zlabel('height (cm)')
     
 def skipprobability(cr):
     cr = cr.copy(deep=True)
@@ -332,8 +332,8 @@ def posturehistogram(steps,rangex=None,rangey=None,
                   scatteralpha=scatteralpha,
                   axes=axes)
     axScatter = axes[0]
-    axScatter.set_xlabel('x (cm)')
-    axScatter.set_ylabel('y (cm)')
+    axScatter.set_xlabel('progression (cm)')
+    axScatter.set_ylabel('height (cm)')
     
 def speedhistogram(steps,rangex=None,rangey=None,
                    color='b',histalpha = 0.75,scatteralpha = 0.4,
@@ -406,8 +406,8 @@ def posturemean(steps,color='b',label=None,ax=None):
     ax.errorbar(xmean,ymean,xerr=xerr,yerr=yerr,ecolor=color)
     if label is not None:
         ax.annotate(label,xy=(xmean,ymean),textcoords='offset points')
-    ax.set_xlabel('x (cm)')
-    ax.set_ylabel('y (cm)')
+    ax.set_xlabel('progression (cm)')
+    ax.set_ylabel('height (cm)')
     
 def _cmtopixel_(x,y):
     x = (x / width_pixel_to_cm)
