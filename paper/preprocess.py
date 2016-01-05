@@ -274,8 +274,9 @@ def createdataset(session,path,overwrite=False):
     stepactivity = indexseries(stepactivity,fronttime)
     gapactivity = indexseries(gapactivity,fronttime)
     
-    # Compute speed
+    # Compute speed (smoothed by centered moving average of size 3)
     speed = trajectories.diff()
+    speed = pd.rolling_mean(speed, 3, center=True)
     timedelta = pd.DataFrame(fronttime.diff() / np.timedelta64(1,'s'))
     timedelta.index = speed.index
     speed = pd.concat([speed,timedelta],axis=1)
