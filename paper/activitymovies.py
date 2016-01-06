@@ -220,7 +220,11 @@ class MoviePlotter:
         plt.tight_layout()
         self.updateframe()
         self.fig.canvas.mpl_connect('key_press_event',self.onkeypress)
+        self.fig.canvas.mpl_connect('key_release_event',self.onkeyrelease)
         self.fig.canvas.mpl_connect('close_event',self.onclose)
+        self.keytimer = self.fig.canvas.new_timer()
+        self.keytimer.add_callback(self.updatekey)
+        self.activekey = None
         
     def release(self):
         for m in self.movies.values:
@@ -255,25 +259,35 @@ class MoviePlotter:
             ax.set_xlim(-offset,offset)
         self.fig.canvas.draw_idle()
         
+    def updatekey(self):
+        if self.activekey == 'left':
+            self.index = max(self.index-1,0)
+            self.updateframe()
+        if self.activekey == 'right':
+            self.index = min(self.index+1,self.nframes-1)
+            self.updateframe()
+        if self.activekey == 'pageup':
+            self.index = max(self.index-10,0)
+            self.updateframe()
+        if self.activekey == 'pagedown':
+            self.index = min(self.index+10,self.nframes-1)
+            self.updateframe()
+        if self.activekey == 'home':
+            self.index = max(self.index-100,0)
+            self.updateframe()
+        if self.activekey == 'end':
+            self.index = min(self.index+100,self.nframes-1)
+            self.updateframe()
+        
     def onclose(self, evt):
         self.release()
         
     def onkeypress(self, evt):
-        if evt.key == 'left':
-            self.index = max(self.index-1,0)
-            self.updateframe()
-        if evt.key == 'right':
-            self.index = min(self.index+1,self.nframes-1)
-            self.updateframe()
-        if evt.key == 'pageup':
-            self.index = max(self.index-10,0)
-            self.updateframe()
-        if evt.key == 'pagedown':
-            self.index = min(self.index+10,self.nframes-1)
-            self.updateframe()
-        if evt.key == 'home':
-            self.index = max(self.index-100,0)
-            self.updateframe()
-        if evt.key == 'end':
-            self.index = min(self.index+100,self.nframes-1)
-            self.updateframe()
+        self.activekey = evt.key
+        self.updatekey()
+        self.keytimer.start(interval=150)
+            
+    def onkeyrelease(self, evt):
+        if self.activekey == evt.key:
+            self.activekey = None
+            self.keytimer.stop()
