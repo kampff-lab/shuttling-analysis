@@ -197,11 +197,14 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),
             
 
 class MoviePlotter:
-    def __init__(self,activity,info,key='frame'):
+    def __init__(self,activity,info,key='frame',annotations=None):
         self.fig = plt.figure()
         self.movies = getmovies(info)
         self.activity = activity
+        self.annotations = annotations
         self.nframes = len(activity)
+        self.evtmarkers = []
+        self.activekey = None
         self.image = None
         self.key = key
         self.index = 0
@@ -224,7 +227,6 @@ class MoviePlotter:
         self.fig.canvas.mpl_connect('close_event',self.onclose)
         self.keytimer = self.fig.canvas.new_timer()
         self.keytimer.add_callback(self.updatekey)
-        self.activekey = None
         
     def release(self):
         for m in self.movies.values:
@@ -243,20 +245,33 @@ class MoviePlotter:
             self.image.set_data(movieframe)
         title = str.format("{0} frame: {1}",moviekey,frameindex)
         self.movax.set_title(title)
-        
+        while len(self.evtmarkers) > 0:
+            marker = self.evtmarkers.pop()
+            marker.remove()
+
+        evts = None        
         offset = 100
         fmin = self.index-offset
         fmax = self.index+offset
         minindex = max(fmin,0)
         maxindex = min(fmax,self.nframes)
-        data = self.activity.ix[minindex:maxindex,:].drop(self.key,axis=1)
+        data = self.activity.ix[minindex:maxindex,:]
         x = range(minindex-self.index,maxindex-self.index)
+        if self.annotations is not None:
+            evtsrange = pd.Series(x,data.index)
+            evtsrange = evtsrange.reindex(self.annotations.index).dropna()
+            if len(evtsrange) > 0:
+                evts = self.annotations.reindex(evtsrange.index).dropna()
+        data.drop(self.key,axis=1,inplace=True)
         for i,ax in enumerate(self.axes):
             if len(ax.lines) > 0:
                 ax.lines.pop(0)
             ax.plot(x,data.ix[:,i],'b')
             ax.relim()
             ax.set_xlim(-offset,offset)
+            if evts is not None:
+                ymin,ymax = ax.get_ylim()
+                self.evtmarkers.append(ax.vlines(evtsrange,ymin,ymax))
         self.fig.canvas.draw_idle()
         
     def updatekey(self):
