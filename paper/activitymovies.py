@@ -197,11 +197,16 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),
             
 
 class MoviePlotter:
-    def __init__(self,activity,info,key='frame',annotations=None):
+    def __init__(self,activity,info,key='frame',
+                 annotations=None,annotationkey=None):
+        if annotationkey is None:
+            annotationkey = slice(None)
+        
         self.fig = plt.figure()
         self.movies = getmovies(info)
         self.activity = activity
         self.annotations = annotations
+        self.annotationkey = annotationkey
         self.nframes = len(activity)
         self.evtmarkers = []
         self.activekey = None
@@ -262,6 +267,7 @@ class MoviePlotter:
             evtsrange = evtsrange.reindex(self.annotations.index).dropna()
             if len(evtsrange) > 0:
                 evts = self.annotations.reindex(evtsrange.index).dropna()
+                evts = evts[self.annotationkey]
         data.drop(self.key,axis=1,inplace=True)
         for i,ax in enumerate(self.axes):
             if len(ax.lines) > 0:
@@ -272,6 +278,11 @@ class MoviePlotter:
             if evts is not None:
                 ymin,ymax = ax.get_ylim()
                 self.evtmarkers.append(ax.vlines(evtsrange,ymin,ymax))
+                for ekey,value in evts.iterrows():
+                    erange = evtsrange.ix[ekey]
+                    self.evtmarkers.append(ax.text(erange,ymax,
+                                                   str(value[0]),
+                                                   verticalalignment='top'))
         self.fig.canvas.draw_idle()
         
     def updatekey(self):
