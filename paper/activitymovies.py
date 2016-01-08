@@ -230,7 +230,6 @@ class MoviePlotter:
         for ax,name in zip(self.axes,activity.columns.drop(key)):
             ax.set_title(name)
             ax.axvline(0,ls='--')
-            ax.set_xlim(-loffset,roffset)
             self.fig.add_subplot(ax)
         plt.tight_layout()
         self.updateframe()
@@ -281,7 +280,7 @@ class MoviePlotter:
             ax.plot(x,data.ix[:,i],'b')
             xmin,xmax = ax.get_xlim()
             ax.relim()
-            ax.set_xlim(xmin,xmax)
+            ax.set_xlim(-self.loffset,self.roffset)
             ymin,ymax = ax.get_ylim()
             if evts is not None:
                 self.evtmarkers.append(ax.vlines(evtsrange,ymin,ymax))
@@ -329,6 +328,15 @@ class MoviePlotter:
         if self.activekey == 'ctrl+end':
             self.index = self.nframes-1
             self.updateframe()
+        if self.activekey == 'ctrl+up':
+            self.loffset *= 10
+            self.roffset *= 10
+            self.updateframe()
+        if self.activekey == 'ctrl+down':
+            if self.loffset > 10 or self.roffset > 10:
+                self.loffset /= 10
+                self.roffset /= 10
+                self.updateframe()
         
     def onclose(self, evt):
         self.release()
