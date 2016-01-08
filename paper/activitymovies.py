@@ -349,6 +349,23 @@ class MoviePlotter:
                 self.annotations.ix[annotationkey,:] = annotation
                 self.updateframe()
         
+        if evt.key == '-':
+            annotationkey = self.activity.index[self.index]
+            try:
+                self.annotations.drop(annotationkey,inplace=True)
+                self.updateframe()
+            except KeyError:
+                pass
+        if evt.key == 'ctrl+-':
+            fmin = self.index-self.loffset
+            fmax = self.index+self.roffset
+            minindex = max(fmin,0)
+            maxindex = min(fmax,self.nframes)
+            annotationkeys = self.activity.index[minindex:maxindex]
+            annotationkeys = annotationkeys.intersection(self.annotations.index)
+            self.annotations.drop(annotationkeys,inplace=True)
+            self.updateframe()
+            
         self.activekey = evt.key
         self.updatekey()
         self.keytimer.start(interval=150)
