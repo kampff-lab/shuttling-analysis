@@ -332,11 +332,11 @@ class MoviePlotter:
             self.loffset *= 10
             self.roffset *= 10
             self.updateframe()
-        if self.activekey == 'ctrl+down':
-            if self.loffset > 10 or self.roffset > 10:
-                self.loffset /= 10
-                self.roffset /= 10
-                self.updateframe()
+        if self.activekey == 'ctrl+down' and \
+           (self.loffset > 10 or self.roffset > 10):
+            self.loffset /= 10
+            self.roffset /= 10
+            self.updateframe()
         
     def onclose(self, evt):
         self.release()
