@@ -226,6 +226,7 @@ class MoviePlotter:
         self.axes = [plt.Subplot(self.fig, gs01[:,i]) for i in range(ncols)]
         for ax,name in zip(self.axes,activity.columns.drop(key)):
             ax.set_title(name)
+            ax.axvline(0,ls='--')
             self.fig.add_subplot(ax)
         plt.tight_layout()
         self.updateframe()
@@ -272,13 +273,13 @@ class MoviePlotter:
                 evts = evts[self.annotationkey]
         data.drop(self.key,axis=1,inplace=True)
         for i,ax in enumerate(self.axes):
-            if len(ax.lines) > 0:
-                ax.lines.pop(0)
+            if len(ax.lines) > 1:
+                ax.lines.pop(1)
             ax.plot(x,data.ix[:,i],'b')
             ax.relim()
             ax.set_xlim(-offset,offset)
+            ymin,ymax = ax.get_ylim()
             if evts is not None:
-                ymin,ymax = ax.get_ylim()
                 self.evtmarkers.append(ax.vlines(evtsrange,ymin,ymax))
                 for ekey,value in evts.iterrows():
                     erange = evtsrange.ix[ekey]
