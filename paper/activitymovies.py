@@ -311,6 +311,24 @@ class MoviePlotter:
         if self.activekey == 'end':
             self.index = min(self.index+100,self.nframes-1)
             self.updateframe()
+        if self.activekey == 'ctrl+left':
+            self.index = max(self.index-1000,0)
+            self.updateframe()
+        if self.activekey == 'ctrl+right':
+            self.index = min(self.index+1000,self.nframes-1)
+            self.updateframe()
+        if self.activekey == 'ctrl+pageup':
+            self.index = max(self.index-10000,0)
+            self.updateframe()
+        if self.activekey == 'ctrl+pagedown':
+            self.index = min(self.index+10000,self.nframes-1)
+            self.updateframe()
+        if self.activekey == 'ctrl+home':
+            self.index = 0
+            self.updateframe()
+        if self.activekey == 'ctrl+end':
+            self.index = self.nframes-1
+            self.updateframe()
         
     def onclose(self, evt):
         self.release()
