@@ -198,7 +198,8 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),
 
 class MoviePlotter:
     def __init__(self,activity,info,key='frame',
-                 annotations=None,annotationkey=None):
+                 annotations=None,annotationkey=None,
+                 annotationmaps=None):
         if annotationkey is None:
             annotationkey = slice(None)
         
@@ -207,6 +208,7 @@ class MoviePlotter:
         self.activity = activity
         self.annotations = annotations
         self.annotationkey = annotationkey
+        self.annotationmaps = annotationmaps
         self.nframes = len(activity)
         self.evtmarkers = []
         self.activekey = None
@@ -309,6 +311,13 @@ class MoviePlotter:
         self.release()
         
     def onkeypress(self, evt):
+        if self.annotationmaps is not None:
+            annotation = self.annotationmaps.get(evt.key)
+            if annotation is not None:
+                annotationkey = self.activity.index[self.index]
+                self.annotations.ix[annotationkey,:] = annotation
+                self.updateframe()
+        
         self.activekey = evt.key
         self.updatekey()
         self.keytimer.start(interval=150)
