@@ -199,7 +199,8 @@ def savemovie(frames,filename,fps,fourcc=cv2.cv.CV_FOURCC('F','M','P','4'),
 class MoviePlotter:
     def __init__(self,activity,info,key='frame',
                  annotations=None,annotationkey=None,
-                 annotationmaps=None):
+                 annotationmaps=None,
+                 loffset=100,roffset=100):
         if annotationkey is None:
             annotationkey = slice(None)
         
@@ -215,6 +216,8 @@ class MoviePlotter:
         self.image = None
         self.key = key
         self.index = 0
+        self.loffset = loffset
+        self.roffset = roffset
         
         gs0 = gridspec.GridSpec(3,1)
         self.movax = plt.Subplot(self.fig, gs0[:-1])
@@ -227,6 +230,7 @@ class MoviePlotter:
         for ax,name in zip(self.axes,activity.columns.drop(key)):
             ax.set_title(name)
             ax.axvline(0,ls='--')
+            ax.set_xlim(-loffset,roffset)
             self.fig.add_subplot(ax)
         plt.tight_layout()
         self.updateframe()
@@ -257,10 +261,9 @@ class MoviePlotter:
             marker = self.evtmarkers.pop()
             marker.remove()
 
-        evts = None        
-        offset = 100
-        fmin = self.index-offset
-        fmax = self.index+offset
+        evts = None
+        fmin = self.index-self.loffset
+        fmax = self.index+self.roffset
         minindex = max(fmin,0)
         maxindex = min(fmax,self.nframes)
         data = self.activity.ix[minindex:maxindex,:]
@@ -276,8 +279,9 @@ class MoviePlotter:
             if len(ax.lines) > 1:
                 ax.lines.pop(1)
             ax.plot(x,data.ix[:,i],'b')
+            xmin,xmax = ax.get_xlim()
             ax.relim()
-            ax.set_xlim(-offset,offset)
+            ax.set_xlim(xmin,xmax)
             ymin,ymax = ax.get_ylim()
             if evts is not None:
                 self.evtmarkers.append(ax.vlines(evtsrange,ymin,ymax))
