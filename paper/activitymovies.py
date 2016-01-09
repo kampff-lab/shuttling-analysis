@@ -218,6 +218,8 @@ class MoviePlotter:
         self.index = 0
         self.loffset = loffset
         self.roffset = roffset
+        self.activityindices = pd.Series(np.arange(len(activity)),
+                                         activity.index)
         
         gs0 = gridspec.GridSpec(3,1)
         self.movax = plt.Subplot(self.fig, gs0[:-1])
@@ -337,6 +339,18 @@ class MoviePlotter:
             self.loffset /= 10
             self.roffset /= 10
             self.updateframe()
+        if self.activekey == 'alt+left':
+            indices = self.activityindices.reindex(self.annotations.index)
+            nextindex = indices[indices < self.index].last_valid_index()
+            if nextindex is not None:
+                self.index = indices[nextindex]
+            self.updateframe()
+        if self.activekey == 'alt+right':
+            indices = self.activityindices.reindex(self.annotations.index)
+            nextindex = indices[indices > self.index].first_valid_index()
+            if nextindex is not None:
+                self.index = indices[nextindex]
+            self.updateframe()
         
     def onclose(self, evt):
         self.release()
@@ -365,7 +379,7 @@ class MoviePlotter:
             annotationkeys = annotationkeys.intersection(self.annotations.index)
             self.annotations.drop(annotationkeys,inplace=True)
             self.updateframe()
-            
+        
         self.activekey = evt.key
         self.updatekey()
         self.keytimer.start(interval=150)
