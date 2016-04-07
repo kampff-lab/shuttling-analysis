@@ -382,15 +382,60 @@ def posturecontinuous(steps,ax=None):
         ax = fig.gca()
         
     ticks = list(steps.stepstate3.diff().nonzero()[0])
-    ticks = ticks[1:4] + [ticks[-1]]
-    steps.xhead.plot(ax=ax,
-                 style='.',
-                 xticks=ticks)
-    ax.yaxis.grid(False)
-    ax.set_xticklabels(['ut','st','rd','all'])
+    ticks = ticks[1:4]
+    ax.plot(steps.xhead,'.')
+    ax.vlines(ticks,*ax.get_ylim(),linestyles='dashed')
+    block1 = ticks[0]/2
+    block2 = ticks[0]+(ticks[1]-ticks[0])/2
+    block3 = ticks[1]+(ticks[2]-ticks[1])/2
+    block4 = ticks[2]+(len(steps)-ticks[2])/2
+    ax.set_xticks([block1,block2,block3,block4])
+    ax.set_xticklabels(['stable','unstable','stable','random'])
     ax.set_ylim(0,8)
-    ax.set_xlabel('trial')
-    ax.set_ylabel('nose x (cm)')
+    ax.set_xlim(0,len(steps.xhead))
+    #ax.set_xlabel('trial')
+    ax.set_ylabel('progression (cm)')
+
+def _plotposturesession_(x,data,ax,color='k',star=False):
+    miu = data.xhead.mean()
+    err = data.xhead.sem()
+    ax.plot(x,miu,'.',color=color)
+    ax.errorbar(x,miu,yerr=err,ecolor=color,fmt='-')
+    if star:
+        ax.text(x,miu+err,'*')
+    
+def posturesessioncomparison(steps,color='k',ax=None):
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.gca()
+        
+    i = 0
+    for session,frame in steps.groupby(level=['session']):
+        if session == 5 or session == 11 or session == 13:
+            pre = frame.query('trial <= 20')
+            post = frame.query('trial > 20')
+            _plotposturesession_(i,pre,ax,color,star=False)
+            i += 1
+            _plotposturesession_(i,post,ax,color)
+        else:
+            _plotposturesession_(i,frame,ax,color)
+        i += 1
+    ax.set_ylabel('progression (cm)')
+    ax.set_title('step posture across sessions')
+    ax.set_xlim(-1,20)
+    seps = [5.5,12.5,15.5]
+    ymin,ymax = ax.get_ylim()
+    ymin,ymax = 2.5,6
+    ax.vlines(seps[0],ymin,ymax,linestyles='dashed')
+    ax.vlines(seps[1],ymin,ymax,linestyles='dashed')
+    ax.vlines(seps[2],ymin,ymax,linestyles='dashed')
+    block1 = seps[0]/2-0.5
+    block2 = seps[0]+(seps[1]-seps[0])/2
+    block3 = seps[1]+(seps[2]-seps[1])/2
+    block4 = seps[2]+(19-seps[2])/2+0.5
+    ax.set_ylim(ymin,ymax)
+    ax.set_xticks([block1,block2,block3,block4])
+    ax.set_xticklabels(['stable','unstable','stable','random'])
     
 def posturemean(steps,color='b',label=None,ax=None):
     if ax is None:
