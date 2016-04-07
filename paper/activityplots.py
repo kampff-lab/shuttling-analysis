@@ -8,12 +8,11 @@ Created on Sun Sep 14 11:42:00 2014
 import os
 import cv2
 import video
-import siphon
 import imgproc
 import pltutils
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import NullFormatter
+import plotsettings as pltconfig
 import activitytables
 import activitymovies
 from preprocess import stepslice
@@ -32,7 +31,8 @@ def scatterhist(x,y,xbins=10,ybins=10,
     else:
         axScatter,axHistx,axHisty = axes
     
-    axScatter.scatter(x, y, c=color, edgecolors='none', alpha=alpha)
+    axScatter.scatter(x, y, c=color, edgecolors='none', alpha=alpha,
+                      s=pltconfig.markersize)
     if xlim is not None:
         axScatter.set_xlim(xlim)
     if ylim is not None:
